@@ -1,0 +1,15 @@
+{
+  "name": "arb-token-lists",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@typescript-eslint/parser": "^5.0.0",
+    "@uniswap/token-lists": "^1.0.0-beta.26",
+    "ajv": "^8.6.3",
+    "ajv-formats": "^2.1.1",
+    "fs": "^0.0.1-security",
+    "ts-node": "^10.3.0",
+    "typescript": "^4.4.4"
+  }
+}
