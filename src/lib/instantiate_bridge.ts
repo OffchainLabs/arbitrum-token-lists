@@ -1,6 +1,6 @@
 import { BridgeHelper, networks, Bridge } from 'arb-ts';
 import { providers, Wallet } from 'ethers';
-
+import args from './getClargs';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -8,7 +8,7 @@ const pk = process.env['PRIVKEY'] as string;
 const mnemonic = process.env['DEV_MNEMONIC'] as string;
 const verbose = process.env['VERBOSE'] as string;
 // todo:
-const networkID = (process.env['networkID'] as string) || '1';
+const networkID = args.networkID?.toString() || '1';
 
 export const instantiateBridge = async (
   l1pkParam?: string,

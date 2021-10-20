@@ -26,4 +26,4 @@ const argv = yargs(process.argv.slice(2))
   })
   .parseSync();
 
-export default yargs;
+export default argv;
