@@ -3,7 +3,114 @@ import addFormats from 'ajv-formats';
 import { schema, TokenList } from '@uniswap/token-lists';
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import axios from 'axios';
+import { Bridge, L1GatewayRouter__factory, ERC20__factory  } from 'arb-ts'
+const routerIface = L1GatewayRouter__factory.createInterface();
+const tokenIface = ERC20__factory.createInterface();
 
+export const getL2TokenAddresses = async (l1TokenAddresses:string[], bridge:Bridge)=>{
+  const {network: l1Network} = bridge.l1Bridge
+
+  const calls = l1TokenAddresses.map((l1TokenAddress:string) => {
+    return {
+      target: l1Network.tokenBridge.l1GatewayRouter,
+      funcFragment: routerIface.functions['calculateL2TokenAddress(address)'],
+      values: [l1TokenAddress],
+    };
+  });
+  const l2Addresses = await bridge.l1Bridge.getMulticallAggregate(calls);
+  const _l2Addresses = l2Addresses.map((m, i) => {
+    const x = l2Addresses && l2Addresses[i] && l2Addresses[i];
+    return (x && (x[0] as string)) || '';
+  });
+  return l2Addresses
+
+}
+
+export const getL2TokenData = async (l2TokenAddresses:string[], bridge:Bridge)=>{
+  const l2Calls = l2TokenAddresses
+    .map((l2Address) => {
+      return [
+        {
+          target: l2Address,
+          funcFragment: tokenIface.functions['symbol()'],
+        },
+        {
+          target: l2Address,
+          funcFragment: tokenIface.functions['decimals()'],
+        },
+        {
+          target: l2Address,
+          funcFragment: tokenIface.functions['name()'],
+        },
+      ];
+    })
+    .flat();
+  const l2Data = await bridge.l2Bridge.getMulticallAggregate(l2Calls);
+  const tokenData: {
+    symbol: string;
+    decimals: number;
+    name: string;
+  }[] = [];
+
+  // unflatten
+  for (let i = 0; i < l2Data.length; i += 3) {
+    // @ts-ignore
+    const symbol = (l2Data && l2Data[i] && (l2Data[i][0] as string)) || '';
+    // @ts-ignore
+    const decimals = (l2Data && l2Data[i + 1] && (l2Data[i + 1][0] as number)) || 0;
+    // @ts-ignore
+    const name = (l2Data && l2Data[i + 2] && (l2Data[i + 2][0] as string)) || '';
+
+    // @ts-ignore
+    tokenData.push({
+      symbol,
+      decimals,
+      name,
+    });
+  }
+  return tokenData
+}
+
+export const getZapperURIs =async  ()=>{
+  return  (
+    (await axios.get('https://zapper.fi/api/token-list')) as any
+  ).data.tokens.reduce((acc: any, currentToken: any) => {
+    return {
+      ...acc,
+      [currentToken.address.toLocaleLowerCase()]: currentToken.logoURI,
+    };
+  }, {});
+}
+
+
+export const getLogoUri = async (l1TokenAddress: string, zapperLogoUris: any) => {
+  const l1TokenAddressLCase = l1TokenAddress.toLowerCase();
+  const zapperUri = zapperLogoUris[l1TokenAddressLCase];
+
+  if (zapperUri) {
+    try {
+      const res = await axios.get(zapperUri);
+      if (res.status === 200) {
+        return zapperUri;
+      }
+    } catch (e) {
+      // zapper uri not found
+    }
+  }
+  const trustWalletUri = `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${l1TokenAddress}/logo.png`;
+
+  try {
+    const res = await axios.get(trustWalletUri);
+    if (res.status === 200) {
+      return trustWalletUri;
+    }
+  } catch (e) {
+    // trustwallet uri not found
+  }
+  console.log('Could not get icon for', l1TokenAddress);
+
+  return;
+};
 export const getTokenListObjFromUrl = async (url: string) => {
   return (await axios.get(url)).data as TokenList;
 };
@@ -50,6 +157,8 @@ function isValidHttpUrl(urlString: string) {
 
   return url.protocol === 'http:' || url.protocol === 'https:';
 }
+
+
 
 export const excludeList = [
   '0x0CE51000d5244F1EAac0B313a792D5a5f96931BF',
