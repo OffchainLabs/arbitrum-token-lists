@@ -1,31 +1,45 @@
 import { TokenList } from '@uniswap/token-lists';
 import { instantiateBridge } from './instantiate_bridge';
-import {getAllTokens, getTokens } from './graph'
+import { getAllTokens, getTokens } from './graph';
 
 import { ArbTokenList } from './types';
-import { excludeList, getL2TokenData, getL2TokenAddresses, getZapperURIs, getLogoUri } from './utils';
+import {
+  excludeList,
+  getL2TokenData,
+  getL2TokenAddresses,
+  getZapperURIs,
+  getLogoUri,
+  getTokenListObj,
+  listNameToFileName,
+} from './utils';
+import { writeFileSync, writeFile } from 'fs';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
 }
 
 export interface L2ToL1GatewayAddresses {
-  [contractAddress: string]: string
+  [contractAddress: string]: string;
 }
-const l2ToL1GatewayAddresses:L2ToL1GatewayAddresses = {
-  "x" : "y"
-}
+const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses = {
+  x: 'y',
+};
 
-export const generateTokenList = async (_l1TokenAddresses: string[] | 'all') => {
+export const generateTokenList = async (
+  _l1TokenAddresses: string[] | 'all',
+  name: string
+) => {
   const bridgeData = await instantiateBridge();
   const { bridge, l1Network, l2Network } = bridgeData;
+  const tokens =
+    _l1TokenAddresses === 'all'
+      ? await getAllTokens(l2Network.chainID)
+      : await getTokens(_l1TokenAddresses, l2Network.chainID);
+  const l1TokenAddresses = tokens.map((token: any) => token.id);
 
-  const tokens = _l1TokenAddresses === 'all' ? await getAllTokens(l2Network.chainID)   : await getTokens(_l1TokenAddresses, l2Network.chainID)
-  const l1TokenAddresses = _l1TokenAddresses === 'all' ? tokens.map((token:any)=> token.id) : _l1TokenAddresses
-  
-  const l2Addresses = await getL2TokenAddresses(l1TokenAddresses, bridge)
-  const tokenData =  await getL2TokenData(l1TokenAddresses, bridge)
-  const zapperLogoUris = await getZapperURIs()
+  const l2Addresses = await getL2TokenAddresses(l1TokenAddresses, bridge);
+  const tokenData = await getL2TokenData(l1TokenAddresses, bridge);
+  const zapperLogoUris = await getZapperURIs();
   const logoUris: string[] = [];
   for (const token of tokens) {
     const uri = (await getLogoUri(token.id, zapperLogoUris)) as string;
@@ -33,7 +47,7 @@ export const generateTokenList = async (_l1TokenAddresses: string[] | 'all') => 
   }
 
   const tokenList = tokens.map((token: any, i: number) => {
-    const l2GatewayAddress = token.gateway[0].id.slice(0, 42) as string
+    const l2GatewayAddress = token.gateway[0].id.slice(0, 42) as string;
     const address = l2Addresses[i];
     const { name, decimals, symbol } = tokenData[i];
     return {
@@ -54,7 +68,7 @@ export const generateTokenList = async (_l1TokenAddresses: string[] | 'all') => 
   tokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
 
   const arbTokenList: ArbTokenList = {
-    name: l2Network.name,
+    name: `Arbified: ${name}`,
     timestamp: new Date().toISOString(),
     version: {
       major: 0,
@@ -66,3 +80,18 @@ export const generateTokenList = async (_l1TokenAddresses: string[] | 'all') => 
   return arbTokenList;
 };
 
+export const arbifyL1List = async (pathOrUrl: string) => {
+  const l1TokenList = await getTokenListObj(pathOrUrl);
+
+  const l1Addresses = l1TokenList.tokens.map((token) =>
+    token.address.toLowerCase()
+  );
+
+  const newList = await generateTokenList(l1Addresses, l1TokenList.name);
+  const path =
+    process.env.PWD +
+    '/src/ArbTokenLists/' +
+    listNameToFileName(l1TokenList.name);
+
+  writeFileSync(path, JSON.stringify(newList));
+};
