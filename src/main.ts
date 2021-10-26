@@ -7,7 +7,7 @@ import args from './lib/getClargs';
     if (!args.tokenList) throw new Error('No token list provided');
 
     await arbifyL1List(args.tokenList);
-  } else if (args.actions === 'full') {
+  } else if (args.action === 'full') {
     const path = __dirname + '/ArbTokenLists/arbitrum_one.json';
     const tokenData = await generateTokenList('all', 'Arbitrum One OGs');
     writeFileSync(path, JSON.stringify(tokenData));
