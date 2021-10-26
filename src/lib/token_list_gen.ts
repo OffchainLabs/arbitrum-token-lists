@@ -7,7 +7,6 @@ import {
   excludeList,
   getL2TokenData,
   getL2TokenAddresses,
-  getZapperURIs,
   getLogoUri,
   getTokenListObj,
   listNameToFileName,
@@ -45,10 +44,9 @@ export const generateTokenList = async (
   const l1TokenAddresses = tokens.map((token: any) => token.id);
   const l2Addresses = await getL2TokenAddresses(l1TokenAddresses, bridge);
   const tokenData = await getL2TokenData(l2Addresses, bridge);
-  const zapperLogoUris = await getZapperURIs();
-  const logoUris: string[] = [];
+  const logoUris: (string | undefined)[] = [];
   for (const token of tokens) {
-    const uri = (await getLogoUri(token.id, zapperLogoUris)) as string;
+    const uri = await getLogoUri(token.id);
     logoUris.push(uri);
   }
 
@@ -56,7 +54,7 @@ export const generateTokenList = async (
     const l2GatewayAddress = token.gateway[0].id.slice(0, 42) as string;
     const address = l2Addresses[i];
     const { name, decimals, symbol } = tokenData[i];
-    return {
+    let arbTokenInfo = {
       logoURI: logoUris[i],
       chainId: +l2Network.chainID,
       address: address,
@@ -69,6 +67,11 @@ export const generateTokenList = async (
         l1GatewayAddress: l2ToL1GatewayAddresses[l2GatewayAddress],
       },
     };
+    if (logoUris[i]) {
+      arbTokenInfo = { ...{ logoURI: logoUris[i] }, ...arbTokenInfo };
+    }
+
+    return arbTokenInfo;
   });
   //   @ts-ignore
   tokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));

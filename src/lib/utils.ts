@@ -9,6 +9,12 @@ import { utils } from 'ethers';
 const routerIface = L1GatewayRouter__factory.createInterface();
 const tokenIface = ERC20__factory.createInterface();
 
+const zapperURIsBuff = readFileSync('./src/Assets/zapper_logo_uris.json');
+const logoURIsBuff = readFileSync('./src/Assets/logo_uris.json');
+
+const zapperURIs = JSON.parse(zapperURIsBuff.toString());
+const logoUris = JSON.parse(logoURIsBuff.toString());
+
 export const listNameToFileName = (name: string) => {
   return 'arbified_' + name.split(' ').join('_').toLowerCase() + '.json';
 };
@@ -91,46 +97,26 @@ export const getL2TokenData = async (
   return tokenData;
 };
 
-export const getZapperURIs = async () => {
-  return (
-    (await axios.get('https://zapper.fi/api/token-list')) as any
-  ).data.tokens.reduce((acc: any, currentToken: any) => {
-    return {
-      ...acc,
-      [currentToken.address.toLocaleLowerCase()]: currentToken.logoURI,
-    };
-  }, {});
-};
-
-export const getLogoUri = async (
-  l1TokenAddress: string,
-  zapperLogoUris: any
-) => {
+export const getLogoUri = async (l1TokenAddress: string) => {
   const l1TokenAddressLCase = l1TokenAddress.toLowerCase();
-  const zapperUri = zapperLogoUris[l1TokenAddressLCase];
+  const logoUri: string | undefined = logoUris[l1TokenAddressLCase];
+  const zapperUri: string | undefined = zapperURIs[l1TokenAddressLCase];
+  const trustWalletUri = `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${l1TokenAddress}/logo.png`;
+  const uris = [logoUri, zapperUri, trustWalletUri].filter(
+    (x): x is string => !!x
+  );
 
-  if (zapperUri) {
+  for (const uri of uris) {
     try {
-      const res = await axios.get(zapperUri);
+      const res = await axios.get(uri);
       if (res.status === 200) {
-        return zapperUri;
+        return uri;
       }
     } catch (e) {
-      // zapper uri not found
+      console.info(`Query for logo uri ${uri} failed:`);
     }
-  }
-  const trustWalletUri = `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${l1TokenAddress}/logo.png`;
-
-  try {
-    const res = await axios.get(trustWalletUri);
-    if (res.status === 200) {
-      return trustWalletUri;
-    }
-  } catch (e) {
-    // trustwallet uri not found
   }
   console.log('Could not get icon for', l1TokenAddress);
-
   return;
 };
 export const getTokenListObjFromUrl = async (url: string) => {
