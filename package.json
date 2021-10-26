@@ -6,7 +6,9 @@
   "scripts": {
     "main": "ts-node src/main.ts",
     "lint": "eslint .",
-    "format": "prettier './**/*.{js,json,md,ts,yml}' --write && yarn run lint --fix"
+    "format": "prettier './**/*.{js,json,md,ts,yml}' --write && yarn run lint --fix",
+    "arbify": "yarn ts-node src/main.ts --action arbify",
+    "fullList": "yarn ts-node src/main.ts --action full"
   },
   "dependencies": {
     "@uniswap/token-lists": "^1.0.0-beta.26",
