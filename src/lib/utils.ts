@@ -72,7 +72,8 @@ export const getL2TokenData = async (
       symbol = utils.parseBytes32String('0x' + symbol);
     }
     // @ts-ignore
-    const decimals = (l2Data && l2Data[i + 1] && (l2Data[i + 1][0] as number)) || 0;
+    const decimals =
+      (l2Data && l2Data[i + 1] && (l2Data[i + 1][0] as number)) || 0;
     // @ts-ignore
     let name = (l2Data && l2Data[i + 2] && (l2Data[i + 2][0] as string)) || '';
     if (name.length === 64) {
