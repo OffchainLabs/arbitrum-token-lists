@@ -23,6 +23,9 @@ const argv = yargs(process.argv.slice(2))
     networkID: {
       type: 'number',
     },
+    tokenList: {
+      type: 'string',
+    },
   })
   .parseSync();
 
