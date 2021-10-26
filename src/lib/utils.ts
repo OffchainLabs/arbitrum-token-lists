@@ -126,6 +126,14 @@ export const getTokenListObjFromLocalPath = async (path: string) => {
   return JSON.parse(readFileSync(path).toString()) as TokenList;
 };
 
+export const validateTokenList = (tokenList: TokenList) => {
+  const ajv = new Ajv();
+  addFormats(ajv);
+  const validate = ajv.compile(schema);
+
+  return validate(tokenList);
+};
+
 export const getTokenListObj = async (pathOrUrl: string) => {
   const tokenList: TokenList = await (async (pathOrUrl: string) => {
     const localFileExists = existsSync(pathOrUrl);
@@ -139,11 +147,7 @@ export const getTokenListObj = async (pathOrUrl: string) => {
     }
   })(pathOrUrl);
 
-  const ajv = new Ajv();
-  addFormats(ajv);
-  const validate = ajv.compile(schema);
-
-  const valid = validate(tokenList);
+  const valid = validateTokenList(tokenList);
   if (valid) {
     return tokenList;
   } else {

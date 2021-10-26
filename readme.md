@@ -1,5 +1,5 @@
 - update logo uri handling (save our json and zapper json locally)
-    - done, need to apply to OG list
+  - done, need to apply to OG list
 - handle paused address(1)
 - automate version bup
 - validate name/symbols

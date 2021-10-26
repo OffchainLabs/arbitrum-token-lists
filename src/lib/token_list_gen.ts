@@ -4,14 +4,14 @@ import { getAllTokens, getTokens } from './graph';
 
 import { ArbTokenList } from './types';
 import {
-  excludeList,
   getL2TokenData,
   getL2TokenAddresses,
   getLogoUri,
   getTokenListObj,
   listNameToFileName,
+  validateTokenList,
 } from './utils';
-import { writeFileSync, writeFile } from 'fs';
+import { writeFileSync, writeFile, readFileSync } from 'fs';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -86,6 +86,7 @@ export const generateTokenList = async (
     },
     tokens: tokenList,
   };
+  validateTokenList(arbTokenList);
   return arbTokenList;
 };
 
@@ -102,5 +103,16 @@ export const arbifyL1List = async (pathOrUrl: string) => {
     '/src/ArbTokenLists/' +
     listNameToFileName(l1TokenList.name);
 
+  writeFileSync(path, JSON.stringify(newList));
+};
+
+export const updateArbifiedList = async (path: string) => {
+  const data = readFileSync(path);
+  const tokenList = JSON.parse(data.toString()) as ArbTokenList;
+
+  const l1Addresses = tokenList.tokens
+    .map((token) => token.extensions.l1Address)
+    .filter((x): x is string => !!x);
+  const newList = await generateTokenList(l1Addresses, tokenList.name);
   writeFileSync(path, JSON.stringify(newList));
 };
