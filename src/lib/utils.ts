@@ -4,6 +4,8 @@ import { schema, TokenList } from '@uniswap/token-lists';
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import axios from 'axios';
 import { Bridge, L1GatewayRouter__factory, ERC20__factory } from 'arb-ts';
+import { utils } from 'ethers';
+
 const routerIface = L1GatewayRouter__factory.createInterface();
 const tokenIface = ERC20__factory.createInterface();
 
@@ -65,11 +67,18 @@ export const getL2TokenData = async (
   // unflatten
   for (let i = 0; i < l2Data.length; i += 3) {
     // @ts-ignore
-    const symbol = (l2Data && l2Data[i] && (l2Data[i][0] as string)) || '';
+    let symbol = (l2Data && l2Data[i] && (l2Data[i][0] as string)) || '';
+    if (symbol.length === 64) {
+      symbol = utils.parseBytes32String('0x' + symbol);
+    }
     // @ts-ignore
-    const decimals =  (l2Data && l2Data[i + 1] && (l2Data[i + 1][0] as number)) || 0;
+    const decimals =
+      (l2Data && l2Data[i + 1] && (l2Data[i + 1][0] as number)) || 0;
     // @ts-ignore
-    const name =(l2Data && l2Data[i + 2] && (l2Data[i + 2][0] as string)) || '';
+    let name = (l2Data && l2Data[i + 2] && (l2Data[i + 2][0] as string)) || '';
+    if (name.length === 64) {
+      name = utils.parseBytes32String('0x' + name);
+    }
 
     // @ts-ignore
     tokenData.push({
@@ -171,11 +180,12 @@ function isValidHttpUrl(urlString: string) {
 }
 
 export const excludeList = [
-  '0x0CE51000d5244F1EAac0B313a792D5a5f96931BF',
-  '0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f',
-  '0xEDA6eFE5556e134Ef52f2F858aa1e81c84CDA84b',
-  '0xe54942077Df7b8EEf8D4e6bCe2f7B58B0082b0cd',
-  '0x282db609e787a132391eb64820ba6129fceb2695',
-  '0x99d8a9c45b2eca8864373a26d1459e3dff1e17f3',
-  '0x106538cc16f938776c7c180186975bca23875287', // remove once bridged
+  '0x0CE51000d5244F1EAac0B313a792D5a5f96931BF', //rkr
+  '0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f', //in
+  '0xEDA6eFE5556e134Ef52f2F858aa1e81c84CDA84b', // bad cap
+  '0xe54942077Df7b8EEf8D4e6bCe2f7B58B0082b0cd', // swapr
+  '0x282db609e787a132391eb64820ba6129fceb2695', // amy
+  '0x99d8a9c45b2eca8864373a26d1459e3dff1e17f3', // mim
+  '0x106538cc16f938776c7c180186975bca23875287', // remove once bridged (basv2)
+  '0xB4A3B0Faf0Ab53df58001804DdA5Bfc6a3D59008', // spera
 ].map((s) => s.toLowerCase());
