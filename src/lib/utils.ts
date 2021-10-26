@@ -66,21 +66,22 @@ export const getL2TokenData = async (
 
   // unflatten
   for (let i = 0; i < l2Data.length; i += 3) {
-    // @ts-ignore
-    let symbol = (l2Data && l2Data[i] && (l2Data[i][0] as string)) || '';
+    const first = l2Data[i];
+    const second = l2Data[i + 1];
+    const third = l2Data[i + 2];
+
+    let symbol = (first && (first[0] as string)) || '';
     if (symbol.length === 64) {
       symbol = utils.parseBytes32String('0x' + symbol);
     }
-    // @ts-ignore
-    const decimals =
-      (l2Data && l2Data[i + 1] && (l2Data[i + 1][0] as number)) || 0;
-    // @ts-ignore
-    let name = (l2Data && l2Data[i + 2] && (l2Data[i + 2][0] as string)) || '';
+    const decimals = (second && (second[0] as number)) || 0;
+
+    let name = (third && (third[0] as string)) || '';
+
     if (name.length === 64) {
       name = utils.parseBytes32String('0x' + name);
     }
 
-    // @ts-ignore
     tokenData.push({
       symbol,
       decimals,
