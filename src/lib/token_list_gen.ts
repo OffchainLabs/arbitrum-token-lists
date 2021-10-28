@@ -82,7 +82,7 @@ export const generateTokenList = async (
   //   @ts-ignore
   tokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
   const arbTokenList: ArbTokenList = {
-    name: `Arbed ${name}`.slice(0,19),
+    name: sanitizeString(`Arbed ${name}`.slice(0,19)),
     timestamp: new Date().toISOString(),
     version: {
       major: 1,
@@ -97,6 +97,8 @@ export const generateTokenList = async (
     console.log(arbTokenList);    
     throw new Error("New token list invalid!")
   }
+  console.log(`Generated list with ${arbTokenList.tokens.length} tokens`);
+  
   return arbTokenList;
 };
 
