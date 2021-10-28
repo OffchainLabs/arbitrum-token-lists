@@ -170,7 +170,7 @@ function isValidHttpUrl(urlString: string) {
   return url.protocol === 'http:' || url.protocol === 'https:';
 }
 
-export const sanitizeString = (str:string)=> str.replace(/[^0-9a-z\s]/gi, '')
+export const sanitizeString = (str:string)=> str.replace(/[^ \w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)]/gi, '');
 
 export const excludeList = [
   '0x0CE51000d5244F1EAac0B313a792D5a5f96931BF', //rkr

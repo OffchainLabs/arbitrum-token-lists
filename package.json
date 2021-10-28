@@ -11,7 +11,7 @@
     "fullList": "yarn ts-node src/main.ts --action full"
   },
   "dependencies": {
-    "@uniswap/token-lists": "^1.0.0-beta.26",
+    "@uniswap/token-lists": "^1.0.0-beta.27",
     "ajv": "^8.6.3",
     "ajv-formats": "^2.1.1",
     "arb-ts": "^1.0.0-beta.4",
