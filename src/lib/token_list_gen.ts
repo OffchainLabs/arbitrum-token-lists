@@ -2,7 +2,7 @@ import { TokenList } from '@uniswap/token-lists';
 import { instantiateBridge } from './instantiate_bridge';
 import { getAllTokens, getTokens } from './graph';
 
-import { ArbTokenList } from './types';
+import { ArbTokenList, ArbTokenInfo } from './types';
 import {
   getL2TokenData,
   getL2TokenAddresses,
@@ -10,6 +10,7 @@ import {
   getTokenListObj,
   listNameToFileName,
   validateTokenList,
+  sanitizeString
 } from './utils';
 import { writeFileSync, writeFile, readFileSync } from 'fs';
 
@@ -33,7 +34,8 @@ const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses = {
 
 export const generateTokenList = async (
   _l1TokenAddresses: string[] | 'all',
-  name: string
+  name: string,
+  mainLogoUri?: string
 ) => {
   const bridgeData = await instantiateBridge();
   const { bridge, l1Network, l2Network } = bridgeData;
@@ -53,9 +55,11 @@ export const generateTokenList = async (
   const tokenList = tokens.map((token: any, i: number) => {
     const l2GatewayAddress = token.gateway[0].id.slice(0, 42) as string;
     const address = l2Addresses[i];
-    const { name, decimals, symbol } = tokenData[i];
+    let { name:_name, decimals, symbol:_symbol } = tokenData[i];
+    const name = sanitizeString(_name)
+    const symbol = sanitizeString(_symbol)
+
     let arbTokenInfo = {
-      logoURI: logoUris[i],
       chainId: +l2Network.chainID,
       address: address,
       name,
@@ -72,21 +76,27 @@ export const generateTokenList = async (
     }
 
     return arbTokenInfo;
-  });
+  }).filter((tokenInfo: ArbTokenInfo)=>{
+    return tokenInfo.extensions.l2GatewayAddress !== "0x0000000000000000000000000000000000000001" 
+  })
   //   @ts-ignore
   tokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
-
   const arbTokenList: ArbTokenList = {
-    name: `Arbified: ${name}`,
+    name: `Arbed ${name}`.slice(0,19),
     timestamp: new Date().toISOString(),
     version: {
-      major: 0,
+      major: 1,
       minor: 0,
       patch: 0,
     },
     tokens: tokenList,
+    logoURI: mainLogoUri // todo: handle undefined
   };
-  validateTokenList(arbTokenList);
+  const res = validateTokenList(arbTokenList);
+  if(!res){
+    console.log(arbTokenList);    
+    throw new Error("New token list invalid!")
+  }
   return arbTokenList;
 };
 
@@ -97,7 +107,7 @@ export const arbifyL1List = async (pathOrUrl: string) => {
     token.address.toLowerCase()
   );
 
-  const newList = await generateTokenList(l1Addresses, l1TokenList.name);
+  const newList = await generateTokenList(l1Addresses, l1TokenList.name, l1TokenList.logoURI);
   const path =
     process.env.PWD +
     '/src/ArbTokenLists/' +
@@ -109,10 +119,12 @@ export const arbifyL1List = async (pathOrUrl: string) => {
 export const updateArbifiedList = async (path: string) => {
   const data = readFileSync(path);
   const tokenList = JSON.parse(data.toString()) as ArbTokenList;
+  // const tokenList  = getTokenListObj(path)
+  // TODO
 
   const l1Addresses = tokenList.tokens
     .map((token) => token.extensions.l1Address)
     .filter((x): x is string => !!x);
-  const newList = await generateTokenList(l1Addresses, tokenList.name);
+  const newList = await generateTokenList(l1Addresses, tokenList.name, tokenList.logoURI);
   writeFileSync(path, JSON.stringify(newList));
 };
