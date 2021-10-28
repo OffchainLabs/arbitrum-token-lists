@@ -12,8 +12,8 @@ import args from './lib/getClargs';
 
     await arbifyL1List(args.tokenList);
   } else if (args.action === 'full') {
-    const path = __dirname + '/ArbTokenLists/arbitrum_one.json';
-    const tokenData = await generateTokenList('all', 'Arbitrum One OGs');
+    const path = __dirname + '/ArbTokenLists/full.json';
+    const tokenData = await generateTokenList('all', 'Full');
     writeFileSync(path, JSON.stringify(tokenData));
   } else if (args.action === 'update') {
     if (!args.fileName) throw new Error('No file name provided');
