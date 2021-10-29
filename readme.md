@@ -1,6 +1,6 @@
 - update logo uri handling (save our json and zapper json locally)
   - done, need to apply to OG list
-- handle paused address(1)
+- handle paused address(0x45FdBC3C73a013d717A6eE9fBEdf8CEda6F00D60)
 - automate version bup
 - validate name/symbols
 - add precommit (ensure it plays nice w/ linter)
