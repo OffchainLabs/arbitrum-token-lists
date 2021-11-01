@@ -11,3 +11,13 @@ export interface ArbTokenInfo extends TokenInfo {
 export interface ArbTokenList extends TokenList {
   tokens: ArbTokenInfo[];
 }
+
+
+export interface EtherscanToken {
+  l1Address: string | null,
+  l2Address: string,
+  l1GatewayAddress: string | null,
+  l2GatewayAddress: string | null
+}
+
+export type EtherscanList = EtherscanToken[]

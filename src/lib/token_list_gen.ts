@@ -2,7 +2,7 @@ import { TokenList } from '@uniswap/token-lists';
 import { instantiateBridge } from './instantiate_bridge';
 import { getAllTokens, getTokens } from './graph';
 
-import { ArbTokenList, ArbTokenInfo } from './types';
+import { ArbTokenList, ArbTokenInfo, EtherscanList } from './types';
 import {
   getL2TokenData,
   getL2TokenAddresses,
@@ -130,3 +130,16 @@ export const updateArbifiedList = async (path: string) => {
   const newList = await generateTokenList(l1Addresses, tokenList.name, tokenList.logoURI);
   writeFileSync(path, JSON.stringify(newList));
 };
+
+export const arbListtoEtherscanList = (arbList: ArbTokenList): EtherscanList=> {
+  return arbList.tokens.map((tokenInfo)=>{
+    const { address: l2Address} =  tokenInfo;
+    const {  l1Address, l1GatewayAddress, l2GatewayAddress} = tokenInfo.extensions
+    return {
+      l1Address,
+      l2Address,
+      l1GatewayAddress,
+      l2GatewayAddress
+    }
+  })
+}
