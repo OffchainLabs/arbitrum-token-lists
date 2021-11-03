@@ -74,6 +74,9 @@ export const generateTokenList = async (
     };
     if (logoUris[i]) {
       arbTokenInfo = { ...{ logoURI: logoUris[i] }, ...arbTokenInfo };
+    } else {
+      console.log('no logo uri for ',token.id, symbol);
+      
     }
 
     return arbTokenInfo;
