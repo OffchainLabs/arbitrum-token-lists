@@ -1,4 +1,4 @@
-import { TokenList } from '@uniswap/token-lists';
+import {  minVersionBump, nextVersion, Version } from '@uniswap/token-lists';
 import { instantiateBridge } from './instantiate_bridge';
 import { getAllTokens, getTokens } from './graph';
 
@@ -35,7 +35,8 @@ const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses = {
 export const generateTokenList = async (
   _l1TokenAddresses: string[] | 'all',
   name: string,
-  mainLogoUri?: string
+  mainLogoUri?: string,
+  prevVersion?: Version
 ) => {
   const bridgeData = await instantiateBridge();
   const { bridge, l1Network, l2Network } = bridgeData;
@@ -81,14 +82,15 @@ export const generateTokenList = async (
   })
   //   @ts-ignore
   tokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
+  const version = prevVersion || {
+    major: 1,
+    minor: 0,
+    patch: 0,
+  }
   const arbTokenList: ArbTokenList = {
     name: sanitizeString(`Arbed ${name}`.slice(0,19)),
     timestamp: new Date().toISOString(),
-    version: {
-      major: 1,
-      minor: 0,
-      patch: 0,
-    },
+    version,
     tokens: tokenList,
     logoURI: mainLogoUri // todo: handle undefined
   };
@@ -127,8 +129,11 @@ export const updateArbifiedList = async (path: string) => {
   const l1Addresses = tokenList.tokens
     .map((token) => token.extensions.l1Address)
     .filter((x): x is string => !!x);
-  const newList = await generateTokenList(l1Addresses, tokenList.name, tokenList.logoURI);
-  writeFileSync(path, JSON.stringify(newList));
+  const newList = await generateTokenList(l1Addresses, tokenList.name, tokenList.logoURI, tokenList.version);
+  const versionBump = minVersionBump(tokenList.tokens, newList.tokens)
+  const newVersion = nextVersion(tokenList.version, versionBump)  
+  const newListWithNewVersion = {...newList, ...{version: newVersion}} as ArbTokenList
+  writeFileSync(path, JSON.stringify(newListWithNewVersion));
 };
 
 export const arbListtoEtherscanList = (arbList: ArbTokenList): EtherscanList=> {
