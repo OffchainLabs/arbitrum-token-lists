@@ -1,10 +1,16 @@
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
-import { schema, TokenList } from '@uniswap/token-lists';
-import { writeFileSync, readFileSync, existsSync } from 'fs';
-import axios from 'axios';
-import { Bridge, L1GatewayRouter__factory, ERC20__factory } from 'arb-ts';
-import { utils } from 'ethers';
+import Ajv from "ajv";
+import addFormats from "ajv-formats";
+import { schema, TokenList } from "@uniswap/token-lists";
+import { writeFileSync, readFileSync, existsSync } from "fs";
+import axios from "axios";
+import {
+  Bridge,
+  L1GatewayRouter__factory,
+  ERC20__factory,
+  L2ERC20Gateway__factory,
+  BridgeHelper
+} from "arb-ts";
+import { utils, providers } from "ethers";
 
 const routerIface = L1GatewayRouter__factory.createInterface();
 const tokenIface = ERC20__factory.createInterface();
@@ -14,6 +20,9 @@ const logoURIsBuff = readFileSync('./src/Assets/logo_uris.json');
 
 const zapperURIs = JSON.parse(zapperURIsBuff.toString());
 const logoUris = JSON.parse(logoURIsBuff.toString());
+for (let address of Object.keys(logoUris)) {
+  logoUris[address.toLowerCase()] = logoUris[address];
+}
 
 export const listNameToFileName = (name: string) => {
   return 'arbified_' + name.split(' ').join('_').toLowerCase() + '.json';
@@ -112,11 +121,8 @@ export const getLogoUri = async (l1TokenAddress: string) => {
       if (res.status === 200) {
         return uri;
       }
-    } catch (e) {
-      console.info(`Query for logo uri ${uri} failed:`);
-    }
+    } catch (e) {}
   }
-  console.log('Could not get icon for', l1TokenAddress);
   return;
 };
 export const getTokenListObjFromUrl = async (url: string) => {
@@ -182,3 +188,54 @@ export const excludeList = [
   '0x106538cc16f938776c7c180186975bca23875287', // remove once bridged (basv2)
   '0xB4A3B0Faf0Ab53df58001804DdA5Bfc6a3D59008', // spera
 ].map((s) => s.toLowerCase());
+
+
+
+/** Temporary workaround until we handle this in subgraph: find all post-whitelisting bridged tokens via event logs */
+export const getPostWhiteListedTokens = async (
+  bridge: Bridge,
+  options:{
+    includeList?: string[],
+    excludeList?: string[]
+  }
+) => {
+  console.log('Querying for permissionlessly bridged standard tokens (this could take ~ a minute)');
+  
+  const iface = L2ERC20Gateway__factory.createInterface();
+
+  const l2Provider = new providers.JsonRpcProvider(
+    "https://arb1-graph.arbitrum.io/rpc"
+  );
+  const eventLogs = await BridgeHelper.getEventLogs(
+    "DepositFinalized",
+    l2Provider,
+    iface,
+    bridge.l1Bridge.network.tokenBridge.l2ERC20Gateway,
+    options.includeList ? [options.includeList] : undefined,
+    { fromBlock: 2417599 }
+  );
+  console.log(`Done getting permissionlessly bridged standard tokens`);
+  
+  
+  const excludeSet: Set<string> = new Set(options.excludeList) 
+
+  const _newTokenAddreseses = eventLogs.map(log => utils.hexDataSlice(log.topics[1], 12))
+    .filter(
+      (address: string) =>
+        !excludeSet.has(address) &&
+        !excludeList.includes(address)
+    );
+
+  const newTokenAddreseses = [...new Set(_newTokenAddreseses)];
+  // Structure data to mimic data returned by subgraph:
+  return newTokenAddreseses.map(address => {
+    return {
+      gateway: [
+        {
+          id: bridge.l1Bridge.network.tokenBridge.l2ERC20Gateway
+        }
+      ],
+      id: address
+    };
+  });
+};

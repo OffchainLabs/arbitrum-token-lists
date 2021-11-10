@@ -10,7 +10,8 @@ import {
   getTokenListObj,
   listNameToFileName,
   validateTokenList,
-  sanitizeString
+  sanitizeString,
+  getPostWhiteListedTokens
 } from './utils';
 import { writeFileSync, writeFile, readFileSync } from 'fs';
 
@@ -40,10 +41,18 @@ export const generateTokenList = async (
 ) => {
   const bridgeData = await instantiateBridge();
   const { bridge, l1Network, l2Network } = bridgeData;
-  const tokens =
+  let tokens =
     _l1TokenAddresses === 'all'
       ? await getAllTokens(l2Network.chainID)
       : await getTokens(_l1TokenAddresses, l2Network.chainID);
+  
+  // /** Temporary workaround until we handle this in subgraph: find all post-whitelisting bridged tokens via event logs */
+  if(_l1TokenAddresses === 'all'){
+    const whitelistedEral1TokenAddresses =tokens.map((token: any) => token.id)
+    const newTokens = await getPostWhiteListedTokens(bridge, {excludeList:whitelistedEral1TokenAddresses })    
+    tokens = tokens.concat(newTokens)
+  }
+  
   const l1TokenAddresses = tokens.map((token: any) => token.id);
   const l2Addresses = await getL2TokenAddresses(l1TokenAddresses, bridge);
   const tokenData = await getL2TokenData(l2Addresses, bridge);
@@ -69,7 +78,7 @@ export const generateTokenList = async (
       extensions: {
         l1Address: token.id,
         l2GatewayAddress,
-        l1GatewayAddress: l2ToL1GatewayAddresses[l2GatewayAddress],
+        l1GatewayAddress: l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()],
       },
     };
     if (logoUris[i]) {
@@ -95,12 +104,22 @@ export const generateTokenList = async (
     timestamp: new Date().toISOString(),
     version,
     tokens: tokenList,
-    logoURI: mainLogoUri // todo: handle undefined
+    logoURI: mainLogoUri
   };
   const res = validateTokenList(arbTokenList);
   if(!res){
-    console.log(arbTokenList);    
-    throw new Error("New token list invalid!")
+    console.log("Token list invalid — let's try to see why:");
+    while(arbTokenList.tokens.length > 0){
+      const candidateToken = arbTokenList.tokens.pop()
+      const res = validateTokenList(arbTokenList);
+      if (res){
+        console.log('This token is a problem:', candidateToken);
+        throw new Error('Invalid token list')
+
+      }
+    }
+    throw new Error('Invalid token list (not sure why)')
+    
   }
   console.log(`Generated list with ${arbTokenList.tokens.length} tokens`);
   
@@ -126,8 +145,6 @@ export const arbifyL1List = async (pathOrUrl: string) => {
 export const updateArbifiedList = async (path: string) => {
   const data = readFileSync(path);
   const tokenList = JSON.parse(data.toString()) as ArbTokenList;
-  // const tokenList  = getTokenListObj(path)
-  // TODO
 
   const l1Addresses = tokenList.tokens
     .map((token) => token.extensions.l1Address)
