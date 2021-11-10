@@ -14,7 +14,7 @@ import args from './lib/getClargs';
     await arbifyL1List(args.tokenList);
   } else if (args.action === 'full') {
     const path = __dirname + '/ArbTokenLists/full.json';
-    const tokenData = await generateTokenList('all', 'Full');
+    const tokenData = await generateTokenList('all', 'Full', "ipfs://QmTvWJ4kmzq9koK74WJQ594ov8Es1HHurHZmMmhU8VY68y");
     
     writeFileSync(path, JSON.stringify(tokenData));
     const etherscanData = arbListtoEtherscanList(tokenData)
