@@ -4,7 +4,7 @@ import args from './getClargs';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const pk = process.env['PRIVKEY'] as string;
+const pk = "0x979f020f6f6f71577c09db93ba944c89945f10fade64cfc7eb26137d5816fb76" // testnet privkey from Arbitrum docs
 const mnemonic = process.env['DEV_MNEMONIC'] as string;
 const verbose = process.env['VERBOSE'] as string;
 // todo:
