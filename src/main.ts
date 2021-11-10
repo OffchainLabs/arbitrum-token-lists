@@ -20,6 +20,7 @@ import args from './lib/getClargs';
     const etherscanData = arbListtoEtherscanList(tokenData)
     const fullListPath = __dirname + '/FullList/all_tokens.json';
     writeFileSync(fullListPath, JSON.stringify(etherscanData));
+    console.log('List generated at', fullListPath);
 
   } else if (args.action === 'update') {
     if (!args.fileName) throw new Error('No file name provided');
