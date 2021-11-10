@@ -27,7 +27,7 @@ export const getTokens = async (
     .join(',');
   const query = gql`
   {
-    tokens(where:{
+    tokens(first: 500, skip: 0, where:{
       id_in:[${formattedAddresses}]
     }) {
       id
