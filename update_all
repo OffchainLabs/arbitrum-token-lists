@@ -1,0 +1,5 @@
+#!/bin/bash
+
+yarn fullList
+yarn arbify --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org
+yarn arbify --tokenList https://www.gemini.com/uniswap/manifest.json
