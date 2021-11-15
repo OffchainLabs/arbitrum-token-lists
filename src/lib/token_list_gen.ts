@@ -93,7 +93,6 @@ export const generateTokenList = async (
   }).filter((tokenInfo: ArbTokenInfo)=>{
     return tokenInfo.extensions.l2GatewayAddress !== "0x0000000000000000000000000000000000000001" 
   })
-  //   @ts-ignore
   tokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
   const version = prevVersion || {
     major: 1,
