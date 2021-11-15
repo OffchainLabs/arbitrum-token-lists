@@ -11,6 +11,7 @@ import {
   BridgeHelper
 } from "arb-ts";
 import { utils, providers } from "ethers";
+import { GraphTokenResult } from './types'
 
 const routerIface = L1GatewayRouter__factory.createInterface();
 const tokenIface = ERC20__factory.createInterface();
@@ -236,6 +237,6 @@ export const getPostWhiteListedTokens = async (
         }
       ],
       id: address
-    };
+    } as GraphTokenResult
   });
 };

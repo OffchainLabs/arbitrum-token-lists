@@ -1,5 +1,6 @@
 import { request, gql } from 'graphql-request';
 import { excludeList } from './utils';
+import { GraphTokensResult } from './types'
 
 const apolloL2GatewaysRinkebyClient =
   'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-rinkeby';
@@ -39,9 +40,9 @@ export const getTokens = async (
   }
 `;
 
-  const { tokens } = await request(clientUrl, query);
+  const { tokens } = await request(clientUrl, query)  as GraphTokensResult
   return tokens.filter(
-    (token: any) => !excludeList.includes(token.id.toLowerCase())
+    (token) => !excludeList.includes(token.id.toLowerCase())
   );
 };
 
@@ -59,8 +60,10 @@ export const getAllTokens = async (networkID: string) => {
     }
   `;
 
-  const { tokens } = await request(clientUrl, query);
+  const { tokens } = await request(clientUrl, query) as GraphTokensResult
+  
+  
   return tokens.filter(
-    (token: any) => !excludeList.includes(token.id.toLowerCase())
+    (token) => !excludeList.includes(token.id.toLowerCase())
   );
 };

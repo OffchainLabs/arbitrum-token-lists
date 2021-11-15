@@ -48,12 +48,12 @@ export const generateTokenList = async (
   
   // /** Temporary workaround until we handle this in subgraph: find all post-whitelisting bridged tokens via event logs */
   if(_l1TokenAddresses === 'all'){
-    const whitelistedEral1TokenAddresses =tokens.map((token: any) => token.id)
+    const whitelistedEral1TokenAddresses =tokens.map((token) => token.id)
     const newTokens = await getPostWhiteListedTokens(bridge, {excludeList:whitelistedEral1TokenAddresses })    
     tokens = tokens.concat(newTokens)
   }
   
-  const l1TokenAddresses = tokens.map((token: any) => token.id);
+  const l1TokenAddresses = tokens.map((token) => token.id);
   const l2Addresses = await getL2TokenAddresses(l1TokenAddresses, bridge);
   const tokenData = await getL2TokenData(l2Addresses, bridge);
   const logoUris: (string | undefined)[] = [];
@@ -62,7 +62,7 @@ export const generateTokenList = async (
     logoUris.push(uri);
   }
 
-  const tokenList = tokens.map((token: any, i: number) => {
+  const tokenList = tokens.map((token, i: number) => {
     const l2GatewayAddress = token.gateway[0].id.slice(0, 42) as string;
     const address = l2Addresses[i];
     let { name:_name, decimals, symbol:_symbol } = tokenData[i];
