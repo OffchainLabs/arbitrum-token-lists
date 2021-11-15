@@ -227,7 +227,7 @@ export const getPostWhiteListedTokens = async (
     l2Provider,
     iface,
     bridge.l1Bridge.network.tokenBridge.l2ERC20Gateway,
-    options.includeList ? [options.includeList] : undefined,
+    undefined,
     { fromBlock: 2417599 }
   );
   console.log(`Done getting permissionlessly bridged standard tokens`);
@@ -239,7 +239,7 @@ export const getPostWhiteListedTokens = async (
     .filter(
       (address: string) =>
         !excludeSet.has(address) &&
-        !excludeList.includes(address)
+        !excludeList.includes(address) && (options.includeList ? options.includeList .includes(address) : true)
     );
 
   const newTokenAddreseses = [...new Set(_newTokenAddreseses)];
