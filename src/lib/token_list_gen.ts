@@ -82,10 +82,15 @@ export const generateTokenList = async (
       symbol,
       decimals,
       extensions: {
-        l1Address: token.id,
-        l2GatewayAddress,
-        l1GatewayAddress: l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()],
-      },
+        bridgeInfo: {
+          [l1Network.chainID]: {
+            tokenAddress: token.id,
+            originBridgeAddress: l2GatewayAddress,
+            destBridgeAddress: l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()]
+          }
+        }
+  
+      }
     };
     if (logoUris[i]) {
       arbTokenInfo = { ...{ logoURI: logoUris[i] }, ...arbTokenInfo };
@@ -96,7 +101,7 @@ export const generateTokenList = async (
 
     return arbTokenInfo;
   }).filter((tokenInfo: ArbTokenInfo)=>{
-    return tokenInfo.extensions.l2GatewayAddress !== "0x0000000000000000000000000000000000000001" 
+    return tokenInfo.extensions.bridgeInfo[l1Network.chainID].originBridgeAddress !== "0x0000000000000000000000000000000000000001" 
   })
   tokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
 
@@ -170,12 +175,12 @@ export const arbifyL1List = async (pathOrUrl: string) => {
 export const arbListtoEtherscanList = (arbList: ArbTokenList): EtherscanList=> {
   return arbList.tokens.map((tokenInfo)=>{
     const { address: l2Address} =  tokenInfo;
-    const {  l1Address, l1GatewayAddress, l2GatewayAddress} = tokenInfo.extensions
+    const {  tokenAddress, originBridgeAddress, destBridgeAddress} = tokenInfo.extensions.bridgeInfo['1']
     return {
-      l1Address,
+      l1Address:tokenAddress,
       l2Address,
-      l1GatewayAddress,
-      l2GatewayAddress
+      l1GatewayAddress:destBridgeAddress,
+      l2GatewayAddress:originBridgeAddress
     }
   })
 }
