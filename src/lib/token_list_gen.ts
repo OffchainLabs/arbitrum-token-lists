@@ -11,7 +11,8 @@ import {
   listNameToFileName,
   validateTokenList,
   sanitizeString,
-  getPostWhiteListedTokens
+  getPostWhiteListedTokens,
+  listNameToArbifiedListName
 } from './utils';
 import { writeFileSync, writeFile, readFileSync } from 'fs';
 
@@ -100,7 +101,7 @@ export const generateTokenList = async (
     patch: 0,
   }
   const arbTokenList: ArbTokenList = {
-    name: sanitizeString(`Arbed ${name}`.slice(0,19)),
+    name: listNameToArbifiedListName(name),
     timestamp: new Date().toISOString(),
     version,
     tokens: tokenList,

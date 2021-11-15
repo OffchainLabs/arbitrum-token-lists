@@ -26,8 +26,23 @@ for (let address of Object.keys(logoUris)) {
 }
 
 export const listNameToFileName = (name: string) => {
-  return 'arbified_' + name.split(' ').join('_').toLowerCase() + '.json';
+  const prefix = "arbed_"
+  let fileName = name.split(' ').join('_').toLowerCase() + '.json';
+  if(!fileName.startsWith(prefix)){
+    fileName =  prefix + fileName
+  }
+  return fileName
 };
+
+export const listNameToArbifiedListName = (name: string)=>{
+  const prefix = "Arbed "
+
+  let fileName = sanitizeString(name)
+  if(!fileName.startsWith(prefix)){
+    fileName =  prefix + fileName
+  }
+  return fileName.slice(0,20)
+}
 
 export const getL2TokenAddresses = async (
   l1TokenAddresses: string[],
