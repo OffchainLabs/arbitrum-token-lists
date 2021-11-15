@@ -1,4 +1,4 @@
-import {  minVersionBump, nextVersion, Version } from '@uniswap/token-lists';
+import {  minVersionBump, nextVersion, Version, diffTokenLists, VersionUpgrade } from '@uniswap/token-lists';
 import { instantiateBridge } from './instantiate_bridge';
 import { getAllTokens, getTokens } from './graph';
 
@@ -14,7 +14,7 @@ import {
   getPostWhiteListedTokens,
   listNameToArbifiedListName
 } from './utils';
-import { writeFileSync, writeFile, readFileSync } from 'fs';
+import { writeFileSync, writeFile, readFileSync, existsSync } from 'fs';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -38,7 +38,7 @@ export const generateTokenList = async (
   _l1TokenAddresses: string[] | 'all',
   name: string,
   mainLogoUri?: string,
-  prevVersion?: Version
+  prevArbTokenList?: ArbTokenList
 ) => {
   const bridgeData = await instantiateBridge();
   const { bridge, l1Network, l2Network } = bridgeData;
@@ -49,8 +49,12 @@ export const generateTokenList = async (
   
   // /** Temporary workaround until we handle this in subgraph: find all post-whitelisting bridged tokens via event logs */
   if(_l1TokenAddresses === 'all'){
-    const whitelistedEral1TokenAddresses =tokens.map((token) => token.id)
+    const whitelistedEral1TokenAddresses = tokens.map((token) => token.id)
     const newTokens = await getPostWhiteListedTokens(bridge, {excludeList:whitelistedEral1TokenAddresses })    
+    tokens = tokens.concat(newTokens)
+  } else {
+    const whitelistedEral1TokenAddresses = tokens.map((token) => token.id)
+    const newTokens = await getPostWhiteListedTokens(bridge, {excludeList:whitelistedEral1TokenAddresses, includeList:_l1TokenAddresses })    
     tokens = tokens.concat(newTokens)
   }
   
@@ -64,6 +68,7 @@ export const generateTokenList = async (
   }
 
   const tokenList = tokens.map((token, i: number) => {
+    // TODO: hex data slice
     const l2GatewayAddress = token.gateway[0].id.slice(0, 42) as string;
     const address = l2Addresses[i];
     let { name:_name, decimals, symbol:_symbol } = tokenData[i];
@@ -94,11 +99,26 @@ export const generateTokenList = async (
     return tokenInfo.extensions.l2GatewayAddress !== "0x0000000000000000000000000000000000000001" 
   })
   tokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
-  const version = prevVersion || {
-    major: 1,
-    minor: 0,
-    patch: 0,
-  }
+
+  const version = (()=>{
+    if(prevArbTokenList){
+      let versionBump = minVersionBump(prevArbTokenList.tokens, tokenList)
+
+      // tmp: library doesn't nicely handle patches (for extensions object)
+      if(versionBump === VersionUpgrade.PATCH){
+        versionBump = VersionUpgrade.NONE
+      }
+      
+      
+      return nextVersion(prevArbTokenList.version, versionBump)  
+    }
+    return  {
+      major: 1,
+      minor: 0,
+      patch: 0,
+    }
+  })()
+
   const arbTokenList: ArbTokenList = {
     name: listNameToArbifiedListName(name),
     timestamp: new Date().toISOString(),
@@ -128,32 +148,23 @@ export const generateTokenList = async (
 
 export const arbifyL1List = async (pathOrUrl: string) => {
   const l1TokenList = await getTokenListObj(pathOrUrl);
+  const path = process.env.PWD +
+  '/src/ArbTokenLists/' +
+  listNameToFileName(l1TokenList.name);
+  let prevArbTokenList: ArbTokenList | undefined; 
+
+  if(existsSync(path)){
+    const data = readFileSync(path)
+    prevArbTokenList =  JSON.parse(data.toString()) as ArbTokenList
+  } 
 
   const l1Addresses = l1TokenList.tokens.map((token) =>
     token.address.toLowerCase()
   );
 
-  const newList = await generateTokenList(l1Addresses, l1TokenList.name, l1TokenList.logoURI);
-  const path =
-    process.env.PWD +
-    '/src/ArbTokenLists/' +
-    listNameToFileName(l1TokenList.name);
+  const newList = await generateTokenList(l1Addresses, l1TokenList.name, l1TokenList.logoURI, prevArbTokenList);
 
   writeFileSync(path, JSON.stringify(newList));
-};
-
-export const updateArbifiedList = async (path: string) => {
-  const data = readFileSync(path);
-  const tokenList = JSON.parse(data.toString()) as ArbTokenList;
-
-  const l1Addresses = tokenList.tokens
-    .map((token) => token.extensions.l1Address)
-    .filter((x): x is string => !!x);
-  const newList = await generateTokenList(l1Addresses, tokenList.name, tokenList.logoURI, tokenList.version);
-  const versionBump = minVersionBump(tokenList.tokens, newList.tokens)
-  const newVersion = nextVersion(tokenList.version, versionBump)  
-  const newListWithNewVersion = {...newList, ...{version: newVersion}} as ArbTokenList
-  writeFileSync(path, JSON.stringify(newListWithNewVersion));
 };
 
 export const arbListtoEtherscanList = (arbList: ArbTokenList): EtherscanList=> {

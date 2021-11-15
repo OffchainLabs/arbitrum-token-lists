@@ -41,7 +41,7 @@ export const listNameToArbifiedListName = (name: string)=>{
   if(!fileName.startsWith(prefix)){
     fileName =  prefix + fileName
   }
-  return fileName.slice(0,20)
+  return fileName.split(' ').slice(0,2).join(' ').slice(0,20)
 }
 
 export const getL2TokenAddresses = async (

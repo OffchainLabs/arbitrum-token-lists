@@ -2,7 +2,6 @@ import { getTokenListObj, getTokenListObjFromUrl } from './lib/utils';
 import {
   generateTokenList,
   arbifyL1List,
-  updateArbifiedList,
   arbListtoEtherscanList,
 } from './lib/token_list_gen';
 import { writeFileSync } from 'fs';
@@ -22,8 +21,5 @@ import args from './lib/getClargs';
     writeFileSync(fullListPath, JSON.stringify(etherscanData));
     console.log('List generated at', fullListPath);
 
-  } else if (args.action === 'update') {
-    if (!args.fileName) throw new Error('No file name provided');
-    updateArbifiedList(__dirname + `/ArbTokenLists/${args.fileName}`);
   }
 })();
