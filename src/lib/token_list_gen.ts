@@ -170,6 +170,8 @@ export const arbifyL1List = async (pathOrUrl: string) => {
   const newList = await generateTokenList(l1Addresses, l1TokenList.name, l1TokenList.logoURI, prevArbTokenList);
 
   writeFileSync(path, JSON.stringify(newList));
+  console.log('Token list generated at', path );
+  
 };
 
 export const arbListtoEtherscanList = (arbList: ArbTokenList): EtherscanList=> {
