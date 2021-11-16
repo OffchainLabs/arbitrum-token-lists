@@ -106,17 +106,20 @@ export const generateTokenList = async (
   tokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
 
   const version = (()=>{
-    if(prevArbTokenList){
-      let versionBump = minVersionBump(prevArbTokenList.tokens, tokenList)
+    /** 
+     * TODO: re-enable autoamted version bumping when the token-list lib includes the new interfaces 
+    // if(prevArbTokenList){
+    //   let versionBump = minVersionBump(prevArbTokenList.tokens, tokenList)
 
-      // tmp: library doesn't nicely handle patches (for extensions object)
-      if(versionBump === VersionUpgrade.PATCH){
-        versionBump = VersionUpgrade.NONE
-      }
+    //   // tmp: library doesn't nicely handle patches (for extensions object)
+    //   if(versionBump === VersionUpgrade.PATCH){
+    //     versionBump = VersionUpgrade.NONE
+    //   }
       
       
-      return nextVersion(prevArbTokenList.version, versionBump)  
-    }
+    //   return nextVersion(prevArbTokenList.version, versionBump)  
+    // }
+    */
     return  {
       major: 1,
       minor: 0,
@@ -131,6 +134,8 @@ export const generateTokenList = async (
     tokens: tokenList,
     logoURI: mainLogoUri
   };
+  /**
+   * * TODO: re-enable autoamted version bumping when the token-list lib includes the new token list json schema 
   const res = validateTokenList(arbTokenList);
   if(!res){
     console.log("Token list invalid — let's try to see why:");
@@ -147,6 +152,7 @@ export const generateTokenList = async (
     
   }
   console.log(`Generated list with ${arbTokenList.tokens.length} tokens`);
+  */
   
   return arbTokenList;
 };
