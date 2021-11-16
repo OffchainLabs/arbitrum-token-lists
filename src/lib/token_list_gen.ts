@@ -107,18 +107,16 @@ export const generateTokenList = async (
 
   const version = (()=>{
     /** 
-     * TODO: re-enable autoamted version bumping when the token-list lib includes the new interfaces 
-    // if(prevArbTokenList){
-    //   let versionBump = minVersionBump(prevArbTokenList.tokens, tokenList)
+     TODO: re-enable autoamted version bumping when the token-list lib includes the new interfaces 
+    if(prevArbTokenList){
+      let versionBump = minVersionBump(prevArbTokenList.tokens, tokenList)
 
-    //   // tmp: library doesn't nicely handle patches (for extensions object)
-    //   if(versionBump === VersionUpgrade.PATCH){
-    //     versionBump = VersionUpgrade.NONE
-    //   }
-      
-      
-    //   return nextVersion(prevArbTokenList.version, versionBump)  
-    // }
+      // tmp: library doesn't nicely handle patches (for extensions object)
+      if(versionBump === VersionUpgrade.PATCH){
+        versionBump = VersionUpgrade.NONE
+      }
+      return nextVersion(prevArbTokenList.version, versionBump)  
+    }
     */
     return  {
       major: 1,
