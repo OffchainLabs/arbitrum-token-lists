@@ -207,7 +207,7 @@ export const excludeList = [
 
 
 
-/** Temporary workaround until we handle this in subgraph: find all post-whitelisting bridged tokens via event logs */
+/** (now unused) Temporary workaround until we handle this in subgraph: find all post-whitelisting bridged tokens via event logs */
 export const getPostWhiteListedTokens = async (
   bridge: Bridge,
   options:{

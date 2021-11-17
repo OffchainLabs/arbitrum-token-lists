@@ -46,17 +46,7 @@ export const generateTokenList = async (
     _l1TokenAddresses === 'all'
       ? await getAllTokens(l2Network.chainID)
       : await getTokens(_l1TokenAddresses, l2Network.chainID);
-  
-  // /** Temporary workaround until we handle this in subgraph: find all post-whitelisting bridged tokens via event logs */
-  if(_l1TokenAddresses === 'all'){
-    const whitelistedEral1TokenAddresses = tokens.map((token) => token.id)
-    const newTokens = await getPostWhiteListedTokens(bridge, {excludeList:whitelistedEral1TokenAddresses })    
-    tokens = tokens.concat(newTokens)
-  } else {
-    const whitelistedEral1TokenAddresses = tokens.map((token) => token.id)
-    const newTokens = await getPostWhiteListedTokens(bridge, {excludeList:whitelistedEral1TokenAddresses, includeList:_l1TokenAddresses })    
-    tokens = tokens.concat(newTokens)
-  }
+
   
   const l1TokenAddresses = tokens.map((token) => token.id);
   const l2Addresses = await getL2TokenAddresses(l1TokenAddresses, bridge);
@@ -149,8 +139,8 @@ export const generateTokenList = async (
     throw new Error('Invalid token list (not sure why)')
     
   }
-  console.log(`Generated list with ${arbTokenList.tokens.length} tokens`);
   */
+ console.log(`Generated list with ${arbTokenList.tokens.length} tokens`);
   
   return arbTokenList;
 };
