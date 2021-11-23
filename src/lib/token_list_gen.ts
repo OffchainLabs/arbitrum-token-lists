@@ -168,6 +168,30 @@ export const arbifyL1List = async (pathOrUrl: string) => {
   
 };
 
+
+export const updateLogoURIs = async (path: string)=> {
+  const data = readFileSync(path)
+  const prevArbTokenList =  JSON.parse(data.toString()) as ArbTokenList
+  const tokens:any = []
+  for (let i = 0; i < prevArbTokenList.tokens.length; i++) {
+    const tokenInfo = {...prevArbTokenList.tokens[i]}
+
+    // @ts-ignore
+    const logoURI = await getLogoUri(tokenInfo.extensions.l1Address)
+    if(logoURI){
+      tokenInfo.logoURI = logoURI
+    } else {
+      console.log('not found:', tokenInfo);
+      delete  tokenInfo.logoURI 
+    }
+    tokens.push(tokenInfo) 
+  }
+
+  const newArbList = {...prevArbTokenList, ...{tokens: tokens}}
+  writeFileSync(path, JSON.stringify(newArbList));
+
+}
+
 export const arbListtoEtherscanList = (arbList: ArbTokenList): EtherscanList=> {
   return arbList.tokens.map((tokenInfo)=>{
     const { address: l2Address} =  tokenInfo;

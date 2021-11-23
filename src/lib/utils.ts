@@ -16,10 +16,10 @@ import { GraphTokenResult } from './types'
 const routerIface = L1GatewayRouter__factory.createInterface();
 const tokenIface = ERC20__factory.createInterface();
 
-const zapperURIsBuff = readFileSync('./src/Assets/zapper_logo_uris.json');
+const coinGeckoBuff = readFileSync('./src/Assets/coingecko_uris.json');
 const logoURIsBuff = readFileSync('./src/Assets/logo_uris.json');
 
-const zapperURIs = JSON.parse(zapperURIsBuff.toString());
+const coingeckoURIs = JSON.parse(coinGeckoBuff.toString());
 const logoUris = JSON.parse(logoURIsBuff.toString());
 for (let address of Object.keys(logoUris)) {
   logoUris[address.toLowerCase()] = logoUris[address];
@@ -125,9 +125,9 @@ export const getL2TokenData = async (
 export const getLogoUri = async (l1TokenAddress: string) => {
   const l1TokenAddressLCase = l1TokenAddress.toLowerCase();
   const logoUri: string | undefined = logoUris[l1TokenAddressLCase];
-  const zapperUri: string | undefined = zapperURIs[l1TokenAddressLCase];
+  const coinGeckoURI: string | undefined = coingeckoURIs[l1TokenAddressLCase];
   const trustWalletUri = `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${l1TokenAddress}/logo.png`;
-  const uris = [logoUri, zapperUri, trustWalletUri].filter(
+  const uris = [logoUri, coinGeckoURI, trustWalletUri].filter(
     (x): x is string => !!x
   );
 
