@@ -1,4 +1,4 @@
-import {TokenInfo, TokenList } from '@uniswap/token-lists';
+import { TokenInfo, TokenList } from '@uniswap/token-lists';
 
 export interface ArbTokenInfo extends TokenInfo {
   extensions: {

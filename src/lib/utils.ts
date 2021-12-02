@@ -11,7 +11,7 @@ import {
   BridgeHelper
 } from "arb-ts";
 import { utils, providers } from "ethers";
-import { GraphTokenResult } from './types'
+import { GraphTokenResult, ArbTokenList } from './types'
 
 const routerIface = L1GatewayRouter__factory.createInterface();
 const tokenIface = ERC20__factory.createInterface();
@@ -148,7 +148,7 @@ export const getTokenListObjFromLocalPath = async (path: string) => {
   return JSON.parse(readFileSync(path).toString()) as TokenList;
 };
 
-export const validateTokenList = (tokenList: TokenList) => {
+export const validateTokenList = (tokenList: ArbTokenList | TokenList) => {
   const ajv = new Ajv();
   addFormats(ajv);
   const validate = ajv.compile(schema);
@@ -169,12 +169,23 @@ export const getTokenListObj = async (pathOrUrl: string) => {
     }
   })(pathOrUrl);
 
-  const valid = validateTokenList(tokenList);
+  let valid = validateTokenList(tokenList);
   if (valid) {
     return tokenList;
   } else {
-    console.log(tokenList);
-    throw new Error('Data does not confirm to token list schema');
+    console.log("Invalid token list:");
+
+    while (!valid && tokenList.tokens.length > 0){
+      const targetToken = tokenList.tokens.pop()
+      valid = validateTokenList(tokenList);
+      if(valid){
+        console.log('Bad token:', targetToken);
+        
+        throw new Error('')
+        
+      }
+    }
+    throw new Error('Data does not confirm to token list schema; not sure why');
   }
 };
 
@@ -203,6 +214,7 @@ export const excludeList = [
   '0x99d8a9c45b2eca8864373a26d1459e3dff1e17f3', // mim
   '0x106538cc16f938776c7c180186975bca23875287', // remove once bridged (basv2)
   '0xB4A3B0Faf0Ab53df58001804DdA5Bfc6a3D59008', // spera
+  // "0x960b236a07cf122663c4303350609a66a7b288c0", //aragon old
 ].map((s) => s.toLowerCase());
 
 
