@@ -96,9 +96,8 @@ export const generateTokenList = async (
   tokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
 
   const version = (()=>{
-    /** 
-     TODO: re-enable autoamted version bumping when the token-list lib includes the new interfaces 
     if(prevArbTokenList){
+      // @ts-ignore
       let versionBump = minVersionBump(prevArbTokenList.tokens, tokenList)
 
       // tmp: library doesn't nicely handle patches (for extensions object)
@@ -107,7 +106,6 @@ export const generateTokenList = async (
       }
       return nextVersion(prevArbTokenList.version, versionBump)  
     }
-    */
     return  {
       major: 1,
       minor: 0,
@@ -122,8 +120,6 @@ export const generateTokenList = async (
     tokens: tokenList,
     logoURI: mainLogoUri
   };
-  /**
-   * * TODO: re-enable autoamted version bumping when the token-list lib includes the new token list json schema 
   const res = validateTokenList(arbTokenList);
   if(!res){
     console.log("Token list invalid — let's try to see why:");
@@ -139,8 +135,10 @@ export const generateTokenList = async (
     throw new Error('Invalid token list (not sure why)')
     
   }
-  */
+  //
  console.log(`Generated list with ${arbTokenList.tokens.length} tokens`);
+ console.log('version:', version);
+ 
   
   return arbTokenList;
 };
@@ -154,6 +152,8 @@ export const arbifyL1List = async (pathOrUrl: string) => {
 
   if(existsSync(path)){
     const data = readFileSync(path)
+    console.log('Prev version of Arb List found');
+    
     prevArbTokenList =  JSON.parse(data.toString()) as ArbTokenList
   } 
 
@@ -162,6 +162,31 @@ export const arbifyL1List = async (pathOrUrl: string) => {
   );
 
   const newList = await generateTokenList(l1Addresses, l1TokenList.name, l1TokenList.logoURI, prevArbTokenList);
+
+  writeFileSync(path, JSON.stringify(newList));
+  console.log('Token list generated at', path );
+  
+};
+
+export const updateArbifiedList = async (pathOrUrl: string) => {
+  // @ts-ignore
+  const arbTokenList:ArbTokenList = await getTokenListObj(pathOrUrl);
+  const path = process.env.PWD +
+  '/src/ArbTokenLists/' +
+  listNameToFileName(arbTokenList.name);
+  let prevArbTokenList: ArbTokenList | undefined; 
+
+  if(existsSync(path)){
+    const data = readFileSync(path)
+    console.log('Prev version of Arb List found');
+    
+    prevArbTokenList =  JSON.parse(data.toString()) as ArbTokenList
+  } 
+
+  //@ts-ignore
+  const l1Addresses = arbTokenList.tokens.map((token) =>token.extensions.l1Address);
+
+  const newList = await generateTokenList(l1Addresses, arbTokenList.name, arbTokenList.logoURI, prevArbTokenList);
 
   writeFileSync(path, JSON.stringify(newList));
   console.log('Token list generated at', path );
