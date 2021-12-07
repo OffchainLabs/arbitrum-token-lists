@@ -22,6 +22,13 @@ export const getTokens = async (
   networkID: string
 ) => {
   const clientUrl = chaidIdToGraphClientUrl(networkID);
+  // lazy solution for big lists for now; we'll have to paginate once we have > 500 tokens registed
+  if (l1TokenAddresses.length > 500){
+    const allTokens = await getAllTokens(networkID)
+    const allTokenAddresses = new Set(allTokens.map((token)=> token.l1TokenAddr.toLowerCase()))
+    l1TokenAddresses = l1TokenAddresses.filter((addr)=> allTokenAddresses.has(addr.toLowerCase()))
+    if(l1TokenAddresses.length > 500) throw new Error("Too many tokens for graph query")
+  }  
   const formattedAddresses = l1TokenAddresses
     .map((a: string) => `"${a}"`.toLowerCase())
     .join(',');
