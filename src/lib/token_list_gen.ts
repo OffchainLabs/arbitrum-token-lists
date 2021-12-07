@@ -11,7 +11,6 @@ import {
   listNameToFileName,
   validateTokenList,
   sanitizeString,
-  getPostWhiteListedTokens,
   listNameToArbifiedListName
 } from './utils';
 import { writeFileSync, writeFile, readFileSync, existsSync } from 'fs';
@@ -31,7 +30,13 @@ const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses = {
   '0x6c411ad3e74de3e7bd422b94a27770f5b86c623b':
     '0xd92023E9d9911199a6711321D1277285e6d4e2db',
   '0x467194771dae2967aef3ecbedd3bf9a310c76c65':
-    '0xD3B5b60020504bc3489D6949d545893982BA3011',
+    '0xd3b5b60020504bc3489d6949d545893982ba3011',
+    "0x195c107f3f75c4c93eba7d9a1312f19305d6375f": "0x91169Dbb45e6804743F94609De50D511C437572E",
+    "0x9b014455acc2fe90c52803849d0002aeec184a06":"0x917dc9a69F65dC3082D518192cd3725E1Fa96cA2",
+    "0xf94bc045c4e926cc0b34e8d1c41cd7a043304ac9": "0x81d1a19cf7071732D4313c75dE8DD5b8CF697eFD",
+    "0xf90eb31045d5b924900aff29344deb42eae0b087": "0x81d1a19cf7071732D4313c75dE8DD5b8CF697eFD",
+
+
 };
 
 export const generateTokenList = async (
@@ -48,18 +53,18 @@ export const generateTokenList = async (
       : await getTokens(_l1TokenAddresses, l2Network.chainID);
 
   
-  const l1TokenAddresses = tokens.map((token) => token.id);
+  const l1TokenAddresses = tokens.map((token) => token.l1TokenAddr);
   const l2Addresses = await getL2TokenAddresses(l1TokenAddresses, bridge);
+  
   const tokenData = await getL2TokenData(l2Addresses, bridge);
   const logoUris: (string | undefined)[] = [];
   for (const token of tokens) {
-    const uri = await getLogoUri(token.id);
+    const uri = await getLogoUri(token.l1TokenAddr);
     logoUris.push(uri);
   }
 
   const tokenList = tokens.map((token, i: number) => {
-    // TODO: hex data slice
-    const l2GatewayAddress = token.gateway[0].id.slice(0, 42) as string;
+    const l2GatewayAddress = token.joinTableEntry[0].gateway.gatewayAddr;
     const address = l2Addresses[i];
     let { name:_name, decimals, symbol:_symbol } = tokenData[i];
     const name = sanitizeString(_name)
@@ -74,7 +79,7 @@ export const generateTokenList = async (
       extensions: {
         bridgeInfo: {
           [l1Network.chainID]: {
-            tokenAddress: token.id,
+            tokenAddress: token.l1TokenAddr,
             originBridgeAddress: l2GatewayAddress,
             destBridgeAddress: l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()]
           }
@@ -85,7 +90,7 @@ export const generateTokenList = async (
     if (logoUris[i]) {
       arbTokenInfo = { ...{ logoURI: logoUris[i] }, ...arbTokenInfo };
     } else {
-      console.log('no logo uri for ',token.id, symbol);
+      console.log('no logo uri for ',token.l1TokenAddr, symbol);
       
     }
 
@@ -96,9 +101,8 @@ export const generateTokenList = async (
   tokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
 
   const version = (()=>{
-    /** 
-     TODO: re-enable autoamted version bumping when the token-list lib includes the new interfaces 
     if(prevArbTokenList){
+      // @ts-ignore
       let versionBump = minVersionBump(prevArbTokenList.tokens, tokenList)
 
       // tmp: library doesn't nicely handle patches (for extensions object)
@@ -107,7 +111,6 @@ export const generateTokenList = async (
       }
       return nextVersion(prevArbTokenList.version, versionBump)  
     }
-    */
     return  {
       major: 1,
       minor: 0,
@@ -122,8 +125,6 @@ export const generateTokenList = async (
     tokens: tokenList,
     logoURI: mainLogoUri
   };
-  /**
-   * * TODO: re-enable autoamted version bumping when the token-list lib includes the new token list json schema 
   const res = validateTokenList(arbTokenList);
   if(!res){
     console.log("Token list invalid — let's try to see why:");
@@ -136,11 +137,14 @@ export const generateTokenList = async (
 
       }
     }
+    console.log(arbTokenList);
     throw new Error('Invalid token list (not sure why)')
     
   }
-  */
+    //
  console.log(`Generated list with ${arbTokenList.tokens.length} tokens`);
+ console.log('version:', version);
+ 
   
   return arbTokenList;
 };
@@ -154,6 +158,8 @@ export const arbifyL1List = async (pathOrUrl: string) => {
 
   if(existsSync(path)){
     const data = readFileSync(path)
+    console.log('Prev version of Arb List found');
+    
     prevArbTokenList =  JSON.parse(data.toString()) as ArbTokenList
   } 
 
@@ -162,6 +168,31 @@ export const arbifyL1List = async (pathOrUrl: string) => {
   );
 
   const newList = await generateTokenList(l1Addresses, l1TokenList.name, l1TokenList.logoURI, prevArbTokenList);
+
+  writeFileSync(path, JSON.stringify(newList));
+  console.log('Token list generated at', path );
+  
+};
+
+export const updateArbifiedList = async (pathOrUrl: string) => {
+  // @ts-ignore
+  const arbTokenList:ArbTokenList = await getTokenListObj(pathOrUrl);
+  const path = process.env.PWD +
+  '/src/ArbTokenLists/' +
+  listNameToFileName(arbTokenList.name);
+  let prevArbTokenList: ArbTokenList | undefined; 
+
+  if(existsSync(path)){
+    const data = readFileSync(path)
+    console.log('Prev version of Arb List found');
+    
+    prevArbTokenList =  JSON.parse(data.toString()) as ArbTokenList
+  } 
+
+  //@ts-ignore
+  const l1Addresses = arbTokenList.tokens.map((token) =>token.extensions.l1Address);
+
+  const newList = await generateTokenList(l1Addresses, arbTokenList.name, arbTokenList.logoURI, prevArbTokenList);
 
   writeFileSync(path, JSON.stringify(newList));
   console.log('Token list generated at', path );

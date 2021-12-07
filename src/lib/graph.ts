@@ -17,7 +17,6 @@ const chaidIdToGraphClientUrl = (chainID: string) => {
       throw new Error('Unsupported chain');
   }
 };
-
 export const getTokens = async (
   l1TokenAddresses: string[],
   networkID: string
@@ -31,18 +30,30 @@ export const getTokens = async (
     tokens(first: 500, skip: 0, where:{
       id_in:[${formattedAddresses}]
     }) {
-      id
-      l2Address
-      gateway {
+      l1TokenAddr: id
+      joinTableEntry: gateway(
+        first: 1
+        orderBy: blockNum
+        orderDirection: desc
+      ) {
         id
+        blockNum
+        token {
+          tokenAddr: id
+        }
+        gateway {
+          gatewayAddr: id
+        }
       }
     }
   }
 `;
-
+  console.log('tokens');
+  
   const { tokens } = await request(clientUrl, query)  as GraphTokensResult
+  
   return tokens.filter(
-    (token) => !excludeList.includes(token.id.toLowerCase())
+    (token) => !excludeList.includes(token.l1TokenAddr.toLowerCase())
   );
 };
 
@@ -51,19 +62,29 @@ export const getAllTokens = async (networkID: string) => {
   const query = gql`
     {
       tokens(first: 500, skip: 0) {
+        l1TokenAddr: id
+      joinTableEntry: gateway(
+        first: 1
+        orderBy: blockNum
+        orderDirection: desc
+      ) {
         id
-        l2Address
-        gateway {
-          id
+        blockNum
+        token {
+          tokenAddr: id
         }
+        gateway {
+          gatewayAddr: id
+        }
+      }
       }
     }
   `;
 
   const { tokens } = await request(clientUrl, query) as GraphTokensResult
   
-  
+
   return tokens.filter(
-    (token) => !excludeList.includes(token.id.toLowerCase())
+    (token) => !excludeList.includes(token.l1TokenAddr.toLowerCase())
   );
 };
