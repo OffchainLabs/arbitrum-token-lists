@@ -220,50 +220,50 @@ export const excludeList = [
 
 
 /** (now unused) Temporary workaround until we handle this in subgraph: find all post-whitelisting bridged tokens via event logs */
-export const getPostWhiteListedTokens = async (
-  bridge: Bridge,
-  options:{
-    includeList?: string[],
-    excludeList?: string[]
-  }
-) => {
-  console.log('Querying for permissionlessly bridged standard tokens (this could take ~ a minute)');
+// export const getPostWhiteListedTokens = async (
+//   bridge: Bridge,
+//   options:{
+//     includeList?: string[],
+//     excludeList?: string[]
+//   }
+// ) => {
+//   console.log('Querying for permissionlessly bridged standard tokens (this could take ~ a minute)');
   
-  const iface = L2ERC20Gateway__factory.createInterface();
+//   const iface = L2ERC20Gateway__factory.createInterface();
 
-  const l2Provider = new providers.JsonRpcProvider(
-    "https://arb1-graph.arbitrum.io/rpc"
-  );
-  const eventLogs = await BridgeHelper.getEventLogs(
-    "DepositFinalized",
-    l2Provider,
-    iface,
-    bridge.l1Bridge.network.tokenBridge.l2ERC20Gateway,
-    undefined,
-    { fromBlock: 2417599 }
-  );
-  console.log(`Done getting permissionlessly bridged standard tokens`);
+//   const l2Provider = new providers.JsonRpcProvider(
+//     "https://arb1-graph.arbitrum.io/rpc"
+//   );
+//   const eventLogs = await BridgeHelper.getEventLogs(
+//     "DepositFinalized",
+//     l2Provider,
+//     iface,
+//     bridge.l1Bridge.network.tokenBridge.l2ERC20Gateway,
+//     undefined,
+//     { fromBlock: 2417599 }
+//   );
+//   console.log(`Done getting permissionlessly bridged standard tokens`);
   
   
-  const excludeSet: Set<string> = new Set(options.excludeList) 
+//   const excludeSet: Set<string> = new Set(options.excludeList) 
 
-  const _newTokenAddreseses = eventLogs.map(log => utils.hexDataSlice(log.topics[1], 12))
-    .filter(
-      (address: string) =>
-        !excludeSet.has(address) &&
-        !excludeList.includes(address) && (options.includeList ? options.includeList .includes(address) : true)
-    );
+//   const _newTokenAddreseses = eventLogs.map(log => utils.hexDataSlice(log.topics[1], 12))
+//     .filter(
+//       (address: string) =>
+//         !excludeSet.has(address) &&
+//         !excludeList.includes(address) && (options.includeList ? options.includeList .includes(address) : true)
+//     );
 
-  const newTokenAddreseses = [...new Set(_newTokenAddreseses)];
-  // Structure data to mimic data returned by subgraph:
-  return newTokenAddreseses.map(address => {
-    return {
-      gateway: [
-        {
-          id: bridge.l1Bridge.network.tokenBridge.l2ERC20Gateway
-        }
-      ],
-      id: address
-    } as GraphTokenResult
-  });
-};
+//   const newTokenAddreseses = [...new Set(_newTokenAddreseses)];
+//   // Structure data to mimic data returned by subgraph:
+//   return newTokenAddreseses.map(address => {
+//     return {
+//       gateway: [
+//         {
+//           id: bridge.l1Bridge.network.tokenBridge.l2ERC20Gateway
+//         }
+//       ],
+//       id: address
+//     } as GraphTokenResult
+//   });
+// };

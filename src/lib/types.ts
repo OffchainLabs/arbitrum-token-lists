@@ -28,11 +28,13 @@ export type EtherscanList = EtherscanToken[]
 
 
 export interface GraphTokenResult {
-  id: string,
   l2Address: string | null,
-  gateway: [{
-    id: string
-  }]
+  joinTableEntry: [{
+    gateway: {
+      gatewayAddr: string
+    }
+  }],
+  l1TokenAddr: string
 }
 
 export interface GraphTokensResult {
