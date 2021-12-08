@@ -156,6 +156,25 @@ export const validateTokenList = (tokenList: ArbTokenList | TokenList) => {
   return validate(tokenList);
 };
 
+export const validateTokenListWithErrorThrowing = (tokenList: ArbTokenList | TokenList)=>{
+  let valid = validateTokenList(tokenList);
+  if (valid) {
+    return true;
+  } else {
+    console.log("Invalid token list:");
+    while (!valid && tokenList.tokens.length > 0){
+      const targetToken = tokenList.tokens.pop()
+      valid = validateTokenList(tokenList);
+      if(valid){
+        console.log('Bad token:', targetToken);
+        throw new Error('Invalid token list due to that token')
+        
+      }
+    }
+    throw new Error('Data does not confirm to token list schema; not sure why');
+  }
+}
+
 export const getTokenListObj = async (pathOrUrl: string) => {
   const tokenList: TokenList = await (async (pathOrUrl: string) => {
     const localFileExists = existsSync(pathOrUrl);
@@ -169,24 +188,8 @@ export const getTokenListObj = async (pathOrUrl: string) => {
     }
   })(pathOrUrl);
 
-  let valid = validateTokenList(tokenList);
-  if (valid) {
-    return tokenList;
-  } else {
-    console.log("Invalid token list:");
-
-    while (!valid && tokenList.tokens.length > 0){
-      const targetToken = tokenList.tokens.pop()
-      valid = validateTokenList(tokenList);
-      if(valid){
-        console.log('Bad token:', targetToken);
-        
-        throw new Error('')
-        
-      }
-    }
-    throw new Error('Data does not confirm to token list schema; not sure why');
-  }
+  validateTokenListWithErrorThrowing(tokenList);
+  return tokenList;
 };
 
 // https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url

@@ -9,7 +9,7 @@ import {
   getLogoUri,
   getTokenListObj,
   listNameToFileName,
-  validateTokenList,
+  validateTokenListWithErrorThrowing,
   sanitizeString,
   listNameToArbifiedListName
 } from './utils';
@@ -125,23 +125,8 @@ export const generateTokenList = async (
     tokens: tokenList,
     logoURI: mainLogoUri
   };
-  const res = validateTokenList(arbTokenList);
-  if(!res){
-    console.log("Token list invalid — let's try to see why:");
-    while(arbTokenList.tokens.length > 0){
-      const candidateToken = arbTokenList.tokens.pop()
-      const res = validateTokenList(arbTokenList);
-      if (res){
-        console.log('This token is a problem:', candidateToken);
-        throw new Error('Invalid token list')
+  validateTokenListWithErrorThrowing(arbTokenList);
 
-      }
-    }
-    console.log(arbTokenList);
-    throw new Error('Invalid token list (not sure why)')
-    
-  }
-    //
  console.log(`Generated list with ${arbTokenList.tokens.length} tokens`);
  console.log('version:', version);
  
