@@ -17,6 +17,25 @@ const chaidIdToGraphClientUrl = (chainID: string) => {
       throw new Error('Unsupported chain');
   }
 };
+
+const isGraphTokenResult = (obj: any)=>{
+  if(!obj){
+    throw new Error("Graph result: undefined")
+  }
+  const expectedKeys = ["joinTableEntry", "l1TokenAddr"]
+  const actualKeys = new Set(Object.keys(obj))
+
+  if(!expectedKeys.every((key)=> actualKeys.has(key))){
+    throw new Error("Graph result: missing top level key")
+  }
+  const joinTableEntry = obj.joinTableEntry[0]
+  if(!joinTableEntry){
+    throw new Error("Graph result: no joinTableEntry")
+  }
+  if(!joinTableEntry.gateway.gatewayAddr){
+    throw new Error("Graph result: could not get gateway address")
+  }
+}
 export const getTokens = async (
   l1TokenAddresses: string[],
   networkID: string
@@ -55,10 +74,10 @@ export const getTokens = async (
     }
   }
 `;
-  console.log('tokens');
   
   const { tokens } = await request(clientUrl, query)  as GraphTokensResult
-  
+  tokens.map((token)=> isGraphTokenResult(token))
+
   return tokens.filter(
     (token) => !excludeList.includes(token.l1TokenAddr.toLowerCase())
   );
@@ -89,7 +108,7 @@ export const getAllTokens = async (networkID: string) => {
   `;
 
   const { tokens } = await request(clientUrl, query) as GraphTokensResult
-  
+  tokens.map((token)=> isGraphTokenResult(token))
 
   return tokens.filter(
     (token) => !excludeList.includes(token.l1TokenAddr.toLowerCase())

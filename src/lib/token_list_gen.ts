@@ -11,7 +11,8 @@ import {
   listNameToFileName,
   validateTokenListWithErrorThrowing,
   sanitizeString,
-  listNameToArbifiedListName
+  listNameToArbifiedListName,
+  isArbTokenList
 } from './utils';
 import { writeFileSync, writeFile, readFileSync, existsSync } from 'fs';
 
@@ -146,6 +147,7 @@ export const arbifyL1List = async (pathOrUrl: string) => {
     console.log('Prev version of Arb List found');
     
     prevArbTokenList =  JSON.parse(data.toString()) as ArbTokenList
+    isArbTokenList(prevArbTokenList)
   } 
 
   const l1Addresses = l1TokenList.tokens.map((token) =>
@@ -172,6 +174,7 @@ export const updateArbifiedList = async (pathOrUrl: string) => {
     console.log('Prev version of Arb List found');
     
     prevArbTokenList =  JSON.parse(data.toString()) as ArbTokenList
+    isArbTokenList(prevArbTokenList)
   } 
 
   //@ts-ignore

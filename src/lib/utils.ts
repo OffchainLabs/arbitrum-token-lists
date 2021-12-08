@@ -206,6 +206,45 @@ function isValidHttpUrl(urlString: string) {
   return url.protocol === 'http:' || url.protocol === 'https:';
 }
 
+// typeguard:
+export const isArbTokenList = (obj:any)=>{
+  const expectedListKeys = ['name', 'timestamp', 'version', 'tokens']
+  const actualListKeys = new Set(Object.keys(obj))
+  if(!expectedListKeys.every((key)=>actualListKeys.has(key) )){
+    throw new Error("ArbTokenList typeguard error: requried list key not included")
+  }
+  const { version, tokens } = obj
+  if(!['major','minor', 'patch'].every((key)=>{    
+    return typeof version[key] === 'number'
+  })){
+    throw new Error("ArbTokenList typeguard error: invalid version")
+  }
+  if(!tokens.every((token:any)=>{
+    const tokenKeys = new Set(Object.keys(token))
+    return ['chainId', 'address','name', 'decimals','symbol', 'extensions' ].every((key)=>{
+      return tokenKeys.has(key)
+    })
+  })){
+    throw new Error ("ArbTokenList typeguard error: token missing required key")
+  }
+  tokens.forEach((token:any)=>{
+    
+    const {  extensions:  { bridgeInfo } } = token
+    const bridges = Object.keys(bridgeInfo)
+    if(!bridges.length){
+      throw new Error("ArbTokenList typeguard error: no bridge info found")
+    }
+    const someDestinationChain = bridges[0]
+    const { tokenAddress, originBridgeAddress, destBridgeAddress } = bridgeInfo[someDestinationChain]
+    
+    if(![tokenAddress, originBridgeAddress, destBridgeAddress ].every((k)=>k)){
+      throw new Error ("ArbTokenList typeguard error: missing extension")
+    }
+  })
+
+
+}
+
 export const sanitizeString = (str:string)=> str.replace(/[^ \w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)]/gi, '');
 
 export const excludeList = [
