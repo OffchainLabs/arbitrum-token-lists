@@ -226,7 +226,9 @@ export const updateLogoURIs = async (path: string)=> {
 export const arbListtoEtherscanList = (arbList: ArbTokenList): EtherscanList=> {
   return arbList.tokens.map((tokenInfo)=>{
     const { address: l2Address} =  tokenInfo;
-    const {  tokenAddress, originBridgeAddress, destBridgeAddress} = tokenInfo.extensions.bridgeInfo['1']
+    // This assumes one origin chain; should be chill
+    const originChainID = Object.keys(tokenInfo.extensions.bridgeInfo)[0]
+    const {  tokenAddress, originBridgeAddress, destBridgeAddress} = tokenInfo.extensions.bridgeInfo[originChainID]
     return {
       l1Address:tokenAddress,
       l2Address,
