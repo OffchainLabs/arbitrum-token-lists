@@ -1,4 +1,4 @@
-import {  minVersionBump, nextVersion, Version } from '@uniswap/token-lists';
+import {  minVersionBump, nextVersion, Version, diffTokenLists, VersionUpgrade } from '@uniswap/token-lists';
 import { instantiateBridge } from './instantiate_bridge';
 import { getAllTokens, getTokens } from './graph';
 
@@ -9,10 +9,12 @@ import {
   getLogoUri,
   getTokenListObj,
   listNameToFileName,
-  validateTokenList,
-  sanitizeString
+  validateTokenListWithErrorThrowing,
+  sanitizeString,
+  listNameToArbifiedListName,
+  isArbTokenList
 } from './utils';
-import { writeFileSync, writeFile, readFileSync } from 'fs';
+import { writeFileSync, writeFile, readFileSync, existsSync } from 'fs';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -29,32 +31,41 @@ const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses = {
   '0x6c411ad3e74de3e7bd422b94a27770f5b86c623b':
     '0xd92023E9d9911199a6711321D1277285e6d4e2db',
   '0x467194771dae2967aef3ecbedd3bf9a310c76c65':
-    '0xD3B5b60020504bc3489D6949d545893982BA3011',
+    '0xd3b5b60020504bc3489d6949d545893982ba3011',
+    "0x195c107f3f75c4c93eba7d9a1312f19305d6375f": "0x91169Dbb45e6804743F94609De50D511C437572E",
+    "0x9b014455acc2fe90c52803849d0002aeec184a06":"0x917dc9a69F65dC3082D518192cd3725E1Fa96cA2",
+    "0xf94bc045c4e926cc0b34e8d1c41cd7a043304ac9": "0x81d1a19cf7071732D4313c75dE8DD5b8CF697eFD",
+    "0xf90eb31045d5b924900aff29344deb42eae0b087": "0x81d1a19cf7071732D4313c75dE8DD5b8CF697eFD",
+
+
 };
 
 export const generateTokenList = async (
   _l1TokenAddresses: string[] | 'all',
   name: string,
   mainLogoUri?: string,
-  prevVersion?: Version
+  prevArbTokenList?: ArbTokenList
 ) => {
   const bridgeData = await instantiateBridge();
   const { bridge, l1Network, l2Network } = bridgeData;
-  const tokens =
+  let tokens =
     _l1TokenAddresses === 'all'
       ? await getAllTokens(l2Network.chainID)
       : await getTokens(_l1TokenAddresses, l2Network.chainID);
-  const l1TokenAddresses = tokens.map((token: any) => token.id);
+
+  
+  const l1TokenAddresses = tokens.map((token) => token.l1TokenAddr);
   const l2Addresses = await getL2TokenAddresses(l1TokenAddresses, bridge);
+  
   const tokenData = await getL2TokenData(l2Addresses, bridge);
   const logoUris: (string | undefined)[] = [];
   for (const token of tokens) {
-    const uri = await getLogoUri(token.id);
+    const uri = await getLogoUri(token.l1TokenAddr);
     logoUris.push(uri);
   }
 
-  const tokenList = tokens.map((token: any, i: number) => {
-    const l2GatewayAddress = token.gateway[0].id.slice(0, 42) as string;
+  const tokenList = tokens.map((token, i: number) => {
+    const l2GatewayAddress = token.joinTableEntry[0].gateway.gatewayAddr;
     const address = l2Addresses[i];
     let { name:_name, decimals, symbol:_symbol } = tokenData[i];
     const name = sanitizeString(_name)
@@ -67,87 +78,150 @@ export const generateTokenList = async (
       symbol,
       decimals,
       extensions: {
-        l1Address: token.id,
-        l2GatewayAddress,
-        l1GatewayAddress: l2ToL1GatewayAddresses[l2GatewayAddress],
-      },
+        bridgeInfo: {
+          [l1Network.chainID]: {
+            tokenAddress: token.l1TokenAddr,
+            originBridgeAddress: l2GatewayAddress,
+            destBridgeAddress: l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()]
+          }
+        }
+  
+      }
     };
     if (logoUris[i]) {
       arbTokenInfo = { ...{ logoURI: logoUris[i] }, ...arbTokenInfo };
     } else {
-      console.log('no logo uri for ',token.id, symbol);
+      console.log('no logo uri for ',token.l1TokenAddr, symbol);
       
     }
 
     return arbTokenInfo;
   }).filter((tokenInfo: ArbTokenInfo)=>{
-    return tokenInfo.extensions.l2GatewayAddress !== "0x0000000000000000000000000000000000000001" 
+    return tokenInfo.extensions.bridgeInfo[l1Network.chainID].originBridgeAddress !== "0x0000000000000000000000000000000000000001" 
   })
-  //   @ts-ignore
   tokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
-  const version = prevVersion || {
-    major: 1,
-    minor: 0,
-    patch: 0,
-  }
+
+  const version = (()=>{
+    if(prevArbTokenList){
+      // @ts-ignore
+      let versionBump = minVersionBump(prevArbTokenList.tokens, tokenList)
+
+      // tmp: library doesn't nicely handle patches (for extensions object)
+      if(versionBump === VersionUpgrade.PATCH){
+        versionBump = VersionUpgrade.NONE
+      }
+      return nextVersion(prevArbTokenList.version, versionBump)  
+    }
+    return  {
+      major: 1,
+      minor: 0,
+      patch: 0,
+    }
+  })()
+
   const arbTokenList: ArbTokenList = {
-    name: sanitizeString(`Arbed ${name}`.slice(0,19)),
+    name: listNameToArbifiedListName(name),
     timestamp: new Date().toISOString(),
     version,
     tokens: tokenList,
-    logoURI: mainLogoUri // todo: handle undefined
+    logoURI: mainLogoUri
   };
-  const res = validateTokenList(arbTokenList);
-  if(!res){
-    console.log(arbTokenList);    
-    throw new Error("New token list invalid!")
-  }
-  console.log(`Generated list with ${arbTokenList.tokens.length} tokens`);
+  validateTokenListWithErrorThrowing(arbTokenList);
+
+ console.log(`Generated list with ${arbTokenList.tokens.length} tokens`);
+ console.log('version:', version);
+ 
   
   return arbTokenList;
 };
 
 export const arbifyL1List = async (pathOrUrl: string) => {
   const l1TokenList = await getTokenListObj(pathOrUrl);
+  const path = process.env.PWD +
+  '/src/ArbTokenLists/' +
+  listNameToFileName(l1TokenList.name);
+  let prevArbTokenList: ArbTokenList | undefined; 
+
+  if(existsSync(path)){
+    const data = readFileSync(path)
+    console.log('Prev version of Arb List found');
+    
+    prevArbTokenList =  JSON.parse(data.toString()) as ArbTokenList
+    isArbTokenList(prevArbTokenList)
+  } 
 
   const l1Addresses = l1TokenList.tokens.map((token) =>
     token.address.toLowerCase()
   );
 
-  const newList = await generateTokenList(l1Addresses, l1TokenList.name, l1TokenList.logoURI);
-  const path =
-    process.env.PWD +
-    '/src/ArbTokenLists/' +
-    listNameToFileName(l1TokenList.name);
+  const newList = await generateTokenList(l1Addresses, l1TokenList.name, l1TokenList.logoURI, prevArbTokenList);
 
   writeFileSync(path, JSON.stringify(newList));
+  console.log('Token list generated at', path );
+  
 };
 
-export const updateArbifiedList = async (path: string) => {
-  const data = readFileSync(path);
-  const tokenList = JSON.parse(data.toString()) as ArbTokenList;
-  // const tokenList  = getTokenListObj(path)
-  // TODO
+export const updateArbifiedList = async (pathOrUrl: string) => {
+  // @ts-ignore
+  const arbTokenList:ArbTokenList = await getTokenListObj(pathOrUrl);
+  const path = process.env.PWD +
+  '/src/ArbTokenLists/' +
+  listNameToFileName(arbTokenList.name);
+  let prevArbTokenList: ArbTokenList | undefined; 
 
-  const l1Addresses = tokenList.tokens
-    .map((token) => token.extensions.l1Address)
-    .filter((x): x is string => !!x);
-  const newList = await generateTokenList(l1Addresses, tokenList.name, tokenList.logoURI, tokenList.version);
-  const versionBump = minVersionBump(tokenList.tokens, newList.tokens)
-  const newVersion = nextVersion(tokenList.version, versionBump)  
-  const newListWithNewVersion = {...newList, ...{version: newVersion}} as ArbTokenList
-  writeFileSync(path, JSON.stringify(newListWithNewVersion));
+  if(existsSync(path)){
+    const data = readFileSync(path)
+    console.log('Prev version of Arb List found');
+    
+    prevArbTokenList =  JSON.parse(data.toString()) as ArbTokenList
+    isArbTokenList(prevArbTokenList)
+  } 
+
+  //@ts-ignore
+  const l1Addresses = arbTokenList.tokens.map((token) =>token.extensions.l1Address);
+
+  const newList = await generateTokenList(l1Addresses, arbTokenList.name, arbTokenList.logoURI, prevArbTokenList);
+
+  writeFileSync(path, JSON.stringify(newList));
+  console.log('Token list generated at', path );
+  
 };
+
+
+export const updateLogoURIs = async (path: string)=> {
+  const data = readFileSync(path)
+  const prevArbTokenList =  JSON.parse(data.toString()) as ArbTokenList
+  const tokens:any = []
+  for (let i = 0; i < prevArbTokenList.tokens.length; i++) {
+    const tokenInfo = {...prevArbTokenList.tokens[i]}
+
+    // @ts-ignore
+    const logoURI = await getLogoUri(tokenInfo.extensions.l1Address)
+    if(logoURI){
+      tokenInfo.logoURI = logoURI
+    } else {
+      console.log('not found:', tokenInfo);
+      delete  tokenInfo.logoURI 
+    }
+    tokens.push(tokenInfo) 
+  }
+
+  const newArbList = {...prevArbTokenList, ...{tokens: tokens}}
+  writeFileSync(path, JSON.stringify(newArbList));
+
+}
 
 export const arbListtoEtherscanList = (arbList: ArbTokenList): EtherscanList=> {
   return arbList.tokens.map((tokenInfo)=>{
     const { address: l2Address} =  tokenInfo;
-    const {  l1Address, l1GatewayAddress, l2GatewayAddress} = tokenInfo.extensions
+    // This assumes one origin chain; should be chill
+    const originChainID = Object.keys(tokenInfo.extensions.bridgeInfo)[0]
+    const {  tokenAddress, originBridgeAddress, destBridgeAddress} = tokenInfo.extensions.bridgeInfo[originChainID]
     return {
-      l1Address,
+      l1Address:tokenAddress,
       l2Address,
-      l1GatewayAddress,
-      l2GatewayAddress
+      l1GatewayAddress:destBridgeAddress,
+      l2GatewayAddress:originBridgeAddress
     }
   })
 }

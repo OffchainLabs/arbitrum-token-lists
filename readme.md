@@ -1,6 +1,14 @@
-- update logo uri handling (save our json and zapper json locally)
-  - done, need to apply to OG list
-- handle paused address(1)
-- automate version bup
-- validate name/symbols
-- add precommit (ensure it plays nice w/ linter)
+### Setup
+From root:
+
+1. `cp .env.sample .env`
+2. In `.env`, set `MAINNET_RPC` var (i.e., set infura key or use different endpoint)
+3. `yarn install`
+
+### Arbify an L1 Token Lost
+
+yarn arbify --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org
+
+### Generate Full List
+
+`yarn fullList`

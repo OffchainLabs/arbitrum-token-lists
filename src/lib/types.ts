@@ -1,11 +1,15 @@
-import { TokenInfo, TokenList, schema } from '@uniswap/token-lists';
+import { TokenInfo, TokenList } from '@uniswap/token-lists';
 
 export interface ArbTokenInfo extends TokenInfo {
   extensions: {
-    l1Address: string | null;
-    l1GatewayAddress: string | null;
-    l2GatewayAddress: string | null;
-  };
+    bridgeInfo: {
+      [destinationChainID: string]:{
+        tokenAddress: string,
+        originBridgeAddress: string,
+        destBridgeAddress: string
+      }
+    }
+  }
 }
 
 export interface ArbTokenList extends TokenList {
@@ -21,3 +25,18 @@ export interface EtherscanToken {
 }
 
 export type EtherscanList = EtherscanToken[]
+
+
+export interface GraphTokenResult {
+  l2Address: string | null,
+  joinTableEntry: [{
+    gateway: {
+      gatewayAddr: string
+    }
+  }],
+  l1TokenAddr: string
+}
+
+export interface GraphTokensResult {
+  tokens: GraphTokenResult[]
+}

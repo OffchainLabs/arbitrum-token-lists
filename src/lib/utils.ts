@@ -1,23 +1,48 @@
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
-import { schema, TokenList } from '@uniswap/token-lists';
-import { writeFileSync, readFileSync, existsSync } from 'fs';
-import axios from 'axios';
-import { Bridge, L1GatewayRouter__factory, ERC20__factory } from 'arb-ts';
-import { utils } from 'ethers';
+import Ajv from "ajv";
+import addFormats from "ajv-formats";
+import { schema, TokenList } from "@uniswap/token-lists";
+import { writeFileSync, readFileSync, existsSync } from "fs";
+import axios from "axios";
+import {
+  Bridge,
+  L1GatewayRouter__factory,
+  ERC20__factory,
+  L2ERC20Gateway__factory,
+  BridgeHelper
+} from "arb-ts";
+import { utils, providers } from "ethers";
+import { GraphTokenResult, ArbTokenList } from './types'
 
 const routerIface = L1GatewayRouter__factory.createInterface();
 const tokenIface = ERC20__factory.createInterface();
 
-const zapperURIsBuff = readFileSync('./src/Assets/zapper_logo_uris.json');
+const coinGeckoBuff = readFileSync('./src/Assets/coingecko_uris.json');
 const logoURIsBuff = readFileSync('./src/Assets/logo_uris.json');
 
-const zapperURIs = JSON.parse(zapperURIsBuff.toString());
+const coingeckoURIs = JSON.parse(coinGeckoBuff.toString());
 const logoUris = JSON.parse(logoURIsBuff.toString());
+for (let address of Object.keys(logoUris)) {
+  logoUris[address.toLowerCase()] = logoUris[address];
+}
 
 export const listNameToFileName = (name: string) => {
-  return 'arbified_' + name.split(' ').join('_').toLowerCase() + '.json';
+  const prefix = "arbed_"
+  let fileName = name.split(' ').join('_').toLowerCase() + '.json';
+  if(!fileName.startsWith(prefix)){
+    fileName =  prefix + fileName
+  }
+  return fileName
 };
+
+export const listNameToArbifiedListName = (name: string)=>{
+  const prefix = "Arbed "
+
+  let fileName = sanitizeString(name)
+  if(!fileName.startsWith(prefix)){
+    fileName =  prefix + fileName
+  }
+  return fileName.split(' ').slice(0,2).join(' ').slice(0,20)
+}
 
 export const getL2TokenAddresses = async (
   l1TokenAddresses: string[],
@@ -100,9 +125,9 @@ export const getL2TokenData = async (
 export const getLogoUri = async (l1TokenAddress: string) => {
   const l1TokenAddressLCase = l1TokenAddress.toLowerCase();
   const logoUri: string | undefined = logoUris[l1TokenAddressLCase];
-  const zapperUri: string | undefined = zapperURIs[l1TokenAddressLCase];
+  const coinGeckoURI: string | undefined = coingeckoURIs[l1TokenAddressLCase];
   const trustWalletUri = `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${l1TokenAddress}/logo.png`;
-  const uris = [logoUri, zapperUri, trustWalletUri].filter(
+  const uris = [logoUri, coinGeckoURI, trustWalletUri].filter(
     (x): x is string => !!x
   );
 
@@ -112,11 +137,8 @@ export const getLogoUri = async (l1TokenAddress: string) => {
       if (res.status === 200) {
         return uri;
       }
-    } catch (e) {
-      console.info(`Query for logo uri ${uri} failed:`);
-    }
+    } catch (e) {}
   }
-  console.log('Could not get icon for', l1TokenAddress);
   return;
 };
 export const getTokenListObjFromUrl = async (url: string) => {
@@ -126,13 +148,32 @@ export const getTokenListObjFromLocalPath = async (path: string) => {
   return JSON.parse(readFileSync(path).toString()) as TokenList;
 };
 
-export const validateTokenList = (tokenList: TokenList) => {
+export const validateTokenList = (tokenList: ArbTokenList | TokenList) => {
   const ajv = new Ajv();
   addFormats(ajv);
   const validate = ajv.compile(schema);
 
   return validate(tokenList);
 };
+
+export const validateTokenListWithErrorThrowing = (tokenList: ArbTokenList | TokenList)=>{
+  let valid = validateTokenList(tokenList);
+  if (valid) {
+    return true;
+  } else {
+    console.log("Invalid token list:");
+    while (!valid && tokenList.tokens.length > 0){
+      const targetToken = tokenList.tokens.pop()
+      valid = validateTokenList(tokenList);
+      if(valid){
+        console.log('Bad token:', targetToken);
+        throw new Error('Invalid token list due to that token')
+        
+      }
+    }
+    throw new Error('Data does not confirm to token list schema; not sure why');
+  }
+}
 
 export const getTokenListObj = async (pathOrUrl: string) => {
   const tokenList: TokenList = await (async (pathOrUrl: string) => {
@@ -147,13 +188,8 @@ export const getTokenListObj = async (pathOrUrl: string) => {
     }
   })(pathOrUrl);
 
-  const valid = validateTokenList(tokenList);
-  if (valid) {
-    return tokenList;
-  } else {
-    console.log(tokenList);
-    throw new Error('Data does not confirm to token list schema');
-  }
+  validateTokenListWithErrorThrowing(tokenList);
+  return tokenList;
 };
 
 // https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url
@@ -170,6 +206,45 @@ function isValidHttpUrl(urlString: string) {
   return url.protocol === 'http:' || url.protocol === 'https:';
 }
 
+// typeguard:
+export const isArbTokenList = (obj:any)=>{
+  const expectedListKeys = ['name', 'timestamp', 'version', 'tokens']
+  const actualListKeys = new Set(Object.keys(obj))
+  if(!expectedListKeys.every((key)=>actualListKeys.has(key) )){
+    throw new Error("ArbTokenList typeguard error: requried list key not included")
+  }
+  const { version, tokens } = obj
+  if(!['major','minor', 'patch'].every((key)=>{    
+    return typeof version[key] === 'number'
+  })){
+    throw new Error("ArbTokenList typeguard error: invalid version")
+  }
+  if(!tokens.every((token:any)=>{
+    const tokenKeys = new Set(Object.keys(token))
+    return ['chainId', 'address','name', 'decimals','symbol', 'extensions' ].every((key)=>{
+      return tokenKeys.has(key)
+    })
+  })){
+    throw new Error ("ArbTokenList typeguard error: token missing required key")
+  }
+  tokens.forEach((token:any)=>{
+    
+    const {  extensions:  { bridgeInfo } } = token
+    const bridges = Object.keys(bridgeInfo)
+    if(!bridges.length){
+      throw new Error("ArbTokenList typeguard error: no bridge info found")
+    }
+    const someDestinationChain = bridges[0]
+    const { tokenAddress, originBridgeAddress, destBridgeAddress } = bridgeInfo[someDestinationChain]
+    
+    if(![tokenAddress, originBridgeAddress, destBridgeAddress ].every((k)=>k)){
+      throw new Error ("ArbTokenList typeguard error: missing extension")
+    }
+  })
+
+
+}
+
 export const sanitizeString = (str:string)=> str.replace(/[^ \w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)]/gi, '');
 
 export const excludeList = [
@@ -181,4 +256,7 @@ export const excludeList = [
   '0x99d8a9c45b2eca8864373a26d1459e3dff1e17f3', // mim
   '0x106538cc16f938776c7c180186975bca23875287', // remove once bridged (basv2)
   '0xB4A3B0Faf0Ab53df58001804DdA5Bfc6a3D59008', // spera
+  // "0x960b236a07cf122663c4303350609a66a7b288c0", //aragon old
 ].map((s) => s.toLowerCase());
+
+
