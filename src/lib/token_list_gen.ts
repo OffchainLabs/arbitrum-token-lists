@@ -104,6 +104,7 @@ export const generateTokenList = async (
   })
   tokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
 
+  console.log(`List has ${tokenList.length} bridged tokens`);
 
   if(options && options.includeUnbridgedL1Tokens){
     const l1AddressesOfBridgedTokens = new Set(tokens.map((token)=> token.l1TokenAddr.toLowerCase()))
@@ -120,7 +121,7 @@ export const generateTokenList = async (
 
       }
     }).sort((a, b) => (a.symbol < b.symbol ? -1 : 1))
-    console.log(`List has ${tokenList.length} bridged tokens and ${unbridgedL1Tokens.length} unbridged tokens`);
+    console.log(`List has ${unbridgedL1Tokens.length} unbridged tokens`);
     
     tokenList = tokenList.concat(unbridgedL1Tokens)
   }
@@ -152,7 +153,7 @@ export const generateTokenList = async (
   };
   validateTokenListWithErrorThrowing(arbTokenList);
 
- console.log(`Generated list with ${arbTokenList.tokens.length} tokens`);
+ console.log(`Generated list with total ${arbTokenList.tokens.length} tokens`);
  console.log('version:', version);
  
   
