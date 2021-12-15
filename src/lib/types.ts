@@ -1,7 +1,7 @@
 import { TokenInfo, TokenList } from '@uniswap/token-lists';
 
 export interface ArbTokenInfo extends TokenInfo {
-  extensions: {
+  extensions?: {
     bridgeInfo: {
       [destinationChainID: string]:{
         tokenAddress: string,
