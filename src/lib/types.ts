@@ -1,6 +1,8 @@
 import { TokenInfo, TokenList } from '@uniswap/token-lists';
 
-export interface ArbTokenInfo extends TokenInfo {
+// extensions object is allowed to be 2 levels deep, but type is out-of-date
+// https://github.com/Uniswap/token-lists/pull/67
+export interface ArbTokenInfo extends Omit<TokenInfo, 'extensions'> {
   extensions?: {
     bridgeInfo: {
       [destinationChainID: string]:{
@@ -12,7 +14,7 @@ export interface ArbTokenInfo extends TokenInfo {
   }
 }
 
-export interface ArbTokenList extends TokenList {
+export interface ArbTokenList extends Omit<TokenList, 'tokens'> {
   tokens: ArbTokenInfo[];
 }
 
