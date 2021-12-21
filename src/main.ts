@@ -6,6 +6,7 @@ import {
 } from './lib/token_list_gen';
 import { writeFileSync, existsSync, mkdirSync } from 'fs';
 import args from './lib/getClargs';
+import { TokenList } from '@uniswap/token-lists';
 
 const TOKENLIST_DIR_PATH = __dirname +'/ArbTokenLists'
 const FULLLIST_DIR_PATH = __dirname +'/FullList'
@@ -27,7 +28,18 @@ if(!existsSync(FULLLIST_DIR_PATH)){
 
     await arbifyL1List(args.tokenList);
   } else if (args.action === 'full') {
-    const tokenData = await generateTokenList('all', 'Full', "ipfs://QmTvWJ4kmzq9koK74WJQ594ov8Es1HHurHZmMmhU8VY68y");
+    const mockList: TokenList = {
+      name: "Full",
+      logoURI: "ipfs://QmTvWJ4kmzq9koK74WJQ594ov8Es1HHurHZmMmhU8VY68y",
+      timestamp: new Date().toISOString(),
+      version: {
+        major: 1,
+        minor: 0,
+        patch: 0
+      },
+      tokens: []
+    }
+    const tokenData = await generateTokenList(mockList, undefined, { getAllTokensInNetwork: true });
     
     const etherscanData = arbListtoEtherscanList(tokenData)
     const fullListPath = __dirname + '/FullList/all_tokens.json';
