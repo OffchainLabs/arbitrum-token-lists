@@ -221,24 +221,25 @@ export const isArbTokenList = (obj:any)=>{
   }
   if(!tokens.every((token:any)=>{
     const tokenKeys = new Set(Object.keys(token))
-    return ['chainId', 'address','name', 'decimals','symbol', 'extensions' ].every((key)=>{
+    return ['chainId', 'address','name', 'decimals','symbol' ].every((key)=>{
       return tokenKeys.has(key)
     })
   })){
     throw new Error ("ArbTokenList typeguard error: token missing required key")
   }
   tokens.forEach((token:any)=>{
-    
-    const {  extensions:  { bridgeInfo } } = token
-    const bridges = Object.keys(bridgeInfo)
-    if(!bridges.length){
-      throw new Error("ArbTokenList typeguard error: no bridge info found")
-    }
-    const someDestinationChain = bridges[0]
-    const { tokenAddress, originBridgeAddress, destBridgeAddress } = bridgeInfo[someDestinationChain]
-    
-    if(![tokenAddress, originBridgeAddress, destBridgeAddress ].every((k)=>k)){
-      throw new Error ("ArbTokenList typeguard error: missing extension")
+    if (token.extensions && token.extensions.bridgeInfo){
+      const {  extensions:  { bridgeInfo } } = token
+      const bridges = Object.keys(bridgeInfo)
+      if(!bridges.length){
+        throw new Error("ArbTokenList typeguard error: no bridge info found")
+      }
+      const someDestinationChain = bridges[0]
+      const { tokenAddress, originBridgeAddress, destBridgeAddress } = bridgeInfo[someDestinationChain]
+      
+      if(![tokenAddress, originBridgeAddress, destBridgeAddress ].every((k)=>k)){
+        throw new Error ("ArbTokenList typeguard error: missing extension")
+      }
     }
   })
 
