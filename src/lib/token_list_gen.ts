@@ -114,10 +114,10 @@ export const generateTokenList = async (
   if(options && options.includeUnbridgedL1Tokens){
     const l1AddressesOfBridgedTokens = new Set(tokens.map((token)=> token.l1TokenAddr.toLowerCase()))
     const unbridgedL1Tokens:ArbTokenInfo[] = l1TokenList.tokens.filter((l1TokenInfo)=>{
-      return !l1AddressesOfBridgedTokens.has(l1TokenInfo.address.toLowerCase())
+      return !l1AddressesOfBridgedTokens.has(l1TokenInfo.address.toLowerCase()) && l1TokenInfo.chainId === +l1Network.chainID
     }).map((l1TokenInfo)=>{
       return {
-        chainId: +l1Network.chainID,
+        chainId: +l1TokenInfo.chainId,
         name: l1TokenInfo.name,
         address: l1TokenInfo.address,
         symbol: l1TokenInfo.symbol,
