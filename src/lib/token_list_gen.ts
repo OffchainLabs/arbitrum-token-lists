@@ -228,7 +228,9 @@ export const updateArbifiedList = async (pathOrUrl: string) => {
     isArbTokenList(prevArbTokenList)
   } 
 
-  const newList = await generateTokenList(arbTokenList, prevArbTokenList);
+  const newList = await generateTokenList(arbTokenList, prevArbTokenList, { 
+    includeAllL1Tokens: true
+  });
 
   writeFileSync(path, JSON.stringify(newList));
   console.log('Token list generated at', path );

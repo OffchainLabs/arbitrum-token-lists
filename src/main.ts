@@ -3,6 +3,7 @@ import {
   generateTokenList,
   arbifyL1List,
   arbListtoEtherscanList,
+  updateArbifiedList,
 } from './lib/token_list_gen';
 import { writeFileSync, existsSync, mkdirSync } from 'fs';
 import args from './lib/getClargs';
@@ -27,7 +28,13 @@ if(!existsSync(FULLLIST_DIR_PATH)){
     if (!args.tokenList) throw new Error('No token list provided');
 
     await arbifyL1List(args.tokenList);
-  } else if (args.action === 'full') {
+  }  else if(args.action === "update") {
+    if (!args.tokenList) throw new Error('No token list provided');
+
+    await updateArbifiedList(args.tokenList)
+  }
+  
+  else if (args.action === 'full') {
     const mockList: TokenList = {
       name: "Full",
       logoURI: "ipfs://QmTvWJ4kmzq9koK74WJQ594ov8Es1HHurHZmMmhU8VY68y",
