@@ -45,11 +45,21 @@ export const generateTokenList = async (
   l1TokenList: TokenList,
   prevArbTokenList?: ArbTokenList,
   options?: {
+    /**
+     * Append all tokens from the original l1TokenList to the output list.
+     */
     includeAllL1Tokens?: boolean,
+    /**
+     * Append all unbridged tokens from original l1TokenList to the output list.
+     */
     includeUnbridgedL1Tokens?: boolean,
     getAllTokensInNetwork?: boolean
   }
 ) => {
+  if(options?.includeAllL1Tokens && options.includeUnbridgedL1Tokens) {
+    throw new Error("Cannot include both of AllL1Tokens and UnbridgedL1Tokens since UnbridgedL1Tokens is a subset of AllL1Tokens.")
+  }
+
   const name = l1TokenList.name
   const mainLogoUri = l1TokenList.logoURI
 
@@ -112,14 +122,9 @@ export const generateTokenList = async (
 
   console.log(`List has ${l2TokenList.length} bridged tokens`);
 
-  let unbridgedL1Tokens:ArbTokenInfo[]  = []
-  if(options && options.includeUnbridgedL1Tokens){
-    const l1AddressesOfBridgedTokens = new Set(tokens.map((token)=> token.l1TokenAddr.toLowerCase()))
-    unbridgedL1Tokens = l1TokenList.tokens.filter((l1TokenInfo)=>{
-      return !l1AddressesOfBridgedTokens.has(l1TokenInfo.address.toLowerCase()) && l1TokenInfo.chainId === +l1Network.chainID
-    }).filter(
-      (l1TokenInfo) => l1TokenInfo.chainId !== parseInt(l2Network.chainID)
-    ).map((l1TokenInfo)=>{
+  const allOtherTokens = l1TokenList.tokens.filter(
+    (l1TokenInfo) => l1TokenInfo.chainId !== parseInt(l2Network.chainID)
+  ).map((l1TokenInfo)=>{
       return {
         chainId: +l1TokenInfo.chainId,
         name: l1TokenInfo.name,
@@ -127,32 +132,20 @@ export const generateTokenList = async (
         symbol: l1TokenInfo.symbol,
         decimals: l1TokenInfo.decimals,
         logoURI: l1TokenInfo.logoURI
-
       }
+  })
+
+  if(options?.includeAllL1Tokens) {
+    l2TokenList = l2TokenList.concat(allOtherTokens)
+  } else if(options?.includeUnbridgedL1Tokens) {
+    const l1AddressesOfBridgedTokens = new Set(tokens.map((token)=> token.l1TokenAddr.toLowerCase()))
+    const unbridgedTokens = allOtherTokens.filter((l1TokenInfo)=>{
+      return !l1AddressesOfBridgedTokens.has(l1TokenInfo.address.toLowerCase()) && l1TokenInfo.chainId === +l1Network.chainID
     }).sort((a, b) => (a.symbol < b.symbol ? -1 : 1))
-    console.log(`List has ${unbridgedL1Tokens.length} unbridged tokens`);
-    
-  }
+    console.log(`List has ${unbridgedTokens.length} unbridged tokens`);
 
-  if(options && options.includeAllL1Tokens) {
-    l2TokenList = l2TokenList.concat(l1TokenList.tokens.filter(
-        (l1TokenInfo) => l1TokenInfo.chainId !== parseInt(l2Network.chainID)
-      )
-      .map((l1TokenInfo)=>{
-        return {
-          chainId: +l1TokenInfo.chainId,
-          name: l1TokenInfo.name,
-          address: l1TokenInfo.address,
-          symbol: l1TokenInfo.symbol,
-          decimals: l1TokenInfo.decimals,
-          logoURI: l1TokenInfo.logoURI
-        }
-    }).sort((a, b) => (a.symbol < b.symbol ? -1 : 1)))
-    
-  } else if(options && options.includeUnbridgedL1Tokens) {
-    l2TokenList = l2TokenList.concat(unbridgedL1Tokens)
+    l2TokenList = l2TokenList.concat(unbridgedTokens)
   }
-
 
   const version = (()=>{
     if(prevArbTokenList){
