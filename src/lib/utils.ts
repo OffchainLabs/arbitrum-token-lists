@@ -44,7 +44,7 @@ export const listNameToArbifiedListName = (name: string)=>{
   return fileName.split(' ').slice(0,2).join(' ').slice(0,20)
 }
 
-export const getL2TokenAddresses = async (
+export const getL2TokenAddressesFromL1 = async (
   l1TokenAddresses: string[],
   bridge: Bridge
 ) => {
@@ -58,6 +58,28 @@ export const getL2TokenAddresses = async (
     };
   });
   const l2Addresses = await bridge.l1Bridge.getMulticallAggregate(calls);
+  const _l2Addresses = l2Addresses.map((m, i) => {
+    const x = l2Addresses && l2Addresses[i] && l2Addresses[i];
+    return (x && (x[0] as string)) || '';
+  });
+
+  return _l2Addresses;
+};
+
+export const getL2TokenAddressesFromL2 = async (
+  l1TokenAddresses: string[],
+  bridge: Bridge
+) => {
+  const { network: l2Network } = bridge.l2Bridge;
+
+  const calls = l1TokenAddresses.map((l1TokenAddress: string) => {
+    return {
+      target: l2Network.tokenBridge.l2GatewayRouter,
+      funcFragment: routerIface.functions['calculateL2TokenAddress(address)'],
+      values: [l1TokenAddress],
+    };
+  });
+  const l2Addresses = await bridge.l2Bridge.getMulticallAggregate(calls);
   const _l2Addresses = l2Addresses.map((m, i) => {
     const x = l2Addresses && l2Addresses[i] && l2Addresses[i];
     return (x && (x[0] as string)) || '';
