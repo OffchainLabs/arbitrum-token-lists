@@ -45,10 +45,21 @@ export const generateTokenList = async (
   l1TokenList: TokenList,
   prevArbTokenList?: ArbTokenList,
   options?: {
+    /**
+     * Append all tokens from the original l1TokenList to the output list.
+     */
+    includeAllL1Tokens?: boolean,
+    /**
+     * Append all unbridged tokens from original l1TokenList to the output list.
+     */
     includeUnbridgedL1Tokens?: boolean,
     getAllTokensInNetwork?: boolean
   }
 ) => {
+  if(options?.includeAllL1Tokens && options.includeUnbridgedL1Tokens) {
+    throw new Error("Cannot include both of AllL1Tokens and UnbridgedL1Tokens since UnbridgedL1Tokens is a subset of AllL1Tokens.")
+  }
+
   const name = l1TokenList.name
   const mainLogoUri = l1TokenList.logoURI
 
@@ -77,7 +88,7 @@ export const generateTokenList = async (
     logoUris.push(uri);
   }
 
-  let l2TokenList:ArbTokenInfo[] = tokens.map((token, i: number) => {
+  let arbifiedTokenList:ArbTokenInfo[] = tokens.map((token, i: number) => {
     const l2GatewayAddress = token.joinTableEntry[0].gateway.gatewayAddr;
     const address = l2AddressesFromL1[i];
     let { name:_name, decimals, symbol:_symbol } = tokenData[i];
@@ -111,15 +122,13 @@ export const generateTokenList = async (
   }).filter((tokenInfo: ArbTokenInfo)=>{
     return tokenInfo.extensions && tokenInfo.extensions.bridgeInfo[l1Network.chainID].originBridgeAddress !== "0x0000000000000000000000000000000000000001" 
   })
-  l2TokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
+  arbifiedTokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
 
-  console.log(`List has ${l2TokenList.length} bridged tokens`);
+  console.log(`List has ${arbifiedTokenList.length} bridged tokens`);
 
-  if(options && options.includeUnbridgedL1Tokens){
-    const l1AddressesOfBridgedTokens = new Set(tokens.map((token)=> token.l1TokenAddr.toLowerCase()))
-    const unbridgedL1Tokens:ArbTokenInfo[] = l1TokenList.tokens.filter((l1TokenInfo)=>{
-      return !l1AddressesOfBridgedTokens.has(l1TokenInfo.address.toLowerCase()) && l1TokenInfo.chainId === +l1Network.chainID
-    }).map((l1TokenInfo)=>{
+  const allOtherTokens = l1TokenList.tokens.filter(
+    (l1TokenInfo) => l1TokenInfo.chainId !== parseInt(l2Network.chainID)
+  ).map((l1TokenInfo)=>{
       return {
         chainId: +l1TokenInfo.chainId,
         name: l1TokenInfo.name,
@@ -127,18 +136,25 @@ export const generateTokenList = async (
         symbol: l1TokenInfo.symbol,
         decimals: l1TokenInfo.decimals,
         logoURI: l1TokenInfo.logoURI
-
       }
+  })
+
+  if(options?.includeAllL1Tokens) {
+    arbifiedTokenList = arbifiedTokenList.concat(allOtherTokens)
+  } else if(options?.includeUnbridgedL1Tokens) {
+    const l1AddressesOfBridgedTokens = new Set(tokens.map((token)=> token.l1TokenAddr.toLowerCase()))
+    const unbridgedTokens = allOtherTokens.filter((l1TokenInfo)=>{
+      return !l1AddressesOfBridgedTokens.has(l1TokenInfo.address.toLowerCase()) && l1TokenInfo.chainId === +l1Network.chainID
     }).sort((a, b) => (a.symbol < b.symbol ? -1 : 1))
-    console.log(`List has ${unbridgedL1Tokens.length} unbridged tokens`);
-    
-    l2TokenList = l2TokenList.concat(unbridgedL1Tokens)
+    console.log(`List has ${unbridgedTokens.length} unbridged tokens`);
+
+    arbifiedTokenList = arbifiedTokenList.concat(unbridgedTokens)
   }
 
   const version = (()=>{
     if(prevArbTokenList){
       // @ts-ignore
-      let versionBump = minVersionBump(prevArbTokenList.tokens, l2TokenList)
+      let versionBump = minVersionBump(prevArbTokenList.tokens, arbifiedTokenList)
 
       // tmp: library doesn't nicely handle patches (for extensions object)
       if(versionBump === VersionUpgrade.PATCH){
@@ -157,7 +173,7 @@ export const generateTokenList = async (
     name: listNameToArbifiedListName(name),
     timestamp: new Date().toISOString(),
     version,
-    tokens: l2TokenList,
+    tokens: arbifiedTokenList,
     logoURI: mainLogoUri
   };
   validateTokenListWithErrorThrowing(arbTokenList);
@@ -189,7 +205,7 @@ export const arbifyL1List = async (pathOrUrl: string) => {
   );
 
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
-    includeUnbridgedL1Tokens: true
+    includeAllL1Tokens: true
   });
 
   writeFileSync(path, JSON.stringify(newList));
@@ -213,7 +229,9 @@ export const updateArbifiedList = async (pathOrUrl: string) => {
     isArbTokenList(prevArbTokenList)
   } 
 
-  const newList = await generateTokenList(arbTokenList, prevArbTokenList);
+  const newList = await generateTokenList(arbTokenList, prevArbTokenList, { 
+    includeAllL1Tokens: true
+  });
 
   writeFileSync(path, JSON.stringify(newList));
   console.log('Token list generated at', path );
