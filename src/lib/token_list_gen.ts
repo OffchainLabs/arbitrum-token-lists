@@ -84,7 +84,7 @@ export const generateTokenList = async (
     logoUris.push(uri);
   }
 
-  let l2TokenList:ArbTokenInfo[] = tokens.map((token, i: number) => {
+  let arbifiedTokenList:ArbTokenInfo[] = tokens.map((token, i: number) => {
     const l2GatewayAddress = token.joinTableEntry[0].gateway.gatewayAddr;
     const address = l2Addresses[i];
     let { name:_name, decimals, symbol:_symbol } = tokenData[i];
@@ -118,9 +118,9 @@ export const generateTokenList = async (
   }).filter((tokenInfo: ArbTokenInfo)=>{
     return tokenInfo.extensions && tokenInfo.extensions.bridgeInfo[l1Network.chainID].originBridgeAddress !== "0x0000000000000000000000000000000000000001" 
   })
-  l2TokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
+  arbifiedTokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
 
-  console.log(`List has ${l2TokenList.length} bridged tokens`);
+  console.log(`List has ${arbifiedTokenList.length} bridged tokens`);
 
   const allOtherTokens = l1TokenList.tokens.filter(
     (l1TokenInfo) => l1TokenInfo.chainId !== parseInt(l2Network.chainID)
@@ -136,7 +136,7 @@ export const generateTokenList = async (
   })
 
   if(options?.includeAllL1Tokens) {
-    l2TokenList = l2TokenList.concat(allOtherTokens)
+    arbifiedTokenList = arbifiedTokenList.concat(allOtherTokens)
   } else if(options?.includeUnbridgedL1Tokens) {
     const l1AddressesOfBridgedTokens = new Set(tokens.map((token)=> token.l1TokenAddr.toLowerCase()))
     const unbridgedTokens = allOtherTokens.filter((l1TokenInfo)=>{
@@ -144,13 +144,13 @@ export const generateTokenList = async (
     }).sort((a, b) => (a.symbol < b.symbol ? -1 : 1))
     console.log(`List has ${unbridgedTokens.length} unbridged tokens`);
 
-    l2TokenList = l2TokenList.concat(unbridgedTokens)
+    arbifiedTokenList = arbifiedTokenList.concat(unbridgedTokens)
   }
 
   const version = (()=>{
     if(prevArbTokenList){
       // @ts-ignore
-      let versionBump = minVersionBump(prevArbTokenList.tokens, l2TokenList)
+      let versionBump = minVersionBump(prevArbTokenList.tokens, arbifiedTokenList)
 
       // tmp: library doesn't nicely handle patches (for extensions object)
       if(versionBump === VersionUpgrade.PATCH){
@@ -169,7 +169,7 @@ export const generateTokenList = async (
     name: listNameToArbifiedListName(name),
     timestamp: new Date().toISOString(),
     version,
-    tokens: l2TokenList,
+    tokens: arbifiedTokenList,
     logoURI: mainLogoUri
   };
   validateTokenListWithErrorThrowing(arbTokenList);
