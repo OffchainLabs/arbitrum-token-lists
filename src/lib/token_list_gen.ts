@@ -68,13 +68,7 @@ export const generateTokenList = async (
   const l2AddressesFromL2 = await getL2TokenAddressesFromL2(l1TokenAddresses, bridge);
 
   // if the l2 route hasn't been updated yet we remove the token from the bridged tokens
-  for (let index = 0; index < l2AddressesFromL1.length; index++) {
-    const l1RoutedAddr = l2AddressesFromL1[index]
-    const l2RoutedAddr = l2AddressesFromL2[index]
-    if(l1RoutedAddr !== l2RoutedAddr) {
-      tokens.splice(index, 1)
-    }
-  }
+  tokens = tokens.filter((t, i) => l2AddressesFromL1[i] === l2AddressesFromL2[i])
 
   const tokenData = await getL2TokenData(l2AddressesFromL1, bridge);
   const logoUris: (string | undefined)[] = [];
