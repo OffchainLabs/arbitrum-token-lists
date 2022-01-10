@@ -1,12 +1,12 @@
 import {  minVersionBump, nextVersion, Version, diffTokenLists, VersionUpgrade, TokenList } from '@uniswap/token-lists';
 import { instantiateBridge } from './instantiate_bridge';
 import { getAllTokens, getTokens } from './graph';
-import { TokenInfo } from '@uniswap/token-lists';
 
 import { ArbTokenList, ArbTokenInfo, EtherscanList, GraphTokenResult } from './types';
 import {
   getL2TokenData,
-  getL2TokenAddresses,
+  getL2TokenAddressesFromL1,
+  getL2TokenAddressesFromL2,
   getLogoUri,
   getTokenListObj,
   listNameToFileName,
@@ -64,9 +64,13 @@ export const generateTokenList = async (
 
   
   const l1TokenAddresses = tokens.map((token:GraphTokenResult) => token.l1TokenAddr);
-  const l2Addresses = await getL2TokenAddresses(l1TokenAddresses, bridge);
-  
-  const tokenData = await getL2TokenData(l2Addresses, bridge);
+  const l2AddressesFromL1 = await getL2TokenAddressesFromL1(l1TokenAddresses, bridge);
+  const l2AddressesFromL2 = await getL2TokenAddressesFromL2(l1TokenAddresses, bridge);
+
+  // if the l2 route hasn't been updated yet we remove the token from the bridged tokens
+  tokens = tokens.filter((t, i) => l2AddressesFromL1[i] === l2AddressesFromL2[i])
+
+  const tokenData = await getL2TokenData(l2AddressesFromL1, bridge);
   const logoUris: (string | undefined)[] = [];
   for (const token of tokens) {
     const uri = await getLogoUri(token.l1TokenAddr);
@@ -75,7 +79,7 @@ export const generateTokenList = async (
 
   let l2TokenList:ArbTokenInfo[] = tokens.map((token, i: number) => {
     const l2GatewayAddress = token.joinTableEntry[0].gateway.gatewayAddr;
-    const address = l2Addresses[i];
+    const address = l2AddressesFromL1[i];
     let { name:_name, decimals, symbol:_symbol } = tokenData[i];
     const name = sanitizeString(_name)
     const symbol = sanitizeString(_symbol)
