@@ -217,7 +217,7 @@ export const arbifyL1List = async (pathOrUrl: string) => {
 
 export const updateArbifiedList = async (pathOrUrl: string) => {
   const arbTokenList = await getTokenListObj(pathOrUrl);
-  removeInvalidTokensFromList(arbTokenList) as typeof arbTokenList
+  removeInvalidTokensFromList(arbTokenList)
   const path = process.env.PWD +
   '/src/ArbTokenLists/' +
   listNameToFileName(arbTokenList.name);
