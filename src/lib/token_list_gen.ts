@@ -13,7 +13,8 @@ import {
   validateTokenListWithErrorThrowing,
   sanitizeString,
   listNameToArbifiedListName,
-  isArbTokenList
+  isArbTokenList,
+  removeInvalidTokensFromList
 } from './utils';
 import { writeFileSync, writeFile, readFileSync, existsSync } from 'fs';
 
@@ -187,6 +188,7 @@ export const generateTokenList = async (
 
 export const arbifyL1List = async (pathOrUrl: string) => {
   const l1TokenList = await getTokenListObj(pathOrUrl);
+  removeInvalidTokensFromList(l1TokenList)
   const path = process.env.PWD +
   '/src/ArbTokenLists/' +
   listNameToFileName(l1TokenList.name);
@@ -214,8 +216,8 @@ export const arbifyL1List = async (pathOrUrl: string) => {
 };
 
 export const updateArbifiedList = async (pathOrUrl: string) => {
-  // @ts-ignore
   const arbTokenList = await getTokenListObj(pathOrUrl);
+  removeInvalidTokensFromList(arbTokenList) as typeof arbTokenList
   const path = process.env.PWD +
   '/src/ArbTokenLists/' +
   listNameToFileName(arbTokenList.name);
