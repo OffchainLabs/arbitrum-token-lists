@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import { getL1Network, getL2Network, MultiCaller, TokenBridger } from "arb-ts"
 dotenv.config();
 
-const networkID = args.networkID?.toString() || '42161';
+const networkID = args.l2NetworkID?.toString() || '42161';
 
 console.log('Using L2 networkID:', networkID);
 

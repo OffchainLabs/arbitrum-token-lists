@@ -20,7 +20,7 @@ import yargs from 'yargs/yargs';
 
 const argv = yargs(process.argv.slice(2))
   .options({
-    networkID: {
+    l2NetworkID: {
       type: 'number',
     },
     tokenList: {
