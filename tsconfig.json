@@ -6,7 +6,7 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "strict": true,
-    "allowJs": true,
+    // "allowJs": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
