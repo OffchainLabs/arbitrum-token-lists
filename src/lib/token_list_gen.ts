@@ -14,6 +14,7 @@ import {
   listNameToArbifiedListName,
   isArbTokenList
 } from './utils';
+import { constants as arbConstants } from "arb-ts"
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
 
@@ -93,6 +94,8 @@ export const generateTokenList = async (
 
   let arbifiedTokenList:ArbTokenInfo[] = tokens
       .map((t, i) => ({token: t, l2Address: l2AddressesFromL2[i], tokenDatum: tokenData[i]}))
+      // it's possible that even though l2AddressesFromL1[i] === l2AddressesFromL2[i] these addresses could be the zero address
+      // this can happen if the graphql query returns an address that hasnt been bridged
       .filter((t): t is typeof t & { l2Address: string } => t.l2Address != undefined && t.l2Address !== constants.AddressZero)
       .map((token, i: number) => {
     const l2GatewayAddress = token.token.joinTableEntry[0].gateway.gatewayAddr;
@@ -128,7 +131,7 @@ export const generateTokenList = async (
 
     return arbTokenInfo;
   }).filter((tokenInfo: ArbTokenInfo)=>{
-    return tokenInfo.extensions && tokenInfo.extensions.bridgeInfo[l1.network.chainID].originBridgeAddress !== "0x0000000000000000000000000000000000000001" 
+    return tokenInfo.extensions && tokenInfo.extensions.bridgeInfo[l1.network.chainID].originBridgeAddress !== arbConstants.DISABLED_GATEWAY 
   })
   arbifiedTokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
 

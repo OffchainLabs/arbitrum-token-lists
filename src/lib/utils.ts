@@ -126,7 +126,7 @@ export const validateTokenListWithErrorThrowing = (
   if (valid) return true
   else {
     console.log('Invalid token list:')
-    throw new Error('Data does not confirm to token list schema; not sure why')
+    throw new Error('Data does not conform to token list schema; not sure why')
   }
 }
 
