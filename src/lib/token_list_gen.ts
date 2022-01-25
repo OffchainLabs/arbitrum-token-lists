@@ -1,10 +1,9 @@
-import {  minVersionBump, nextVersion, Version, diffTokenLists, VersionUpgrade, TokenList } from '@uniswap/token-lists';
-import { instantiateBridge } from './instantiate_bridge';
+import {  minVersionBump, nextVersion, VersionUpgrade, TokenList } from '@uniswap/token-lists';
 import { getAllTokens, getTokens } from './graph';
+import { constants } from 'ethers'
 
 import { ArbTokenList, ArbTokenInfo, EtherscanList, GraphTokenResult } from './types';
 import {
-  getL2TokenData,
   getL2TokenAddressesFromL1,
   getL2TokenAddressesFromL2,
   getLogoUri,
@@ -16,7 +15,9 @@ import {
   isArbTokenList,
   removeInvalidTokensFromList
 } from './utils';
-import { writeFileSync, writeFile, readFileSync, existsSync } from 'fs';
+import { constants as arbConstants } from "arb-ts"
+import { writeFileSync, readFileSync, existsSync } from 'fs';
+import { getNetworkConfig } from './instantiate_bridge';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -64,48 +65,58 @@ export const generateTokenList = async (
   const name = l1TokenList.name
   const mainLogoUri = l1TokenList.logoURI
 
-  const bridgeData = await instantiateBridge();
-  const { bridge, l1Network, l2Network } = bridgeData;
+  const { l1 , l2 } = await getNetworkConfig();
+
   let tokens =
     options && options.getAllTokensInNetwork
-      ? await getAllTokens(l2Network.chainID)
+      ? await getAllTokens(l2.network.chainID)
       : await getTokens(
           l1TokenList.tokens.map((token) => token.address.toLowerCase()),
-          l2Network.chainID
+          l2.network.chainID
         );
 
   
   const l1TokenAddresses = tokens.map((token:GraphTokenResult) => token.l1TokenAddr);
-  const l2AddressesFromL1 = await getL2TokenAddressesFromL1(l1TokenAddresses, bridge);
-  const l2AddressesFromL2 = await getL2TokenAddressesFromL2(l1TokenAddresses, bridge);
+  const l2AddressesFromL1 = await getL2TokenAddressesFromL1(l1TokenAddresses, l1.multiCaller, l2.network.tokenBridge.l1GatewayRouter);
+  const l2AddressesFromL2 = await getL2TokenAddressesFromL2(l1TokenAddresses, l2.multiCaller, l2.network.tokenBridge.l2GatewayRouter);
 
   // if the l2 route hasn't been updated yet we remove the token from the bridged tokens
   tokens = tokens.filter((t, i) => l2AddressesFromL1[i] === l2AddressesFromL2[i])
 
-  const tokenData = await getL2TokenData(l2AddressesFromL1, bridge);
+  const tokenData = await l2.multiCaller.getTokenData(
+    l2AddressesFromL1.map(t => t || constants.AddressZero),
+    { name: true, decimals: true, symbol: true }
+  )
   const logoUris: (string | undefined)[] = [];
   for (const token of tokens) {
     const uri = await getLogoUri(token.l1TokenAddr);
     logoUris.push(uri);
   }
 
-  let arbifiedTokenList:ArbTokenInfo[] = tokens.map((token, i: number) => {
-    const l2GatewayAddress = token.joinTableEntry[0].gateway.gatewayAddr;
-    const address = l2AddressesFromL1[i];
-    let { name:_name, decimals, symbol:_symbol } = tokenData[i];
+  let arbifiedTokenList:ArbTokenInfo[] = tokens
+      .map((t, i) => ({token: t, l2Address: l2AddressesFromL2[i], tokenDatum: tokenData[i]}))
+      // it's possible that even though l2AddressesFromL1[i] === l2AddressesFromL2[i] these addresses could be the zero address
+      // this can happen if the graphql query returns an address that hasnt been bridged
+      .filter((t): t is typeof t & { l2Address: string } => t.l2Address != undefined && t.l2Address !== constants.AddressZero)
+      .map((token, i: number) => {
+    const l2GatewayAddress = token.token.joinTableEntry[0].gateway.gatewayAddr;
+    let { name:_name, decimals, symbol:_symbol } = token.tokenDatum;
+    if(!_name) throw new Error(`Unexpected undefined token name: ${JSON.stringify(token)}`);
+    if(!decimals) throw new Error(`Unexpected undefined token decimals: ${JSON.stringify(token)}`);
+    if(!_symbol) throw new Error(`Unexpected undefined token symbol: ${JSON.stringify(token)}`);
     const name = sanitizeString(_name)
     const symbol = sanitizeString(_symbol)
 
     let arbTokenInfo = {
-      chainId: +l2Network.chainID,
-      address: address,
+      chainId: +l2.network.chainID,
+      address: token.l2Address,
       name,
       symbol,
       decimals,
       extensions: {
         bridgeInfo: {
-          [l1Network.chainID]: {
-            tokenAddress: token.l1TokenAddr,
+          [l1.network.chainID]: {
+            tokenAddress: token.token.l1TokenAddr,
             originBridgeAddress: l2GatewayAddress,
             destBridgeAddress: l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()]
           }
@@ -115,20 +126,20 @@ export const generateTokenList = async (
     if (logoUris[i]) {
       arbTokenInfo = { ...{ logoURI: logoUris[i] }, ...arbTokenInfo };
     } else {
-      console.log('no logo uri for ',token.l1TokenAddr, symbol);
+      console.log('no logo uri for ',token.token.l1TokenAddr, symbol);
       
     }
 
     return arbTokenInfo;
   }).filter((tokenInfo: ArbTokenInfo)=>{
-    return tokenInfo.extensions && tokenInfo.extensions.bridgeInfo[l1Network.chainID].originBridgeAddress !== "0x0000000000000000000000000000000000000001" 
+    return tokenInfo.extensions && tokenInfo.extensions.bridgeInfo[l1.network.chainID].originBridgeAddress !== arbConstants.DISABLED_GATEWAY 
   })
   arbifiedTokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
 
   console.log(`List has ${arbifiedTokenList.length} bridged tokens`);
 
   const allOtherTokens = l1TokenList.tokens.filter(
-    (l1TokenInfo) => l1TokenInfo.chainId !== parseInt(l2Network.chainID)
+    (l1TokenInfo) => l1TokenInfo.chainId !== parseInt(l2.network.chainID)
   ).map((l1TokenInfo)=>{
       return {
         chainId: +l1TokenInfo.chainId,
@@ -145,7 +156,7 @@ export const generateTokenList = async (
   } else if(options?.includeUnbridgedL1Tokens) {
     const l1AddressesOfBridgedTokens = new Set(tokens.map((token)=> token.l1TokenAddr.toLowerCase()))
     const unbridgedTokens = allOtherTokens.filter((l1TokenInfo)=>{
-      return !l1AddressesOfBridgedTokens.has(l1TokenInfo.address.toLowerCase()) && l1TokenInfo.chainId === +l1Network.chainID
+      return !l1AddressesOfBridgedTokens.has(l1TokenInfo.address.toLowerCase()) && l1TokenInfo.chainId === +l1.network.chainID
     }).sort((a, b) => (a.symbol < b.symbol ? -1 : 1))
     console.log(`List has ${unbridgedTokens.length} unbridged tokens`);
 
@@ -177,11 +188,18 @@ export const generateTokenList = async (
     tokens: arbifiedTokenList,
     logoURI: mainLogoUri
   };
-  validateTokenListWithErrorThrowing(arbTokenList);
 
- console.log(`Generated list with total ${arbTokenList.tokens.length} tokens`);
- console.log('version:', version);
- 
+  // some tokens use an old name with doesnt validate - eg maker
+  // which has the name in hex
+  const makerName = "4d616b6572000000000000000000000000000000000000000000000000000000"
+  const validationTokenList: ArbTokenList = {
+    ...arbTokenList,
+    tokens: arbTokenList.tokens.filter(t => t.name !== makerName)
+  };
+  validateTokenListWithErrorThrowing(validationTokenList);
+
+  console.log(`Generated list with total ${arbTokenList.tokens.length} tokens`);
+  console.log('version:', version);
   
   return arbTokenList;
 };
