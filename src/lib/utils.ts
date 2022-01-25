@@ -103,7 +103,7 @@ export const getTokenListObjFromLocalPath = async (path: string) => {
   return JSON.parse(readFileSync(path).toString()) as TokenList
 }
 
-export const validateTokenList = (tokenList: ArbTokenList | TokenList) => {
+export const tokenListIsValid = (tokenList: ArbTokenList | TokenList) => {
   const ajv = new Ajv()
   addFormats(ajv)
   const validate = ajv.compile(schema)
@@ -122,11 +122,39 @@ export const validateTokenList = (tokenList: ArbTokenList | TokenList) => {
 export const validateTokenListWithErrorThrowing = (
   tokenList: ArbTokenList | TokenList,
 ) => {
-  let valid = validateTokenList(tokenList)
+  let valid = tokenListIsValid(tokenList)
   if (valid) return true
   else {
     console.log('Invalid token list:')
     throw new Error('Data does not conform to token list schema; not sure why')
+  }
+}
+
+export const removeInvalidTokensFromList = (tokenList: ArbTokenList | TokenList):ArbTokenList | TokenList  =>{
+  let valid = tokenListIsValid(tokenList);
+  const startingTokenListLen = tokenList.tokens.length
+  
+  if (valid) {
+    return tokenList;
+  } else {
+    let tokenListCopy = JSON.parse(JSON.stringify(tokenList)) as typeof tokenList
+    console.log("Invalid token list:");
+    while (!valid && tokenListCopy.tokens.length > 0){
+      const targetToken = tokenListCopy.tokens.pop()
+      const tokenTokenIndex = tokenListCopy.tokens.length 
+      valid = tokenListIsValid(tokenListCopy);
+      if(valid){
+        console.log('Invalid token token, removing from list', targetToken);
+        
+        tokenList.tokens.splice(tokenTokenIndex , 1)
+        // pre-recursion sanity check:
+        if( tokenList.tokens.length >= startingTokenListLen ){
+          throw new Error("666: removeInvalidTokensFromList failed basic sanity check")
+        }
+        return removeInvalidTokensFromList(tokenList)
+      }
+    }
+    throw new Error('Data does not confirm to token list schema; not sure why');
   }
 }
 
@@ -141,11 +169,10 @@ export const getTokenListObj = async (pathOrUrl: string) => {
     } else {
       throw new Error('Could not find token list')
     }
-  })(pathOrUrl)
-
-  validateTokenListWithErrorThrowing(tokenList)
+  })(pathOrUrl);
+  isTokenList(tokenList)
   return tokenList
-}
+};
 
 // https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url
 
@@ -213,6 +240,30 @@ export const isArbTokenList = (obj: any) => {
       }
     }
   })
+}
+
+
+// typeguard:
+export const isTokenList = (obj:any)=>{
+  const expectedListKeys = ['name', 'timestamp', 'version', 'tokens']
+  const actualListKeys = new Set(Object.keys(obj))
+  if(!expectedListKeys.every((key)=>actualListKeys.has(key) )){
+    throw new Error("tokenlist typeguard error: requried list key not included")
+  }
+  const { version, tokens } = obj
+  if(!['major','minor', 'patch'].every((key)=>{    
+    return typeof version[key] === 'number'
+  })){
+    throw new Error("tokenlist typeguard error: invalid version")
+  }
+  if(!tokens.every((token:any)=>{
+    const tokenKeys = new Set(Object.keys(token))
+    return ['chainId', 'address','name', 'decimals','symbol' ].every((key)=>{
+      return tokenKeys.has(key)
+    })
+  })){
+    throw new Error ("tokenlist typeguard error: token missing required key")
+  }
 }
 
 export const sanitizeString = (str: string) =>
