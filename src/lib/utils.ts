@@ -122,11 +122,13 @@ export const tokenListIsValid = (tokenList: ArbTokenList | TokenList) => {
 export const validateTokenListWithErrorThrowing = (
   tokenList: ArbTokenList | TokenList,
 ) => {
-  let valid = tokenListIsValid(tokenList)
-  if (valid) return true
-  else {
+  try {
+    let valid = tokenListIsValid(tokenList)
+    if (valid) return true
+    else throw new Error('Data does not conform to token list schema; not sure why')
+  } catch(e) {
     console.log('Invalid token list:')
-    throw new Error('Data does not conform to token list schema; not sure why')
+    throw e
   }
 }
 
