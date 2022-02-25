@@ -306,7 +306,6 @@ export const arbListtoEtherscanList = (
     if (tokenInfo.extensions) {
       // This assumes one origin chain; should be chill
       const originChainID = Object.keys(tokenInfo.extensions.bridgeInfo)[0];
-      console.log("adding to etherscan", tokenInfo)
       const { tokenAddress, originBridgeAddress, destBridgeAddress } =
         tokenInfo.extensions.bridgeInfo[originChainID];
       const data = {
