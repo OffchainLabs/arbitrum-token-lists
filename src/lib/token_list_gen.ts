@@ -112,9 +112,9 @@ export const generateTokenList = async (
     const l2GatewayAddress = token.token.joinTableEntry[0].gateway.gatewayAddr;
     let { name:_name, decimals, symbol:_symbol } = token.tokenDatum;
     
-    if(_name === undefined || _name === null) throw new Error(`Unexpected undefined token name: ${JSON.stringify(token)}`);
-    if(decimals === undefined || decimals === null) throw new Error(`Unexpected undefined token decimals: ${JSON.stringify(token)}`);
-    if(_symbol === undefined || _symbol === null) throw new Error(`Unexpected undefined token symbol: ${JSON.stringify(token)}`);
+    if(_name === undefined) throw new Error(`Unexpected undefined token name: ${JSON.stringify(token)}`);
+    if(decimals === undefined) throw new Error(`Unexpected undefined token decimals: ${JSON.stringify(token)}`);
+    if(_symbol === undefined) throw new Error(`Unexpected undefined token symbol: ${JSON.stringify(token)}`);
     
     // if token name is empty, instead set the address as the name
     // we remove the initial 0x since the token list standard only allows up to 40 characters
