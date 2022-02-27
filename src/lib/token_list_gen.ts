@@ -1,6 +1,6 @@
 import {  minVersionBump, nextVersion, VersionUpgrade, TokenList } from '@uniswap/token-lists';
 import { getAllTokens, getTokens } from './graph';
-import { constants } from 'ethers'
+import { constants, utils } from 'ethers'
 
 import { ArbTokenList, ArbTokenInfo, EtherscanList, GraphTokenResult } from './types';
 import {
@@ -112,13 +112,27 @@ export const generateTokenList = async (
     const l2GatewayAddress = token.token.joinTableEntry[0].gateway.gatewayAddr;
     let { name:_name, decimals, symbol:_symbol } = token.tokenDatum;
     
-    if(_name === undefined) throw new Error(`Unexpected undefined token name: ${JSON.stringify(token)}`);
     if(decimals === undefined) throw new Error(`Unexpected undefined token decimals: ${JSON.stringify(token)}`);
-    if(_symbol === undefined) throw new Error(`Unexpected undefined token symbol: ${JSON.stringify(token)}`);
-    
-    // if token name is empty, instead set the address as the name
-    // we remove the initial 0x since the token list standard only allows up to 40 characters
-    _name = _name === "" ? token.token.l1TokenAddr.substring(2) : _name;
+
+    _name = (() => {
+      if(_name === undefined) throw new Error(`Unexpected undefined token name: ${JSON.stringify(token)}`);
+      // if token name is empty, instead set the address as the name
+      // we remove the initial 0x since the token list standard only allows up to 40 characters
+      else if(_name === "") return token.token.l1TokenAddr.substring(2)
+      // parse null terminated bytes32 strings
+      else if(_name.length === 64) return utils.parseBytes32String("0x" + _name)
+      else return _name;
+    })()
+
+    _symbol = (() => {
+      if(_symbol === undefined) throw new Error(`Unexpected undefined token symbol: ${JSON.stringify(token)}`);
+      // schema doesn't allow for empty symbols, and has a max length of 20
+      else if (_symbol === "") return _name.substring(0, Math.min(_name.length, 20));
+      // parse null terminated bytes32 strings
+      else if (_symbol.length === 64) return utils.parseBytes32String("0x" + _symbol);
+      else return _symbol;
+    })()
+
     const name = sanitizeString(_name)
     const symbol = sanitizeString(_symbol)
 
@@ -204,12 +218,9 @@ export const generateTokenList = async (
     logoURI: mainLogoUri
   };
 
-  // some tokens use an old name with doesnt validate - eg maker
-  // which has the name in hex
-  const makerName = "4d616b6572000000000000000000000000000000000000000000000000000000"
   const validationTokenList: ArbTokenList = {
     ...arbTokenList,
-    tokens: arbTokenList.tokens.filter(t => t.name !== makerName)
+    tokens: arbTokenList.tokens
   };
   validateTokenListWithErrorThrowing(validationTokenList);
 
