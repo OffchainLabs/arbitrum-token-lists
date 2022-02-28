@@ -1,6 +1,6 @@
 import {  minVersionBump, nextVersion, VersionUpgrade, TokenList } from '@uniswap/token-lists';
 import { getAllTokens, getTokens } from './graph';
-import { constants } from 'ethers'
+import { constants, utils } from 'ethers'
 
 import { ArbTokenList, ArbTokenInfo, EtherscanList, GraphTokenResult } from './types';
 import {
@@ -26,21 +26,31 @@ export interface ArbificationOptions {
 export interface L2ToL1GatewayAddresses {
   [contractAddress: string]: string;
 }
+
+// TODO: read these values from the gateway or a subgraph
 const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses = {
+  // L2 ERC20 Gateway	mainnet
   '0x09e9222e96e7b4ae2a407b98d48e330053351eee':
     '0xa3A7B6F88361F48403514059F1F16C8E78d60EeC',
-  '0x096760f208390250649e3e8763348e783aef5562':
+  // L2 Arb-Custom Gateway	mainnet
+    '0x096760f208390250649e3e8763348e783aef5562':
     '0xcEe284F754E854890e311e3280b767F80797180d',
+  // L2 weth mainnet
   '0x6c411ad3e74de3e7bd422b94a27770f5b86c623b':
     '0xd92023E9d9911199a6711321D1277285e6d4e2db',
+  // L2 dai gateway mainnet
   '0x467194771dae2967aef3ecbedd3bf9a310c76c65':
     '0xd3b5b60020504bc3489d6949d545893982ba3011',
+  // L2 ERC20 Gateway	rinkeby
     "0x195c107f3f75c4c93eba7d9a1312f19305d6375f": "0x91169Dbb45e6804743F94609De50D511C437572E",
+  // L2 Arb-Custom Gateway	rinkeby
     "0x9b014455acc2fe90c52803849d0002aeec184a06":"0x917dc9a69F65dC3082D518192cd3725E1Fa96cA2",
+  // L2 Weth Gateway rinkeby
     "0xf94bc045c4e926cc0b34e8d1c41cd7a043304ac9": "0x81d1a19cf7071732D4313c75dE8DD5b8CF697eFD",
+  // old L2 weth gateway in rinkeby? we can prob remove this
     "0xf90eb31045d5b924900aff29344deb42eae0b087": "0x81d1a19cf7071732D4313c75dE8DD5b8CF697eFD",
-
-
+  // livepeer gateway mainnet
+  "0x6d2457a4ad276000a615295f7a80f79e48ccd318": "0x6142f1C8bBF02E6A6bd074E8d564c9A5420a0676"
 };
 
 export const generateTokenList = async (
@@ -101,9 +111,28 @@ export const generateTokenList = async (
       .map((token, i: number) => {
     const l2GatewayAddress = token.token.joinTableEntry[0].gateway.gatewayAddr;
     let { name:_name, decimals, symbol:_symbol } = token.tokenDatum;
-    if(!_name) throw new Error(`Unexpected undefined token name: ${JSON.stringify(token)}`);
-    if(!decimals) throw new Error(`Unexpected undefined token decimals: ${JSON.stringify(token)}`);
-    if(!_symbol) throw new Error(`Unexpected undefined token symbol: ${JSON.stringify(token)}`);
+    
+    if(decimals === undefined) throw new Error(`Unexpected undefined token decimals: ${JSON.stringify(token)}`);
+
+    _name = (() => {
+      if(_name === undefined) throw new Error(`Unexpected undefined token name: ${JSON.stringify(token)}`);
+      // if token name is empty, instead set the address as the name
+      // we remove the initial 0x since the token list standard only allows up to 40 characters
+      else if(_name === "") return token.token.l1TokenAddr.substring(2)
+      // parse null terminated bytes32 strings
+      else if(_name.length === 64) return utils.parseBytes32String("0x" + _name)
+      else return _name;
+    })()
+
+    _symbol = (() => {
+      if(_symbol === undefined) throw new Error(`Unexpected undefined token symbol: ${JSON.stringify(token)}`);
+      // schema doesn't allow for empty symbols, and has a max length of 20
+      else if (_symbol === "") return _name.substring(0, Math.min(_name.length, 20));
+      // parse null terminated bytes32 strings
+      else if (_symbol.length === 64) return utils.parseBytes32String("0x" + _symbol);
+      else return _symbol;
+    })()
+
     const name = sanitizeString(_name)
     const symbol = sanitizeString(_symbol)
 
@@ -189,12 +218,9 @@ export const generateTokenList = async (
     logoURI: mainLogoUri
   };
 
-  // some tokens use an old name with doesnt validate - eg maker
-  // which has the name in hex
-  const makerName = "4d616b6572000000000000000000000000000000000000000000000000000000"
   const validationTokenList: ArbTokenList = {
     ...arbTokenList,
-    tokens: arbTokenList.tokens.filter(t => t.name !== makerName)
+    tokens: arbTokenList.tokens
   };
   validateTokenListWithErrorThrowing(validationTokenList);
 
