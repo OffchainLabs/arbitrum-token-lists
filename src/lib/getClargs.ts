@@ -26,6 +26,9 @@ const argv = yargs(process.argv.slice(2))
     tokenList: {
       type: 'string',
     },
+    includeOldDataFields: {
+      type: "boolean"
+    }
   })
   .parseSync();
 

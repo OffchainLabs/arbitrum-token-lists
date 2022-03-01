@@ -27,7 +27,7 @@ if(!existsSync(FULLLIST_DIR_PATH)){
   if (args.action === 'arbify') {
     if (!args.tokenList) throw new Error('No token list provided');
 
-    await arbifyL1List(args.tokenList);
+    await arbifyL1List(args.tokenList, !!args.includeOldDataFields);
   }  else if(args.action === "update") {
     if (!args.tokenList) throw new Error('No token list provided');
 
