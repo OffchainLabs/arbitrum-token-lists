@@ -65,7 +65,8 @@ export const generateTokenList = async (
      * Append all unbridged tokens from original l1TokenList to the output list.
      */
     includeUnbridgedL1Tokens?: boolean,
-    getAllTokensInNetwork?: boolean
+    getAllTokensInNetwork?: boolean,
+    includeOldDataFields?: boolean
   }
 ) => {
   if(options?.includeAllL1Tokens && options.includeUnbridgedL1Tokens) {
@@ -152,6 +153,15 @@ export const generateTokenList = async (
         }
       }
     };
+    if(options && options.includeOldDataFields){
+      arbTokenInfo.extensions = {
+        ...arbTokenInfo.extensions,
+        // @ts-ignore
+        l1Address: token.token.l1TokenAddr,
+        l2GatewayAddress: l2GatewayAddress,
+        l1GatewayAddress: l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()]
+      }
+    }
     if (logoUris[i]) {
       arbTokenInfo = { ...{ logoURI: logoUris[i] }, ...arbTokenInfo };
     } else {
@@ -230,7 +240,7 @@ export const generateTokenList = async (
   return arbTokenList;
 };
 
-export const arbifyL1List = async (pathOrUrl: string) => {
+export const arbifyL1List = async (pathOrUrl: string, includeOldDataFields?:boolean) => {
   const l1TokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(l1TokenList)
   const path = process.env.PWD +
@@ -251,7 +261,8 @@ export const arbifyL1List = async (pathOrUrl: string) => {
   );
 
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
-    includeAllL1Tokens: true
+    includeAllL1Tokens: true,
+    includeOldDataFields
   });
 
   writeFileSync(path, JSON.stringify(newList));

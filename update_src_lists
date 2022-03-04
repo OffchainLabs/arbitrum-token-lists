@@ -1,0 +1,2 @@
+yarn arbify --tokenList ./src/SourceLists/whitelist_era_src.json --l2NetworkID 42161 --includeOldDataFields true
+yarn arbify --tokenList ./src/SourceLists/rinkeby_src.json --l2NetworkID 421611  
