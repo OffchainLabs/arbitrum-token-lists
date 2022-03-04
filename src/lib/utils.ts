@@ -6,9 +6,10 @@ import { readFileSync, existsSync } from 'fs'
 import axios from 'axios'
 import { MultiCaller, abi } from 'arb-ts'
 import { ArbTokenList } from './types'
+import path from 'path'
 
-const coinGeckoBuff = readFileSync('./src/Assets/coingecko_uris.json')
-const logoURIsBuff = readFileSync('./src/Assets/logo_uris.json')
+const coinGeckoBuff = readFileSync(path.resolve(__dirname, '../Assets/coingecko_uris.json'))
+const logoURIsBuff = readFileSync(path.resolve(__dirname, '../Assets/logo_uris.json'))
 
 const coingeckoURIs = JSON.parse(coinGeckoBuff.toString())
 const logoUris = JSON.parse(logoURIsBuff.toString())
