@@ -15,7 +15,7 @@ import {
   isArbTokenList,
   removeInvalidTokensFromList
 } from './utils';
-import { constants as arbConstants } from "arb-ts"
+import { constants as arbConstants } from "@arbitrum/sdk"
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
 
@@ -178,7 +178,7 @@ export const generateTokenList = async (
   console.log(`List has ${arbifiedTokenList.length} bridged tokens`);
 
   const allOtherTokens = l1TokenList.tokens.filter(
-    (l1TokenInfo) => l1TokenInfo.chainId !== parseInt(l2.network.chainID)
+    (l1TokenInfo) => l1TokenInfo.chainId !== l2.network.chainID
   ).map((l1TokenInfo)=>{
       return {
         chainId: +l1TokenInfo.chainId,
