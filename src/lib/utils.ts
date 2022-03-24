@@ -4,7 +4,10 @@ import addFormats from 'ajv-formats'
 import { schema, TokenList } from '@uniswap/token-lists'
 import { readFileSync, existsSync } from 'fs'
 import axios from 'axios'
-import { MultiCaller, abi } from 'arb-ts'
+import { MultiCaller } from '@arbitrum/sdk'
+import { L1GatewayRouter__factory } from "@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory";
+import { L2GatewayRouter__factory } from "@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory";
+
 import { ArbTokenList } from './types'
 import path from 'path'
 
@@ -41,7 +44,7 @@ export const getL2TokenAddressesFromL1 = async (
   multiCaller: MultiCaller,
   l1GatewayRouterAddress: string,
 ) => {
-  const iFace = abi.L1GatewayRouter__factory.createInterface()
+  const iFace = L1GatewayRouter__factory.createInterface()
 
   return await multiCaller.multiCall(
     l1TokenAddresses.map((addr) => ({
@@ -62,7 +65,7 @@ export const getL2TokenAddressesFromL2 = async (
   multiCaller: MultiCaller,
   l2GatewayRouterAddress: string,
 ) => {
-  const iFace = abi.L2GatewayRouter__factory.createInterface()
+  const iFace = L2GatewayRouter__factory.createInterface()
 
   return await multiCaller.multiCall(
     l1TokenAddresses.map((addr) => ({

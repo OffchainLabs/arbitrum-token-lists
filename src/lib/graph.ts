@@ -38,8 +38,9 @@ const isGraphTokenResult = (obj: any)=>{
 }
 export const getTokens = async (
   l1TokenAddresses: string[],
-  networkID: string
+  _networkID: string | number
 ) => {
+  const networkID = typeof _networkID === 'number' ? _networkID.toString(): _networkID
   const clientUrl = chaidIdToGraphClientUrl(networkID);
   // lazy solution for big lists for now; we'll have to paginate once we have > 500 tokens registed
   if (l1TokenAddresses.length > 500){
@@ -83,7 +84,8 @@ export const getTokens = async (
   );
 };
 
-export const getAllTokens = async (networkID: string) => {
+export const getAllTokens = async (_networkID: string | number) => {
+  const networkID = typeof _networkID === 'number' ? _networkID.toString(): _networkID
   const clientUrl = chaidIdToGraphClientUrl(networkID);
   const query = gql`
     {

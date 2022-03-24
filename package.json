@@ -13,10 +13,10 @@
     "start_server": "yarn ts-node server/app.ts"
   },
   "dependencies": {
+    "@arbitrum/sdk": "^1.0.0",
     "@uniswap/token-lists": "^1.0.0-beta.27",
     "ajv": "^8.6.3",
     "ajv-formats": "^2.1.1",
-    "arb-ts": "2.0.0-beta.10",
     "axios": "^0.23.0",
     "better-ajv-errors": "^1.1.2",
     "eslint-config-prettier": "^8.3.0",
