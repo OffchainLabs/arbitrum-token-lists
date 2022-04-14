@@ -13,7 +13,9 @@ import {
   sanitizeString,
   listNameToArbifiedListName,
   isArbTokenList,
-  removeInvalidTokensFromList
+  removeInvalidTokensFromList,
+  isValidHttpUrl,
+  getFormattedSourceURL
 } from './utils';
 import { constants as arbConstants } from "@arbitrum/sdk"
 import { writeFileSync, readFileSync, existsSync } from 'fs';
@@ -66,7 +68,8 @@ export const generateTokenList = async (
      */
     includeUnbridgedL1Tokens?: boolean,
     getAllTokensInNetwork?: boolean,
-    includeOldDataFields?: boolean
+    includeOldDataFields?: boolean,
+    sourceListURL?: string
   }
 ) => {
   if(options?.includeAllL1Tokens && options.includeUnbridgedL1Tokens) {
@@ -219,13 +222,22 @@ export const generateTokenList = async (
       patch: 0,
     }
   })()
-
+  const sourceListURL = getFormattedSourceURL(options?.sourceListURL)
   const arbTokenList: ArbTokenList = {
     name: listNameToArbifiedListName(name),
     timestamp: new Date().toISOString(),
     version,
     tokens: arbifiedTokenList,
-    logoURI: mainLogoUri
+    logoURI: mainLogoUri,
+    ...sourceListURL && {
+      tags:  {
+        "sourceList":{
+          name: "Source list url",
+          description: `${sourceListURL} _ for forwardslash`
+        }
+      }
+    }
+   
   };
 
   const validationTokenList: ArbTokenList = {
@@ -262,7 +274,8 @@ export const arbifyL1List = async (pathOrUrl: string, includeOldDataFields?:bool
 
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
     includeAllL1Tokens: true,
-    includeOldDataFields
+    includeOldDataFields,
+    sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl: undefined
   });
 
   writeFileSync(path, JSON.stringify(newList));
@@ -287,7 +300,9 @@ export const updateArbifiedList = async (pathOrUrl: string) => {
   } 
 
   const newList = await generateTokenList(arbTokenList, prevArbTokenList, { 
-    includeAllL1Tokens: true
+    includeAllL1Tokens: true,
+    sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl: undefined
+
   });
 
   writeFileSync(path, JSON.stringify(newList));

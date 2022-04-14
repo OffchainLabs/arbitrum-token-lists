@@ -182,7 +182,7 @@ export const getTokenListObj = async (pathOrUrl: string) => {
 
 // https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url
 
-function isValidHttpUrl(urlString: string) {
+export function isValidHttpUrl(urlString: string) {
   let url
 
   try {
@@ -194,6 +194,13 @@ function isValidHttpUrl(urlString: string) {
   return url.protocol === 'http:' || url.protocol === 'https:'
 }
 
+export const getFormattedSourceURL = (sourceUrl?: string) => {
+  if (!sourceUrl) return null;
+  const urlReplaceBackSlashes = sourceUrl.replace(/\//g, '_')
+  return /^[ \w\.,:]+$/.test(urlReplaceBackSlashes)
+    ? urlReplaceBackSlashes
+    : null;
+};
 // typeguard:
 export const isArbTokenList = (obj: any) => {
   const expectedListKeys = ['name', 'timestamp', 'version', 'tokens']
