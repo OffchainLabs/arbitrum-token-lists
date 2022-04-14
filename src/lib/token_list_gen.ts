@@ -96,11 +96,22 @@ export const generateTokenList = async (
 
   // if the l2 route hasn't been updated yet we remove the token from the bridged tokens
   tokens = tokens.filter((t, i) => l2AddressesFromL1[i] === l2AddressesFromL2[i])
+    
+  const getTokenDataReturn = (false as true) && await l2.multiCaller.getTokenData([],{ name: true, decimals: true, symbol: true });
+  let tokenData: typeof getTokenDataReturn=[]
+  const INC = 50
+  let index = 0   
+  while (index < l2AddressesFromL1.length){
+    const l2AddressesFromL1Slice = l2AddressesFromL1.slice(index, index + INC)
+    const result = await l2.multiCaller.getTokenData(
+      l2AddressesFromL1Slice.map(t => t || constants.AddressZero),
+      { name: true, decimals: true, symbol: true }
+    )
+    tokenData = tokenData.concat(result)
+    index += INC
+  }
 
-  const tokenData = await l2.multiCaller.getTokenData(
-    l2AddressesFromL1.map(t => t || constants.AddressZero),
-    { name: true, decimals: true, symbol: true }
-  )
+  
   const logoUris: (string | undefined)[] = [];
   for (const token of tokens) {
     const uri = await getLogoUri(token.l1TokenAddr);

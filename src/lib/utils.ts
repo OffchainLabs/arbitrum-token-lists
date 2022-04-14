@@ -39,25 +39,44 @@ export const listNameToArbifiedListName = (name: string) => {
   return fileName.split(' ').slice(0, 2).join(' ').slice(0, 20)
 }
 
+const getL2TokenAddressesFromGateway = async (
+  l1TokenAddresses: string[],
+  multiCaller: MultiCaller,
+  gatewayRouterAddress: string,
+  layer: 1 | 2
+) => {
+  const iFace = (layer === 1 ? L1GatewayRouter__factory : L2GatewayRouter__factory).createInterface()
+  const INC = 50
+
+  let index = 0
+  let result :(string | undefined)[]=[] 
+  while( index < l1TokenAddresses.length){
+    const l1TokenAddressesSlice = l1TokenAddresses.slice(index, index + INC)
+    const response  = await multiCaller.multiCall(
+      l1TokenAddressesSlice.map((addr) => ({
+        encoder: () =>
+          iFace.encodeFunctionData('calculateL2TokenAddress', [addr]),
+        decoder: (returnData: string) =>
+          iFace.decodeFunctionResult(
+            'calculateL2TokenAddress',
+            returnData,
+          )[0] as string,
+        targetAddr: gatewayRouterAddress,
+      })),
+    )
+    result = [...result, ...response]
+    index += INC
+  }
+
+  return result
+}
+
 export const getL2TokenAddressesFromL1 = async (
   l1TokenAddresses: string[],
   multiCaller: MultiCaller,
   l1GatewayRouterAddress: string,
 ) => {
-  const iFace = L1GatewayRouter__factory.createInterface()
-
-  return await multiCaller.multiCall(
-    l1TokenAddresses.map((addr) => ({
-      encoder: () =>
-        iFace.encodeFunctionData('calculateL2TokenAddress', [addr]),
-      decoder: (returnData: string) =>
-        iFace.decodeFunctionResult(
-          'calculateL2TokenAddress',
-          returnData,
-        )[0] as string,
-      targetAddr: l1GatewayRouterAddress,
-    })),
-  )
+  return getL2TokenAddressesFromGateway(l1TokenAddresses,multiCaller,l1GatewayRouterAddress,1)
 }
 
 export const getL2TokenAddressesFromL2 = async (
@@ -65,20 +84,7 @@ export const getL2TokenAddressesFromL2 = async (
   multiCaller: MultiCaller,
   l2GatewayRouterAddress: string,
 ) => {
-  const iFace = L2GatewayRouter__factory.createInterface()
-
-  return await multiCaller.multiCall(
-    l1TokenAddresses.map((addr) => ({
-      encoder: () =>
-        iFace.encodeFunctionData('calculateL2TokenAddress', [addr]),
-      decoder: (returnData: string) =>
-        iFace.decodeFunctionResult(
-          'calculateL2TokenAddress',
-          returnData,
-        )[0] as string,
-      targetAddr: l2GatewayRouterAddress,
-    })),
-  )
+  return getL2TokenAddressesFromGateway(l1TokenAddresses,multiCaller,l2GatewayRouterAddress,2)
 }
 
 export const getLogoUri = async (l1TokenAddress: string) => {
