@@ -98,10 +98,10 @@ export const generateTokenList = async (
     l2AddressesFromL1.map(t => t || constants.AddressZero),
     { name: true, decimals: true, symbol: true }
   )
-  const logoUris: (string | undefined)[] = [];
+  const logoUris: { [l1addr: string]: string } = {};
   for (const token of tokens) {
     const uri = await getLogoUri(token.l1TokenAddr);
-    logoUris.push(uri);
+    if (uri) logoUris[token.l1TokenAddr] = uri;
   }
 
   let arbifiedTokenList:ArbTokenInfo[] = tokens
@@ -162,8 +162,8 @@ export const generateTokenList = async (
         l1GatewayAddress: l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()]
       }
     }
-    if (logoUris[i]) {
-      arbTokenInfo = { ...{ logoURI: logoUris[i] }, ...arbTokenInfo };
+    if (logoUris[token.token.l1TokenAddr]) {
+      arbTokenInfo = { ...{ logoURI: logoUris[token.token.l1TokenAddr] }, ...arbTokenInfo };
     } else {
       console.log('no logo uri for ',token.token.l1TokenAddr, symbol);
       
