@@ -82,7 +82,10 @@ export const generateTokenList = async (
     options && options.getAllTokensInNetwork
       ? await getAllTokens(l2.network.chainID)
       : await getTokens(
-          l1TokenList.tokens.map((token) => token.address.toLowerCase()),
+          l1TokenList.tokens.map((token) => ({
+            addr: token.address.toLowerCase(),
+            logo: token.logoURI
+          })),
           l2.network.chainID
         );
 
@@ -100,7 +103,7 @@ export const generateTokenList = async (
   )
   const logoUris: { [l1addr: string]: string } = {};
   for (const token of tokens) {
-    const uri = await getLogoUri(token.l1TokenAddr);
+    const uri = token.logoUri || await getLogoUri(token.l1TokenAddr);
     if (uri) logoUris[token.l1TokenAddr] = uri;
   }
 
@@ -296,28 +299,28 @@ export const updateArbifiedList = async (pathOrUrl: string) => {
 };
 
 
-export const updateLogoURIs = async (path: string)=> {
-  const data = readFileSync(path)
-  const prevArbTokenList =  JSON.parse(data.toString()) as ArbTokenList
-  const tokens:any = []
-  for (let i = 0; i < prevArbTokenList.tokens.length; i++) {
-    const tokenInfo = {...prevArbTokenList.tokens[i]}
+// export const updateLogoURIs = async (path: string)=> {
+//   const data = readFileSync(path)
+//   const prevArbTokenList =  JSON.parse(data.toString()) as ArbTokenList
+//   const tokens:any = []
+//   for (let i = 0; i < prevArbTokenList.tokens.length; i++) {
+//     const tokenInfo = {...prevArbTokenList.tokens[i]}
 
-    // @ts-ignore
-    const logoURI = await getLogoUri(tokenInfo.extensions.l1Address)
-    if(logoURI){
-      tokenInfo.logoURI = logoURI
-    } else {
-      console.log('not found:', tokenInfo);
-      delete  tokenInfo.logoURI 
-    }
-    tokens.push(tokenInfo) 
-  }
+//     // @ts-ignore
+//     const logoURI = await getLogoUri(tokenInfo.extensions.l1Address)
+//     if(logoURI){
+//       tokenInfo.logoURI = logoURI
+//     } else {
+//       console.log('not found:', tokenInfo);
+//       delete  tokenInfo.logoURI 
+//     }
+//     tokens.push(tokenInfo) 
+//   }
 
-  const newArbList = {...prevArbTokenList, ...{tokens: tokens}}
-  writeFileSync(path, JSON.stringify(newArbList));
+//   const newArbList = {...prevArbTokenList, ...{tokens: tokens}}
+//   writeFileSync(path, JSON.stringify(newArbList));
 
-}
+// }
 
 export const arbListtoEtherscanList = (
   arbList: ArbTokenList

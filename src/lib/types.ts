@@ -36,7 +36,8 @@ export interface GraphTokenResult {
       gatewayAddr: string
     }
   }],
-  l1TokenAddr: string
+  l1TokenAddr: string,
+  logoUri: string | undefined
 }
 
 export interface GraphTokensResult {
