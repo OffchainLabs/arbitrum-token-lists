@@ -11,6 +11,7 @@
     "update": "yarn ts-node src/main.ts --action update",
     "arbify": "yarn ts-node src/main.ts --action arbify",
     "fullList": "yarn ts-node src/main.ts --action full",
+    "permit": "yarn ts-node src/main.ts --action permit",
     "start_server": "yarn ts-node server/app.ts"
   },
   "dependencies": {

@@ -1,6 +1,6 @@
 import {  minVersionBump, nextVersion, VersionUpgrade, TokenList } from '@uniswap/token-lists';
 import { getAllTokens, getTokens } from './graph';
-import { constants, utils } from 'ethers'
+import { constants, utils, ethers } from 'ethers'
 
 import { ArbTokenList, ArbTokenInfo, EtherscanList, GraphTokenResult } from './types';
 import {
@@ -18,6 +18,12 @@ import {
 import { constants as arbConstants } from "@arbitrum/sdk"
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
+
+import permitTokenAbi from "../PermitTokens/permitTokenAbi.json";
+import daiPermitTokenAbi from "../PermitTokens/daiPermitTokenAbi.json";
+import { getCorrectPermitSigNoVersion } from "../PermitTokens/permitSignature";
+import { getCorrectPermitSig } from "../PermitTokens/permitSignature";
+import { getDaiLikePermitSignature } from "../PermitTokens/permitSignature";
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -345,3 +351,56 @@ export const arbListtoEtherscanList = (
   return list;
 };
 
+export const permitTest = async (pathOrUrl: string) => {
+  const l1TokenList = await getTokenListObj(pathOrUrl);
+  removeInvalidTokensFromList(l1TokenList)
+
+  const newList = await generateTokenList(l1TokenList, undefined, {
+    includeUnbridgedL1Tokens: false,
+  });
+  const etherscanData = arbListtoEtherscanList(newList);
+  let dict: { [key: string]: any } = {};
+  
+  const { l1 } = await getNetworkConfig();
+  const wallet = ethers.Wallet.createRandom().connect(l1.provider);
+  const spender = ethers.Wallet.createRandom().connect(l1.provider);
+  const value = ethers.utils.parseUnits("1.0", 18);
+  const deadline = ethers.constants.MaxUint256;
+
+  for(let i=0; i<newList.tokens.length; i++){
+    const tokenContract = new ethers.Contract(etherscanData[i].l1Address!, permitTokenAbi['abi'], wallet);
+
+    try {
+      const signature = await getCorrectPermitSig(wallet, tokenContract, spender.address, value, deadline);
+      const { v, r, s } = ethers.utils.splitSignature(signature);
+
+      const tx = await tokenContract.connect(wallet).callStatic.permit(wallet.address, spender.address, value, deadline, v, r, s, {gasLimit: 2000000});
+      dict[newList.tokens[i].name] = etherscanData[i].l1Address;
+
+    } catch (e) { // if contract doesn't use version
+        try {
+            const signature = await getCorrectPermitSigNoVersion(wallet, tokenContract, spender.address, value, deadline);
+            const { v, r, s } = ethers.utils.splitSignature(signature);
+
+            const tx = await tokenContract.connect(wallet).callStatic.permit(wallet.address, spender.address, value, deadline, v, r, s, {gasLimit: 2000000});
+            dict[newList.tokens[i].name] = etherscanData[i].l1Address;
+
+        } catch (e2) { // if contract uses Dai-like signature and permit call
+          try {
+            const daiTokenContract = new ethers.Contract(etherscanData[i].l1Address!, daiPermitTokenAbi, wallet); 
+
+            let signature = await getDaiLikePermitSignature(wallet, daiTokenContract, spender.address, deadline);
+            const { v, r, s } = ethers.utils.splitSignature(signature[0]);
+
+            await daiTokenContract.connect(wallet).callStatic.permit(wallet.address, spender.address, signature[1], deadline, true, v, r, s, {gasLimit: 2000000});
+            dict[newList.tokens[i].name] = etherscanData[i].l1Address;
+          }
+
+          catch(e) {} // if contract doesn't have permit
+        }
+    }
+
+  }
+  writeFileSync(`src/ArbTokenLists/permitTokens.json`, JSON.stringify(dict));
+  console.log("Token list generated at src/ArbTokenLists/permitTokens.json");
+};
