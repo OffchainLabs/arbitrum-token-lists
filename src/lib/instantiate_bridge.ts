@@ -13,6 +13,7 @@ export const getNetworkConfig = async () => {
   const l2Rpc = (() => {
     if(networkID === 42161) return "https://arb1.arbitrum.io/rpc"
     else if(networkID === 421611) return "https://rinkeby.arbitrum.io/rpc"
+    else if(networkID === 42170) return "https://nova.arbitrum.io/rpc"
     throw new Error("No L2 RPC detected")
   })()
   const arbProvider = new providers.JsonRpcProvider(l2Rpc);
@@ -21,6 +22,7 @@ export const getNetworkConfig = async () => {
   const l1Rpc = (() => {
     if(l2Network.partnerChainID === 1) return process.env['MAINNET_RPC'] as string
     else if(l2Network.partnerChainID === 4) return process.env['RINKEBY_RPC'] as string
+    // else if(l2Network.partnerChainID === 5) return process.env['GOERLI_RPC'] as string
     throw new Error("No L1 RPC detected")
   })()
   const ethProvider = new providers.JsonRpcProvider(l1Rpc)
