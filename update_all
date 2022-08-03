@@ -4,3 +4,6 @@ yarn fullList
 yarn arbify --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org
 yarn arbify --tokenList https://www.gemini.com/uniswap/manifest.json
 yarn arbify --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json
+yarn novaify --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org
+yarn novaify --tokenList https://www.gemini.com/uniswap/manifest.json
+yarn novaify --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json

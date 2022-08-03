@@ -34,8 +34,7 @@ export interface L2ToL1GatewayAddresses {
   [contractAddress: string]: string;
 }
 
-//NOVAify
-// TODO: read these values from the gateway or a subgraph
+// nova
 const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses = {
   // L2 ERC20 Gateway	mainnet
   '0x09e9222e96e7b4ae2a407b98d48e330053351eee':

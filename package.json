@@ -12,6 +12,10 @@
     "arbify": "yarn ts-node src/main.ts --action arbify",
     "fullList": "yarn ts-node src/main.ts --action full",
     "permit": "yarn ts-node src/main.ts --action permit",
+    "novaify": "yarn ts-node src/main.ts --action novaify",
+    "updateNova": "yarn ts-node src/main.ts --action updateNova",
+    "fullListNova": "yarn ts-node src/main.ts --action fullNova",
+    "permitNova": "yarn ts-node src/main.ts --action permitNova",
     "start_server": "yarn ts-node server/app.ts"
   },
   "dependencies": {
