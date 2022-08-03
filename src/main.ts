@@ -9,7 +9,6 @@ import {
 import { writeFileSync, existsSync, mkdirSync } from 'fs';
 import args from './lib/getClargs';
 import { TokenList } from '@uniswap/token-lists';
-import { generateNovaTokenList, novaifyL1List, novaListtoEtherscanList, permitNovaTest, updateNovaifiedList } from './lib/nova_token_list_gen';
 
 const TOKENLIST_DIR_PATH = __dirname +'/ArbTokenLists'
 const FULLLIST_DIR_PATH = __dirname +'/FullList'
@@ -61,40 +60,4 @@ if(!existsSync(FULLLIST_DIR_PATH)){
 
     const tokenData = await permitTest(args.tokenList);
   }
-  else if (args.action === 'novaify') {
-    if (!args.tokenList) throw new Error('No token list provided');
-
-    await novaifyL1List(args.tokenList, !!args.includeOldDataFields);
-  }
-    else if(args.action === "updateNova") {
-    if (!args.tokenList) throw new Error('No token list provided');
-
-    await updateNovaifiedList(args.tokenList)
-    }
-
-    else if (args.action === 'fullNova') {
-    const mockList: TokenList = {
-      name: "Full",
-      logoURI: "ipfs://QmTvWJ4kmzq9koK74WJQ594ov8Es1HHurHZmMmhU8VY68y",
-      timestamp: new Date().toISOString(),
-      version: {
-        major: 1,
-        minor: 0,
-        patch: 0
-      },
-      tokens: []
-    }
-    const tokenData = await generateNovaTokenList(mockList, undefined, { getAllTokensInNetwork: true });
-
-    const etherscanData = novaListtoEtherscanList(tokenData)
-    const fullListPath = __dirname + '/FullList/all_tokens.json';
-    writeFileSync(fullListPath, JSON.stringify(etherscanData));
-    console.log('List generated at', fullListPath);
-
-    }
-    else if(args.action === "permitNova") {
-    if (!args.tokenList) throw new Error('No token list provided');
-
-    const tokenData = await permitNovaTest(args.tokenList);
-    }
 })();
