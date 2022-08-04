@@ -1,7 +1,4 @@
 {
-    "_format": "hh-sol-artifact-1",
-    "contractName": "PermitToken",
-    "sourceName": "contracts/PermitToken.sol",
     "abi": [
       {
         "inputs": [
@@ -364,8 +361,6 @@
         "stateMutability": "nonpayable",
         "type": "function"
       }
-    ],
-    "bytecode": "",
-    "deployedBytecode": ""
+    ]
   }
   
