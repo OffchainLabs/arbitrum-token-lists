@@ -15,7 +15,7 @@ import {
   isArbTokenList,
   removeInvalidTokensFromList
 } from './utils';
-import { CallInput, constants as arbConstants } from "@arbitrum/sdk"
+import { CallInput, constants as arbConstants, MultiCaller } from "@arbitrum/sdk"
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
 
@@ -368,8 +368,33 @@ export const permitTest = async (pathOrUrl: string) => {
   const spender = ethers.Wallet.createRandom().connect(l1.provider);
   const value = ethers.utils.parseUnits("1.0", 18);
   const deadline = ethers.constants.MaxUint256;
+  
+  for(let i=0; i<5; i++){
+    let sigArray: any = [];
+      try {
+        for(let i = 0; i<3; i++) {
+          if(i<1){
+            const tokenContract = new ethers.Contract(etherscanData[i].l1Address!, permitTokenAbi['abi'], wallet);
+            const signature = await getCorrectPermitSig(wallet, tokenContract, spender.address, value, deadline);
+            const { v, r, s } = ethers.utils.splitSignature(signature);
+            sigArray.push({v, r, s});
+          }
+          if(i===1){
+            const tokenContract = new ethers.Contract(etherscanData[i].l1Address!, permitTokenAbi['abi'], wallet);
+            const signature = await getCorrectPermitSigNoVersion(wallet, tokenContract, spender.address, value, deadline);
+            const { v, r, s } = ethers.utils.splitSignature(signature);
+            sigArray.push({v, r, s});
+          }
+          else {
+            const daiTokenContract = new ethers.Contract(etherscanData[i].l1Address!, daiPermitTokenAbi, wallet); 
+            const signature = await getDaiLikePermitSignature(wallet, daiTokenContract, spender.address, deadline);
+            const { v, r, s } = ethers.utils.splitSignature(signature[0]);
+            sigArray.push({v, r, s});
+          }
+        }
+      }
+      catch(e){}
 
-  for(let i=0; i<20; i++){
     const tokenContract = new ethers.Contract(etherscanData[i].l1Address!, permitTokenAbi['abi'], wallet);
 
     try {
@@ -377,23 +402,35 @@ export const permitTest = async (pathOrUrl: string) => {
       const signature = await getCorrectPermitSig(wallet, tokenContract, spender.address, value, deadline);
       const { v, r, s } = ethers.utils.splitSignature(signature);
 
-      // const inputs: [
-      //   CallInput<Awaited<ReturnType<ERC20PermitUpgradeable['callStatic']['permit']>>>,
-      //  ] = [
-      //    {
-      //       targetAddr: tokenContract.address,
-      //       encoder: () => tokenContract.interface.encodeFunctionData('permit', [wallet.address, spender.address, value, deadline, v, r, s]),
-      //       decoder: (returnData: string) =>
-      //       tokenContract.interface.decodeFunctionResult('permit', returnData),
-      //  },
-      // ]
+      const calls: [
+        CallInput<Awaited<ReturnType<ERC20PermitUpgradeable['callStatic']['permit']>>>,
+        // CallInput<Awaited<ReturnType<ERC20PermitUpgradeable['callStatic']['permit']>>>,
+        // CallInput<Awaited<ReturnType<ERC20PermitUpgradeable['callStatic']['permit']>>>,
+       ] = [
+         {
+            targetAddr: tokenContract.address,
+            encoder: () => tokenContract.interface.encodeFunctionData('permit', [wallet.address, spender.address, value, deadline, v, r, s]),
+            decoder: (returnData: string) =>
+            tokenContract.interface.decodeFunctionResult('permit', returnData),
+        },
+      //   {
+      //     targetAddr: tokenContract.address,
+      //     encoder: () => tokenContract.interface.encodeFunctionData('permit', [wallet.address, spender.address, value, deadline, sigArray[1].v, sigArray[1].r, sigArray[1].s]),
+      //     decoder: (returnData: string) =>
+      //     tokenContract.interface.decodeFunctionResult('permit', returnData),
+      //   },
+      //   {
+      //     targetAddr: tokenContract.address,
+      //     encoder: () => tokenContract.interface.encodeFunctionData('permit', [wallet.address, spender.address, value, deadline, sigArray[2].v, sigArray[2].r, sigArray[2].s]),
+      //     decoder: (returnData: string) =>
+      //     tokenContract.interface.decodeFunctionResult('permit', returnData),
+      // },
+      ]
 
-      // const res = await l1.multiCaller.multiCall(inputs);
-      // console.log(res[0])
-      const tx = await tokenContract.connect(wallet).callStatic.permit(wallet.address, spender.address, value, deadline, v, r, s, {gasLimit: 2000000});
-      // if(res != undefined) { 
+      const res = await l1.multiCaller.multiCall(calls, false);
+      console.log(res)
+      // const tx = await tokenContract.connect(wallet).callStatic.permit(wallet.address, spender.address, value, deadline, v, r, s, {gasLimit: 2000000});
       dict[newList.tokens[i].name] = etherscanData[i].l1Address;
-      // }
 
     } catch (e) { // if contract doesn't use version
         try {
