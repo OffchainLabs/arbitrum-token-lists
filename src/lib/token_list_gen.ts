@@ -362,7 +362,6 @@ export const permitTest = async (pathOrUrl: string) => {
     includeUnbridgedL1Tokens: false,
   });
   const etherscanData = arbListtoEtherscanList(newList);
-  let dict: { [key: string]: any } = {};
   
   const { l1 } = await getNetworkConfig();
   const wallet = ethers.Wallet.createRandom().connect(l1.provider);
@@ -413,8 +412,6 @@ export const permitTest = async (pathOrUrl: string) => {
       );
       idxToAddress[dictIdx] = etherscanData[i].l1Address!;
       dictIdx += 3;
-
-      dict[newList.tokens[i].name] = etherscanData[i].l1Address;
 
     } catch (e) { // if contract doesn't have permit
     }

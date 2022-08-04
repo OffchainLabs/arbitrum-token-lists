@@ -1,11 +1,4 @@
-import { CallInput } from "@arbitrum/sdk";
-import { ERC20 } from "@arbitrum/sdk/dist/lib/abi/ERC20";
-import { ERC20PermitUpgradeable } from "@arbitrum/sdk/dist/lib/abi/ERC20PermitUpgradeable";
-import daiPermitTokenAbi from "../PermitTokens/daiPermitTokenAbi.json";
-import { BigNumber, Wallet } from "ethers"; 
-import { NumericLiteral } from "typescript";
-import { getNetworkConfig } from "../lib/instantiate_bridge";
-import { SignatureLike } from "@ethersproject/bytes";
+import { Wallet } from "ethers"; 
 
 export async function getCorrectPermitSig(
     wallet: Wallet,
@@ -93,94 +86,21 @@ export async function getCorrectPermitSigNoVersion(
     return sig;
 }
 
-// export async function getDaiLikePermitSignature(
-//     wallet: Wallet,
-//     token: any,
-//     spender: string,
-//     deadline: any,
-//     optional?: { nonce?: number; name?: string; chainId?: number;}
-//     ) { 
-//     const [nonce, name, chainId] = await Promise.all([
-//         optional?.nonce ?? token.nonces(wallet.address),
-//         optional?.name ?? token.name(),
-//         optional?.chainId ?? wallet.getChainId(),
-//     ])
-
-//     const { l1 } = await getNetworkConfig();
-
-//     const name1 = token.name()
-//     const nonce1 = token.nonces(wallet.address)
-//     const chainId1 = wallet.getChainId();
-
-//     const [name11, nonce11, chainId11] = await l1.multiCaller.getTokenData([name1, nonce1, chainId1]);
-//     console.log(name11, nonce11, chainId11);
-//     // const tokenData = await l1.multiCaller.getTokenData(
-//     //     token.address,
-//     //     { name: true, nonces: true }
-//     // )
-    
-//     const domain = {
-//         "name": name,
-//         "version": "1", 
-//         "chainId": chainId,
-//         "verifyingContract": token.address
-//     };
-    
-//     const types = {
-//         Permit: [
-//         { name: 'holder', type: 'address' },
-//         { name: 'spender', type: 'address' },
-//         { name: 'nonce', type: 'uint256' },
-//         { name: 'expiry', type: 'uint256'},
-//         { name: 'allowed', type: 'bool' },
-//     ],
-//     }
-    
-//     const message = {
-//             holder: wallet.address,
-//             spender: spender,
-//             nonce: nonce,
-//             expiry: deadline,
-//             allowed: true
-//     };
-    
-//     const sig = await wallet._signTypedData(domain, types, message);
-//     return [sig, nonce];
-// }
-
 export async function getDaiLikePermitSignature(
     wallet: Wallet,
     token: any,
     spender: string,
     deadline: any,
     optional?: { nonce?: number; name?: string; chainId?: number;}
-    ): Promise<[SignatureLike, BigNumber]> { 
-
-    const chainId = await wallet.getChainId();
-    const { l1 } = await getNetworkConfig();
-
-    const inputs: [
-        CallInput<Awaited<ReturnType<ERC20['functions']['name']>>[0]>,
-        CallInput<Awaited<ReturnType<ERC20PermitUpgradeable['functions']['nonces']>>[0]>,
-       ] = [
-          {
-            targetAddr: token.address,
-            encoder: () => token.interface.encodeFunctionData('name'),
-            decoder: (returnData: string) =>
-            token.interface.decodeFunctionResult('name', returnData)[0],
-         },
-         {
-            targetAddr: token.address,
-            encoder: () => token.interface.encodeFunctionData('nonces', [wallet.address]),
-            decoder: (returnData: string) =>
-            token.interface.decodeFunctionResult('nonces', returnData)[0],
-       },
-    ]
-      
-    const res = await l1.multiCaller.multiCall(inputs)
+    ) { 
+    const [nonce, name, chainId] = await Promise.all([
+        optional?.nonce ?? token.nonces(wallet.address),
+        optional?.name ?? token.name(),
+        optional?.chainId ?? wallet.getChainId(),
+    ])
 
     const domain = {
-        "name": res[0],
+        "name": name,
         "version": "1", 
         "chainId": chainId,
         "verifyingContract": token.address
@@ -199,11 +119,11 @@ export async function getDaiLikePermitSignature(
     const message = {
             holder: wallet.address,
             spender: spender,
-            nonce: res[1],
+            nonce: nonce,
             expiry: deadline,
             allowed: true
     };
     
     const sig = await wallet._signTypedData(domain, types, message);
-    return [sig, res[1]!];
+    return [sig, nonce];
 }
