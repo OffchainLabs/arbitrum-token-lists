@@ -11,6 +11,9 @@
     "update": "yarn ts-node src/main.ts --action update",
     "arbify": "yarn ts-node src/main.ts --action arbify",
     "fullList": "yarn ts-node src/main.ts --action full",
+    "updateNova": "yarn ts-node src/main.ts --action updateNova",
+    "novaify": "yarn ts-node src/main.ts --action novaify",
+    "fullListNova": "yarn ts-node src/main.ts --action fullNova",
     "start_server": "yarn ts-node server/app.ts"
   },
   "dependencies": {

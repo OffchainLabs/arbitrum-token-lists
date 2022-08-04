@@ -22,7 +22,6 @@ export const getNetworkConfig = async () => {
   const l1Rpc = (() => {
     if(l2Network.partnerChainID === 1) return process.env['MAINNET_RPC'] as string
     else if(l2Network.partnerChainID === 4) return process.env['RINKEBY_RPC'] as string
-    // else if(l2Network.partnerChainID === 5) return process.env['GOERLI_RPC'] as string
     throw new Error("No L1 RPC detected")
   })()
   const ethProvider = new providers.JsonRpcProvider(l1Rpc)

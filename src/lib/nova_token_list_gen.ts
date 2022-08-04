@@ -74,13 +74,13 @@ export const generateNovaTokenList = async (
     throw new Error("Cannot include both of AllL1Tokens and UnbridgedL1Tokens since UnbridgedL1Tokens is a subset of AllL1Tokens.")
   }
 
-  const name = l1TokenList.name
-  const mainLogoUri = l1TokenList.logoURI
-
   const { l1 , l2 } = await getNetworkConfig();
   const customL1Network = l1.network;
   const customL2Network = l2.network;
-  addCustomNetwork({customL1Network, customL2Network});
+  addCustomNetwork({customL2Network});
+
+  const name = l1TokenList.name
+  const mainLogoUri = l1TokenList.logoURI
 
   let tokens =
     options && options.getAllTokensInNetwork
