@@ -15,7 +15,7 @@ import {
   isArbTokenList,
   removeInvalidTokensFromList
 } from './utils';
-import { CallInput, constants as arbConstants, MultiCaller } from "@arbitrum/sdk"
+import { constants as arbConstants } from "@arbitrum/sdk"
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
 
@@ -25,7 +25,6 @@ import multicallAbi from "../PermitTokens/multicallAbi.json";
 import { getCorrectPermitSigNoVersion } from "../PermitTokens/permitSignature";
 import { getCorrectPermitSig } from "../PermitTokens/permitSignature";
 import { getDaiLikePermitSignature } from "../PermitTokens/permitSignature";
-import { ERC20PermitUpgradeable } from '@arbitrum/sdk/dist/lib/abi/ERC20PermitUpgradeable';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -354,11 +353,24 @@ export const arbListtoEtherscanList = (
   return list;
 };
 
+
 export const permitTest = async (pathOrUrl: string) => {
   const l1TokenList = await getTokenListObj(pathOrUrl);
-  removeInvalidTokensFromList(l1TokenList)
+  removeInvalidTokensFromList(l1TokenList);
+  const path = process.env.PWD +
+  '/src/ArbTokenLists/permit_' +
+  listNameToFileName(l1TokenList.name);
+  let prevPermitTokenList: ArbTokenList | undefined; 
 
-  const newList = await generateTokenList(l1TokenList, undefined, {
+  if (existsSync(path)) {
+    const data = readFileSync(path)
+    console.log('Previous version of permit list found!');
+    
+    prevPermitTokenList = JSON.parse(data.toString()) as ArbTokenList;
+    isArbTokenList(prevPermitTokenList);
+  }
+
+  const newList = await generateTokenList(l1TokenList, prevPermitTokenList, {
     includeUnbridgedL1Tokens: false,
   });
   const etherscanData = arbListtoEtherscanList(newList);
@@ -370,10 +382,11 @@ export const permitTest = async (pathOrUrl: string) => {
   const deadline = ethers.constants.MaxUint256;
   
   const permitCalls = [];
-  let hasPermit: { [key: string]: any } = {};
-  const idxToAddress = [];
   let dictIdx = 0;
+  const idxToTokenInfo: { [key: number]: { l1Address: string; token: any} } = {};
   const multicall = new ethers.Contract("0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696", multicallAbi, wallet);
+
+  const permitTokenList: ArbTokenInfo[] = [];
 
   for(let i=0; i<newList.tokens.length; i++){
     try {
@@ -410,25 +423,63 @@ export const permitTest = async (pathOrUrl: string) => {
             callData: callDataDAI, // DAI permit
         },
       );
-      idxToAddress[dictIdx] = etherscanData[i].l1Address!;
+      idxToTokenInfo[dictIdx] = { l1Address: etherscanData[i].l1Address!, token: newList.tokens[i] };
       dictIdx += 3;
 
     } catch (e) { // if contract doesn't have permit
     }
   }
-    const tryPermit = await multicall.callStatic.tryAggregate(false, permitCalls, {gasLimit: 2000000});
 
-    for (let i=0; i < tryPermit.length; i += 3) {
-      const tokenAddress = idxToAddress[i];
-      if (tryPermit[i].success === true) { // if version
-          hasPermit[tokenAddress] = "version";
-      } else if (tryPermit[i+1].success === true) { // if no version
-          hasPermit[tokenAddress] = "no version";
-      } else if (tryPermit[i+2].success === true) { // if DAI version
-          hasPermit[tokenAddress] = "dai";  
-      }
+  // get array of results from tryAggregate
+  const tryPermit = await multicall.callStatic.tryAggregate(false, permitCalls, {gasLimit: 2000000});
+
+  for (let i=0; i < tryPermit.length; i += 3) {
+    const { l1Address: tokenAddress, token } = idxToTokenInfo[i];
+    let tag;
+    // add 
+    if (tryPermit[i].success === true) { // if version
+        tag = "version in domain";
+    } else if (tryPermit[i+1].success === true) { // if no version
+        tag = "no version in domain";
+    } else if (tryPermit[i+2].success === true) { // if DAI version
+        tag = "dai like signature";  
     }
 
-  writeFileSync(`src/ArbTokenLists/permitTokens.json`, JSON.stringify(hasPermit));
-  console.log("Token list generated at src/ArbTokenLists/permitTokens.json");
+    if (tag) { // if this address implements permit
+      let permitTokenInfo: ArbTokenInfo = {
+        chainId: l1.network.chainID,
+        address: tokenAddress,
+        name: token.name,
+        decimals: token.decimals, 
+        symbol: token.symbol,
+        tags: [tag],
+        extensions: token.extensions // add extensions associated w/ with token
+      };
+  
+      if (token.logoURI) { // if there is a logoURI for this token
+        permitTokenInfo = { ...{ logoURI: token.logoURI }, ...permitTokenInfo };
+      }
+  
+      permitTokenList.push(permitTokenInfo);
+    } 
+  }
+
+  const version = (()=>{
+    return  {
+      major: 1,
+      minor: 0,
+      patch: 0,
+    }
+  })();
+
+  const arbTokenList: ArbTokenList = {
+    name: newList.name, 
+    timestamp: new Date().toISOString(),
+    version,
+    tokens: permitTokenList, // need to get this token list
+    logoURI: newList.logoURI
+  };
+
+  writeFileSync(path, JSON.stringify(arbTokenList));
+  console.log("Token list generated at ", path);
 };

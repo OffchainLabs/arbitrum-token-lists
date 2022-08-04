@@ -42,7 +42,7 @@ export const getTokens = async (
 ): Promise<Array<GraphTokenResult>> => {
   const networkID = typeof _networkID === 'number' ? _networkID.toString(): _networkID
   const clientUrl = chaidIdToGraphClientUrl(networkID);
-  // lazy solution for big lists for now; we'll have to paginate once we have > 500 tokens registed
+  // lazy solution for big lists for now; we'll have to paginate once we have > 500 tokens registered
   if (tokenList.length > 500){
     const allTokens = await getAllTokens(networkID)
     const allTokenAddresses = new Set(allTokens.map((token)=> token.l1TokenAddr.toLowerCase()))
