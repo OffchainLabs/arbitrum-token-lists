@@ -8,7 +8,6 @@ import {
 import { writeFileSync, existsSync, mkdirSync } from 'fs';
 import args from './lib/getClargs';
 import { TokenList } from '@uniswap/token-lists';
-import { generateNovaTokenList, novaifyL1List, novaListtoEtherscanList, updateNovaifiedList } from './lib/nova_token_list_gen';
 
 const TOKENLIST_DIR_PATH = __dirname +'/ArbTokenLists'
 const FULLLIST_DIR_PATH = __dirname +'/FullList'
@@ -58,12 +57,12 @@ if(!existsSync(FULLLIST_DIR_PATH)){
   else if (args.action === 'novaify') {
     if (!args.tokenList) throw new Error('No token list provided');
 
-    await novaifyL1List(args.tokenList, !!args.includeOldDataFields);
+    await arbifyL1List(args.tokenList, !!args.includeOldDataFields, true);
   }
     else if(args.action === "updateNova") {
     if (!args.tokenList) throw new Error('No token list provided');
 
-    await updateNovaifiedList(args.tokenList)
+    await updateArbifiedList(args.tokenList, true)
     }
 
     else if (args.action === 'fullNova') {
@@ -78,9 +77,9 @@ if(!existsSync(FULLLIST_DIR_PATH)){
       },
       tokens: []
     }
-    const tokenData = await generateNovaTokenList(mockList, undefined, { getAllTokensInNetwork: true });
+    const tokenData = await generateTokenList(mockList, undefined, { getAllTokensInNetwork: true, isNova: true });
 
-    const etherscanData = novaListtoEtherscanList(tokenData)
+    const etherscanData = arbListtoEtherscanList(tokenData)
     const fullListPath = __dirname + '/FullList/all_tokens.json';
     writeFileSync(fullListPath, JSON.stringify(etherscanData));
     console.log('List generated at', fullListPath);

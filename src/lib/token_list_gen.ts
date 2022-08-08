@@ -15,7 +15,7 @@ import {
   isArbTokenList,
   removeInvalidTokensFromList
 } from './utils';
-import { constants as arbConstants } from "@arbitrum/sdk"
+import { addCustomNetwork, constants as arbConstants, L2Network } from "@arbitrum/sdk"
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
 
@@ -53,6 +53,21 @@ const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses = {
   "0x6d2457a4ad276000a615295f7a80f79e48ccd318": "0x6142f1C8bBF02E6A6bd074E8d564c9A5420a0676"
 };
 
+// nova
+const l2ToL1GatewayAddressesNova: L2ToL1GatewayAddresses = {
+  // L2 ERC20 Gateway	mainnet
+  '0xcF9bAb7e53DDe48A6DC4f286CB14e05298799257':
+    '0xB2535b988dcE19f9D71dfB22dB6da744aCac21bf',
+  // L2 Arb-Custom Gatewa	mainnet
+    '0xbf544970E6BD77b21C6492C281AB60d0770451F4':
+    '0x23122da8C581AA7E0d07A36Ff1f16F799650232f',
+  // L2 weth mainnet
+  '0x7626841cB6113412F9c88D3ADC720C9FAC88D9eD':
+    '0xE4E2121b479017955Be0b175305B35f312330BaE',
+};
+
+const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60
+
 export const generateTokenList = async (
   l1TokenList: TokenList,
   prevArbTokenList?: ArbTokenList,
@@ -66,7 +81,8 @@ export const generateTokenList = async (
      */
     includeUnbridgedL1Tokens?: boolean,
     getAllTokensInNetwork?: boolean,
-    includeOldDataFields?: boolean
+    includeOldDataFields?: boolean,
+    isNova?: boolean
   }
 ) => {
   if(options?.includeAllL1Tokens && options.includeUnbridgedL1Tokens) {
@@ -75,6 +91,44 @@ export const generateTokenList = async (
 
   const name = l1TokenList.name
   const mainLogoUri = l1TokenList.logoURI
+
+  if(options?.isNova){
+    const AnyTrust: L2Network = {
+      chainID: 42170,
+      confirmPeriodBlocks: 45818,
+      ethBridge: {
+        bridge: '0xc1ebd02f738644983b6c4b2d440b8e77dde276bd',
+        inbox: '0xc4448b71118c9071bcb9734a0eac55d18a153949',
+        outbox: '0xD4B80C3D7240325D18E645B49e6535A3Bf95cc58',
+        rollup: '0xfb209827c58283535b744575e11953dcc4bead88',
+        sequencerInbox: '0x211e1c4c7f1bf5351ac850ed10fd68cffcf6c21b'
+      },
+      explorerUrl: 'https://a4ba-explorer.arbitrum.io',
+      isArbitrum: true,
+      isCustom: true,
+      name: 'AnyTrust',
+      partnerChainID: 1,
+      retryableLifetimeSeconds: SEVEN_DAYS_IN_SECONDS,
+      rpcURL: 'https://a4ba.arbitrum.io/rpc',
+      tokenBridge: {
+        l1CustomGateway: '0x23122da8C581AA7E0d07A36Ff1f16F799650232f',
+        l1ERC20Gateway: '0xB2535b988dcE19f9D71dfB22dB6da744aCac21bf',
+        l1GatewayRouter: '0xC840838Bc438d73C16c2f8b22D2Ce3669963cD48',
+        l1MultiCall: '0x8896d23afea159a5e9b72c9eb3dc4e2684a38ea3',
+        l1ProxyAdmin: '0xa8f7DdEd54a726eB873E98bFF2C95ABF2d03e560',
+        l1Weth: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+        l1WethGateway: '0xE4E2121b479017955Be0b175305B35f312330BaE',
+        l2CustomGateway: '0xbf544970E6BD77b21C6492C281AB60d0770451F4',
+        l2ERC20Gateway: '0xcF9bAb7e53DDe48A6DC4f286CB14e05298799257',
+        l2GatewayRouter: '0x21903d3F8176b1a0c17E953Cd896610Be9fFDFa8',
+        l2Multicall: '0x5e1eE626420A354BbC9a95FeA1BAd4492e3bcB86',
+        l2ProxyAdmin: '0xada790b026097BfB36a5ed696859b97a96CEd92C',
+        l2Weth: '0x722E8BdD2ce80A4422E880164f2079488e115365',
+        l2WethGateway: '0x7626841cB6113412F9c88D3ADC720C9FAC88D9eD'
+      }
+    }
+    addCustomNetwork({customL2Network: AnyTrust});
+  }
 
   const { l1 , l2 } = await getNetworkConfig();
 
@@ -243,7 +297,7 @@ export const generateTokenList = async (
   return arbTokenList;
 };
 
-export const arbifyL1List = async (pathOrUrl: string, includeOldDataFields?:boolean) => {
+export const arbifyL1List = async (pathOrUrl: string, includeOldDataFields?:boolean, isNova?: boolean) => {
   const l1TokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(l1TokenList)
   const path = process.env.PWD +
@@ -265,7 +319,8 @@ export const arbifyL1List = async (pathOrUrl: string, includeOldDataFields?:bool
 
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
     includeAllL1Tokens: true,
-    includeOldDataFields
+    includeOldDataFields,
+    isNova: isNova
   });
 
   writeFileSync(path, JSON.stringify(newList));
@@ -273,7 +328,7 @@ export const arbifyL1List = async (pathOrUrl: string, includeOldDataFields?:bool
   
 };
 
-export const updateArbifiedList = async (pathOrUrl: string) => {
+export const updateArbifiedList = async (pathOrUrl: string, isNova?: boolean) => {
   const arbTokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(arbTokenList)
   const path = process.env.PWD +
@@ -290,7 +345,8 @@ export const updateArbifiedList = async (pathOrUrl: string) => {
   } 
 
   const newList = await generateTokenList(arbTokenList, prevArbTokenList, { 
-    includeAllL1Tokens: true
+    includeAllL1Tokens: true,
+    isNova: isNova
   });
 
   writeFileSync(path, JSON.stringify(newList));
