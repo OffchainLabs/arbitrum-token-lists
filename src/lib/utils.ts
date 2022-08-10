@@ -4,7 +4,7 @@ import addFormats from 'ajv-formats'
 import { schema, TokenList } from '@uniswap/token-lists'
 import { readFileSync, existsSync } from 'fs'
 import axios from 'axios'
-import { MultiCaller } from '@arbitrum/sdk'
+import { L2Network, MultiCaller } from '@arbitrum/sdk'
 import { L1GatewayRouter__factory } from "@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory";
 import { L2GatewayRouter__factory } from "@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory";
 
@@ -37,6 +37,67 @@ export const listNameToArbifiedListName = (name: string) => {
     fileName = prefix + fileName
   }
   return fileName.split(' ').slice(0, 2).join(' ').slice(0, 20)
+}
+
+export const getL2GatewayAddressesFromL1Token = async (
+  l1TokenAddresses: string[],
+  multiCaller: MultiCaller,
+  l2Network: L2Network
+) => {
+  const iFace = L1GatewayRouter__factory.createInterface();
+
+  const gateways = await multiCaller.multiCall(
+    l1TokenAddresses.map((addr) => ({
+      encoder: () => iFace.encodeFunctionData("getGateway", [addr]),
+      decoder: (returnData: string) => iFace.decodeFunctionResult("getGateway", returnData)[0] as string,
+      targetAddr: l2Network.tokenBridge.l2GatewayRouter,
+    }))
+  );
+
+  for (const curr of gateways) {
+    if (typeof curr === "undefined") throw new Error("undefined gateway!");
+  }
+
+  return gateways
+
+  // const l2Addrs = await getL2GatewayAddressesFromL1Gateway(
+  //   gateways as string[],
+  //   multiCaller
+  // );
+
+  // const res = l2Addrs.map((_, i) => ({
+  //   l1Token: l1TokenAddresses[i],
+  //   l1GatewayAddr: gateways[i],
+  //   l2GatewayAddr: l2Addrs[i],
+  // }));
+
+  // for(const curr of res) {
+  //   if(curr.l1Token.toLowerCase() === "0x6B175474E89094C44Da98b954EedeAC495271d0F".toLowerCase()) {
+  //     console.log(curr)
+  //   }
+  // }
+
+  // return res;
+};
+
+export const getL2GatewayAddressesFromL1Gateway = async (
+  l1RouterAddresses: string[],
+  multiCaller: MultiCaller
+) => {
+  const iFace = L1GatewayRouter__factory.createInterface()
+
+  return await multiCaller.multiCall(
+    l1RouterAddresses.map((addr) => ({
+      encoder: () =>
+        iFace.encodeFunctionData('counterpartGateway'),
+      decoder: (returnData: string) =>
+        iFace.decodeFunctionResult(
+          'calculateL2TokenAddress',
+          returnData,
+        )[0] as string,
+      targetAddr: addr,
+    })),
+  )
 }
 
 export const getL2TokenAddressesFromL1 = async (
