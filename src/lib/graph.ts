@@ -41,6 +41,10 @@ export const getTokens = async (
   _networkID: string | number
 ): Promise<Array<GraphTokenResult>> => {
   const networkID = typeof _networkID === 'number' ? _networkID.toString(): _networkID
+  if(networkID === '42170') {
+    console.warn('empty subgraph for nova')
+    return []
+  }
   const clientUrl = chaidIdToGraphClientUrl(networkID);
   // lazy solution for big lists for now; we'll have to paginate once we have > 500 tokens registed
   if (tokenList.length > 500){

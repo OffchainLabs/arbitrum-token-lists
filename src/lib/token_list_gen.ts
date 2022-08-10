@@ -13,7 +13,8 @@ import {
   sanitizeString,
   listNameToArbifiedListName,
   isArbTokenList,
-  removeInvalidTokensFromList
+  removeInvalidTokensFromList,
+  getL2GatewayAddressesFromL1Token
 } from './utils';
 import { addCustomNetwork, constants as arbConstants, L2Network } from "@arbitrum/sdk"
 import { writeFileSync, readFileSync, existsSync } from 'fs';
@@ -56,14 +57,18 @@ const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses = {
 // nova
 const l2ToL1GatewayAddressesNova: L2ToL1GatewayAddresses = {
   // L2 ERC20 Gateway	mainnet
-  '0xcF9bAb7e53DDe48A6DC4f286CB14e05298799257':
-    '0xB2535b988dcE19f9D71dfB22dB6da744aCac21bf',
+  '0xcf9bab7e53dde48a6dc4f286cb14e05298799257':
+    '0xb2535b988dce19f9d71dfb22db6da744acac21bf',
   // L2 Arb-Custom Gatewa	mainnet
-    '0xbf544970E6BD77b21C6492C281AB60d0770451F4':
-    '0x23122da8C581AA7E0d07A36Ff1f16F799650232f',
+    '0xbf544970e6bd77b21c6492c281ab60d0770451f4':
+    '0x23122da8c581aa7e0d07a36ff1f16f799650232f',
   // L2 weth mainnet
-  '0x7626841cB6113412F9c88D3ADC720C9FAC88D9eD':
-    '0xE4E2121b479017955Be0b175305B35f312330BaE',
+  '0x7626841cb6113412f9c88d3adc720c9fac88d9ed':
+    '0xe4e2121b479017955be0b175305b35f312330bae',
+
+  // L2 dai gateway mainnet
+  "0x10e6593cdda8c58a1d0f14c5164b376352a55f2f":
+    "0x97f63339374fce157aa8ee27830172d2af76a786"
 };
 
 const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60
@@ -132,7 +137,11 @@ export const generateTokenList = async (
 
   const { l1 , l2 } = await getNetworkConfig();
 
-  let tokens =
+  const isNova: boolean =
+    (typeof l2.network.chainID === "string" && l2.network.chainID === "42170") ||
+    (typeof l2.network.chainID === "number" && l2.network.chainID === 42170)
+
+  let tokens: GraphTokenResult[] =
     options && options.getAllTokensInNetwork
       ? await getAllTokens(l2.network.chainID)
       : await getTokens(
@@ -144,9 +153,34 @@ export const generateTokenList = async (
         );
 
   
-  const l1TokenAddresses = tokens.map((token:GraphTokenResult) => token.l1TokenAddr);
+  const l1TokenAddresses = l1TokenList.tokens.map((token) => token.address);
   const l2AddressesFromL1 = await getL2TokenAddressesFromL1(l1TokenAddresses, l1.multiCaller, l2.network.tokenBridge.l1GatewayRouter);
   const l2AddressesFromL2 = await getL2TokenAddressesFromL2(l1TokenAddresses, l2.multiCaller, l2.network.tokenBridge.l2GatewayRouter);
+
+  if(isNova) {
+    const logos = l1TokenList.tokens.reduce(
+      (acc, curr) => ((acc[curr.address.toLowerCase()] = curr.logoURI), acc),
+      {} as { [addr: string]: string | undefined }
+    );
+
+    const l2Gateways = await getL2GatewayAddressesFromL1Token(l1TokenAddresses, l2.multiCaller, l2.network)
+    const res: GraphTokenResult[] = l1TokenList.tokens.map((curr, index) => {
+      if(!l2Gateways[index]) throw new Error("no l2 gateway!!")
+      return {
+        l2Address: l2AddressesFromL2[index] || null,
+        joinTableEntry: [{
+          gateway: {
+            gatewayAddr: l2Gateways[index]!
+          }
+        }],
+        l1TokenAddr: curr.address,
+        logoUri: logos[curr.address] || undefined
+        // logoUri: curr.logoURI
+      }
+    });
+    tokens = res
+  }
+  console.log(tokens.length)
 
   // if the l2 route hasn't been updated yet we remove the token from the bridged tokens
   tokens = tokens.filter((t, i) => l2AddressesFromL1[i] === l2AddressesFromL2[i])
@@ -170,7 +204,8 @@ export const generateTokenList = async (
     const l2GatewayAddress = token.token.joinTableEntry[0].gateway.gatewayAddr;
     let { name:_name, decimals, symbol:_symbol } = token.tokenDatum;
     
-    if(decimals === undefined) throw new Error(`Unexpected undefined token decimals: ${JSON.stringify(token)}`);
+    // we queried the L2 token and got nothing, so token doesn't exist yet
+    if(decimals === undefined) return undefined;
 
     _name = (() => {
       if(_name === undefined) throw new Error(`Unexpected undefined token name: ${JSON.stringify(token)}`);
@@ -194,6 +229,21 @@ export const generateTokenList = async (
     const name = sanitizeString(_name)
     const symbol = sanitizeString(_symbol)
 
+    const getL2ToL1 = () => {
+      console.log({isNova})
+      if(isNova) {
+        const res = l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()]
+        console.log(res)
+        if(!res) console.log("nothin")
+        return res
+      } else {
+        const res = l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()];
+        if(!res) console.log("no res in not nova")
+        return res
+      }
+    };
+    
+
     let arbTokenInfo = {
       chainId: +l2.network.chainID,
       address: token.l2Address,
@@ -205,7 +255,7 @@ export const generateTokenList = async (
           [l1.network.chainID]: {
             tokenAddress: token.token.l1TokenAddr,
             originBridgeAddress: l2GatewayAddress,
-            destBridgeAddress: l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()]
+            destBridgeAddress: getL2ToL1()
           }
         }
       }
@@ -216,7 +266,7 @@ export const generateTokenList = async (
         // @ts-ignore
         l1Address: token.token.l1TokenAddr,
         l2GatewayAddress: l2GatewayAddress,
-        l1GatewayAddress: l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()]
+        l1GatewayAddress: getL2ToL1()
       }
     }
     if (logoUris[token.token.l1TokenAddr]) {
@@ -227,9 +277,10 @@ export const generateTokenList = async (
     }
 
     return arbTokenInfo;
-  }).filter((tokenInfo: ArbTokenInfo)=>{
-    return tokenInfo.extensions && tokenInfo.extensions.bridgeInfo[l1.network.chainID].originBridgeAddress !== arbConstants.DISABLED_GATEWAY 
   })
+  .filter((tokenInfo: ArbTokenInfo | undefined )=>{
+    return tokenInfo && tokenInfo.extensions && tokenInfo.extensions.bridgeInfo[l1.network.chainID].originBridgeAddress !== arbConstants.DISABLED_GATEWAY 
+  }) as ArbTokenInfo[]
   arbifiedTokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
 
   console.log(`List has ${arbifiedTokenList.length} bridged tokens`);
