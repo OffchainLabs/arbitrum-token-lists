@@ -34,7 +34,7 @@ const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses = {
   '0x09e9222e96e7b4ae2a407b98d48e330053351eee':
     '0xa3A7B6F88361F48403514059F1F16C8E78d60EeC',
   // L2 Arb-Custom Gateway	mainnet
-    '0x096760f208390250649e3e8763348e783aef5562':
+  '0x096760f208390250649e3e8763348e783aef5562':
     '0xcEe284F754E854890e311e3280b767F80797180d',
   // L2 weth mainnet
   '0x6c411ad3e74de3e7bd422b94a27770f5b86c623b':
@@ -60,7 +60,7 @@ const l2ToL1GatewayAddressesNova: L2ToL1GatewayAddresses = {
   '0xcf9bab7e53dde48a6dc4f286cb14e05298799257':
     '0xb2535b988dce19f9d71dfb22db6da744acac21bf',
   // L2 Arb-Custom Gatewa	mainnet
-    '0xbf544970e6bd77b21c6492c281ab60d0770451f4':
+  '0xbf544970e6bd77b21c6492c281ab60d0770451f4':
     '0x23122da8c581aa7e0d07a36ff1f16f799650232f',
   // L2 weth mainnet
   '0x7626841cb6113412f9c88d3adc720c9fac88d9ed':
@@ -72,6 +72,20 @@ const l2ToL1GatewayAddressesNova: L2ToL1GatewayAddresses = {
 };
 
 const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60
+
+const  chunkArray = (myArray: (string |undefined) [] , chunk_size: number) => {
+  var index = 0;
+  var arrayLength = myArray.length;
+  var tempArray = [];
+  
+  for (index = 0; index < arrayLength; index += chunk_size) {
+      let myChunk = myArray.slice(index, index+chunk_size);
+      // Do something if you want with the group
+      tempArray.push(myChunk);
+  }
+
+  return tempArray;
+}
 
 export const generateTokenList = async (
   l1TokenList: TokenList,
@@ -151,19 +165,34 @@ export const generateTokenList = async (
           })),
           l2.network.chainID
         );
-
   
   const l1TokenAddresses = l1TokenList.tokens.map((token) => token.address);
-  const l2AddressesFromL1 = await getL2TokenAddressesFromL1(l1TokenAddresses, l1.multiCaller, l2.network.tokenBridge.l1GatewayRouter);
-  const l2AddressesFromL2 = await getL2TokenAddressesFromL2(l1TokenAddresses, l2.multiCaller, l2.network.tokenBridge.l2GatewayRouter);
 
+  let intermediatel2AddressesFromL1 = [];
+  let intermediatel2AddressesFromL2 = [];
+  let chunksOfL1 = chunkArray(l1TokenAddresses, 500);
+  for (let i = 0; i < chunksOfL1.length; i++){
+      let l2AddressesFromL1Temp = await getL2TokenAddressesFromL1(chunksOfL1[i] as string[], l1.multiCaller, l2.network.tokenBridge.l1GatewayRouter);
+      intermediatel2AddressesFromL1.push(l2AddressesFromL1Temp);
+      let l2AddressesFromL2Temp = await getL2TokenAddressesFromL2(chunksOfL1[i] as string[], l1.multiCaller, l2.network.tokenBridge.l1GatewayRouter);
+      intermediatel2AddressesFromL2.push(l2AddressesFromL2Temp);
+  }
+  const l2AddressesFromL1 = intermediatel2AddressesFromL1.flat(1);
+  const l2AddressesFromL2 = intermediatel2AddressesFromL2.flat(1);
+  
   if(isNova) {
     const logos = l1TokenList.tokens.reduce(
       (acc, curr) => ((acc[curr.address.toLowerCase()] = curr.logoURI), acc),
       {} as { [addr: string]: string | undefined }
     );
+    
+    let intermediatel2GatewayAddrs = [];
+    for (let i = 0; i < chunksOfL1.length; i++){
+        let l2GatewayAddressesFromL1Temp = await getL2GatewayAddressesFromL1Token(chunksOfL1[i] as string[], l2.multiCaller, l2.network);
+        intermediatel2GatewayAddrs.push(l2GatewayAddressesFromL1Temp);
+    }
+    const l2Gateways = intermediatel2GatewayAddrs.flat(1);
 
-    const l2Gateways = await getL2GatewayAddressesFromL1Token(l1TokenAddresses, l2.multiCaller, l2.network)
     const res: GraphTokenResult[] = l1TokenList.tokens.map((curr, index) => {
       if(!l2Gateways[index]) throw new Error("no l2 gateway!!")
       return {
@@ -185,10 +214,17 @@ export const generateTokenList = async (
   // if the l2 route hasn't been updated yet we remove the token from the bridged tokens
   tokens = tokens.filter((t, i) => l2AddressesFromL1[i] === l2AddressesFromL2[i])
 
-  const tokenData = await l2.multiCaller.getTokenData(
-    l2AddressesFromL1.map(t => t || constants.AddressZero),
-    { name: true, decimals: true, symbol: true }
-  )
+  let intermediateTokenData = [];
+  let chunksOfL2AddrsFromL1 = chunkArray(l2AddressesFromL1, 500);
+    for (let i = 0; i < chunksOfL2AddrsFromL1.length; i++){
+        let tokenDataTemp = await l2.multiCaller.getTokenData(
+          chunksOfL2AddrsFromL1[i].map(t => t || constants.AddressZero),
+          { name: true, decimals: true, symbol: true }
+        )
+        intermediateTokenData.push(tokenDataTemp);
+    }
+  const tokenData = intermediateTokenData.flat(1);
+
   const logoUris: { [l1addr: string]: string } = {};
   for (const token of tokens) {
     const uri = token.logoUri || await getLogoUri(token.l1TokenAddr);
@@ -351,9 +387,18 @@ export const generateTokenList = async (
 export const arbifyL1List = async (pathOrUrl: string, includeOldDataFields?:boolean, isNova?: boolean) => {
   const l1TokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(l1TokenList)
-  const path = process.env.PWD +
-  '/src/ArbTokenLists/' +
-  listNameToFileName(l1TokenList.name);
+  let path = "";
+  if(isNova){
+    path = process.env.PWD +
+    '/src/ArbTokenLists/nova_' +
+    listNameToFileName(l1TokenList.name);
+  }
+  else {
+    path = process.env.PWD +
+    '/src/ArbTokenLists/' +
+    listNameToFileName(l1TokenList.name);
+  }
+
   let prevArbTokenList: ArbTokenList | undefined; 
 
   if(existsSync(path)){
@@ -382,9 +427,17 @@ export const arbifyL1List = async (pathOrUrl: string, includeOldDataFields?:bool
 export const updateArbifiedList = async (pathOrUrl: string, isNova?: boolean) => {
   const arbTokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(arbTokenList)
-  const path = process.env.PWD +
-  '/src/ArbTokenLists/' +
-  listNameToFileName(arbTokenList.name);
+  let path = "";
+  if(isNova){
+    path = process.env.PWD +
+    '/src/ArbTokenLists/nova_' +
+    listNameToFileName(arbTokenList.name);
+  }
+  else{
+    path = process.env.PWD +
+    '/src/ArbTokenLists/' +
+    listNameToFileName(arbTokenList.name);
+  }
   let prevArbTokenList: ArbTokenList | undefined; 
 
   if(existsSync(path)){
