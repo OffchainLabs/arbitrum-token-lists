@@ -73,18 +73,15 @@ const l2ToL1GatewayAddressesNova: L2ToL1GatewayAddresses = {
 
 const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60
 
-const  chunkArray = (myArray: (string |undefined) [] , chunk_size: number) => {
-  var index = 0;
-  var arrayLength = myArray.length;
-  var tempArray = [];
+const  divvyUpArray = (array: (string | undefined)[], chunk_size: number) => {
+  var arrLen = array.length;
+  var res = [];
   
-  for (index = 0; index < arrayLength; index += chunk_size) {
-      let myChunk = myArray.slice(index, index+chunk_size);
-      // Do something if you want with the group
-      tempArray.push(myChunk);
+  for (let i = 0; i < arrLen; i += chunk_size) {
+      let temp = array.slice(i, i+chunk_size);
+      res.push(temp);
   }
-
-  return tempArray;
+  return res;
 }
 
 export const generateTokenList = async (
@@ -170,11 +167,11 @@ export const generateTokenList = async (
 
   let intermediatel2AddressesFromL1 = [];
   let intermediatel2AddressesFromL2 = [];
-  let chunksOfL1 = chunkArray(l1TokenAddresses, 500);
-  for (let i = 0; i < chunksOfL1.length; i++){
-      let l2AddressesFromL1Temp = await getL2TokenAddressesFromL1(chunksOfL1[i] as string[], l1.multiCaller, l2.network.tokenBridge.l1GatewayRouter);
+  let divviedL1Addrs = divvyUpArray(l1TokenAddresses, 500);
+  for (let i = 0; i < divviedL1Addrs.length; i++){
+      let l2AddressesFromL1Temp = await getL2TokenAddressesFromL1(divviedL1Addrs[i] as string[], l1.multiCaller, l2.network.tokenBridge.l1GatewayRouter);
       intermediatel2AddressesFromL1.push(l2AddressesFromL1Temp);
-      let l2AddressesFromL2Temp = await getL2TokenAddressesFromL2(chunksOfL1[i] as string[], l1.multiCaller, l2.network.tokenBridge.l1GatewayRouter);
+      let l2AddressesFromL2Temp = await getL2TokenAddressesFromL2(divviedL1Addrs[i] as string[], l1.multiCaller, l2.network.tokenBridge.l1GatewayRouter);
       intermediatel2AddressesFromL2.push(l2AddressesFromL2Temp);
   }
   const l2AddressesFromL1 = intermediatel2AddressesFromL1.flat(1);
@@ -187,8 +184,8 @@ export const generateTokenList = async (
     );
     
     let intermediatel2GatewayAddrs = [];
-    for (let i = 0; i < chunksOfL1.length; i++){
-        let l2GatewayAddressesFromL1Temp = await getL2GatewayAddressesFromL1Token(chunksOfL1[i] as string[], l2.multiCaller, l2.network);
+    for (let i = 0; i < divviedL1Addrs.length; i++){
+        let l2GatewayAddressesFromL1Temp = await getL2GatewayAddressesFromL1Token(divviedL1Addrs[i] as string[], l2.multiCaller, l2.network);
         intermediatel2GatewayAddrs.push(l2GatewayAddressesFromL1Temp);
     }
     const l2Gateways = intermediatel2GatewayAddrs.flat(1);
@@ -215,10 +212,10 @@ export const generateTokenList = async (
   tokens = tokens.filter((t, i) => l2AddressesFromL1[i] === l2AddressesFromL2[i])
 
   let intermediateTokenData = [];
-  let chunksOfL2AddrsFromL1 = chunkArray(l2AddressesFromL1, 500);
-    for (let i = 0; i < chunksOfL2AddrsFromL1.length; i++){
+  let divviedL2AddrsFromL1 = divvyUpArray(l2AddressesFromL1, 500);
+    for (let i = 0; i < divviedL2AddrsFromL1.length; i++){
         let tokenDataTemp = await l2.multiCaller.getTokenData(
-          chunksOfL2AddrsFromL1[i].map(t => t || constants.AddressZero),
+          divviedL2AddrsFromL1[i].map(t => t || constants.AddressZero),
           { name: true, decimals: true, symbol: true }
         )
         intermediateTokenData.push(tokenDataTemp);
