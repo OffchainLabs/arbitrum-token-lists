@@ -170,7 +170,6 @@ export const generateTokenList = async (
     });
     tokens = res
   }
-  console.log(tokens.length)
 
   // if the l2 route hasn't been updated yet we remove the token from the bridged tokens
   tokens = tokens.filter((t, i) => l2AddressesFromL1[i] === l2AddressesFromL2[i])

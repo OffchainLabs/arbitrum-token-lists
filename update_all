@@ -3,7 +3,7 @@
 # arb1
 yarn fullList --l2NetworkID 42161
 yarn arbify --l2NetworkID 42161 --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org
-yarn arbify --l2NetworkID 42161--tokenList https://www.gemini.com/uniswap/manifest.json
+yarn arbify --l2NetworkID 42161 --tokenList https://www.gemini.com/uniswap/manifest.json
 yarn arbify --l2NetworkID 42161 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json
 
 # nova

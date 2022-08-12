@@ -35,6 +35,7 @@ const argv = yargs(process.argv.slice(2))
   })
   .demandOption("action")
   .demandOption("l2NetworkID")
+  .demandOption("tokenList")
   .parseSync();
 
 export default argv;

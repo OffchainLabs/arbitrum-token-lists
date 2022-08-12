@@ -25,16 +25,13 @@ if(!existsSync(FULLLIST_DIR_PATH)){
 
 (async () => {
   if (args.action === 'arbify') {
-    if (!args.tokenList) throw new Error('No token list provided');
-
     await arbifyL1List(args.tokenList, !!args.includeOldDataFields);
   }  else if(args.action === "update") {
-    if (!args.tokenList) throw new Error('No token list provided');
-
     await updateArbifiedList(args.tokenList)
   }
   
   else if (args.action === 'full') {
+    if(args.tokenList !== "full") throw new Error("expected --tokenList 'full'")
     const mockList: TokenList = {
       name: "Full",
       logoURI: "ipfs://QmTvWJ4kmzq9koK74WJQ594ov8Es1HHurHZmMmhU8VY68y",
