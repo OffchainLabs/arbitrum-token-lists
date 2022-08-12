@@ -127,7 +127,10 @@ export const generateTokenList = async (
           l2.network.chainID
         );
   
-  const l1TokenAddresses = l1TokenList.tokens.map((token) => token.address);
+  const l1TokenAddresses =
+    options && options.getAllTokensInNetwork
+      ? tokens.map((curr) => curr.l1TokenAddr)
+      : l1TokenList.tokens.map((token) => token.address);
 
   let intermediatel2AddressesFromL1 = [];
   let intermediatel2AddressesFromL2 = [];
@@ -135,7 +138,7 @@ export const generateTokenList = async (
   for (let i = 0; i < divviedL1Addrs.length; i++){
       let l2AddressesFromL1Temp = await getL2TokenAddressesFromL1(divviedL1Addrs[i] as string[], l1.multiCaller, l2.network.tokenBridge.l1GatewayRouter);
       intermediatel2AddressesFromL1.push(l2AddressesFromL1Temp);
-      let l2AddressesFromL2Temp = await getL2TokenAddressesFromL2(divviedL1Addrs[i] as string[], l1.multiCaller, l2.network.tokenBridge.l1GatewayRouter);
+      let l2AddressesFromL2Temp = await getL2TokenAddressesFromL2(divviedL1Addrs[i] as string[], l2.multiCaller, l2.network.tokenBridge.l2GatewayRouter);
       intermediatel2AddressesFromL2.push(l2AddressesFromL2Temp);
   }
   const l2AddressesFromL1 = intermediatel2AddressesFromL1.flat(1);
@@ -191,86 +194,109 @@ export const generateTokenList = async (
     if (uri) logoUris[token.l1TokenAddr] = uri;
   }
 
-  let arbifiedTokenList:ArbTokenInfo[] = tokens
-      .map((t, i) => ({token: t, l2Address: l2AddressesFromL2[i], tokenDatum: tokenData[i]}))
-      // it's possible that even though l2AddressesFromL1[i] === l2AddressesFromL2[i] these addresses could be the zero address
-      // this can happen if the graphql query returns an address that hasnt been bridged
-      .filter((t): t is typeof t & { l2Address: string } => t.l2Address != undefined && t.l2Address !== constants.AddressZero)
-      .map((token, i: number) => {
-    const l2GatewayAddress = token.token.joinTableEntry[0].gateway.gatewayAddr;
-    let { name:_name, decimals, symbol:_symbol } = token.tokenDatum;
-    
-    // we queried the L2 token and got nothing, so token doesn't exist yet
-    if(decimals === undefined) return undefined;
+  let arbifiedTokenList: ArbTokenInfo[] = tokens
+    .map((t, i) => ({
+      token: t,
+      l2Address: l2AddressesFromL2[i],
+      tokenDatum: tokenData[i],
+    }))
+    // it's possible that even though l2AddressesFromL1[i] === l2AddressesFromL2[i] these addresses could be the zero address
+    // this can happen if the graphql query returns an address that hasnt been bridged
+    .filter(
+      (t): t is typeof t & { l2Address: string } =>
+        t.l2Address != undefined && t.l2Address !== constants.AddressZero
+    )
+    .map((token, i: number) => {
+      const l2GatewayAddress =
+        token.token.joinTableEntry[0].gateway.gatewayAddr;
+      let { name: _name, decimals, symbol: _symbol } = token.tokenDatum;
 
-    _name = (() => {
-      if(_name === undefined) throw new Error(`Unexpected undefined token name: ${JSON.stringify(token)}`);
-      // if token name is empty, instead set the address as the name
-      // we remove the initial 0x since the token list standard only allows up to 40 characters
-      else if(_name === "") return token.token.l1TokenAddr.substring(2)
-      // parse null terminated bytes32 strings
-      else if(_name.length === 64) return utils.parseBytes32String("0x" + _name)
-      else return _name;
-    })()
+      // we queried the L2 token and got nothing, so token doesn't exist yet
+      if (decimals === undefined) return undefined;
 
-    _symbol = (() => {
-      if(_symbol === undefined) throw new Error(`Unexpected undefined token symbol: ${JSON.stringify(token)}`);
-      // schema doesn't allow for empty symbols, and has a max length of 20
-      else if (_symbol === "") return _name.substring(0, Math.min(_name.length, 20));
-      // parse null terminated bytes32 strings
-      else if (_symbol.length === 64) return utils.parseBytes32String("0x" + _symbol);
-      else return _symbol;
-    })()
+      _name = (() => {
+        if (_name === undefined)
+          throw new Error(
+            `Unexpected undefined token name: ${JSON.stringify(token)}`
+          );
+        // if token name is empty, instead set the address as the name
+        // we remove the initial 0x since the token list standard only allows up to 40 characters
+        else if (_name === "") return token.token.l1TokenAddr.substring(2);
+        // parse null terminated bytes32 strings
+        else if (_name.length === 64)
+          return utils.parseBytes32String("0x" + _name);
+        else return _name;
+      })();
 
-    const name = sanitizeString(_name)
-    const symbol = sanitizeString(_symbol)
+      _symbol = (() => {
+        if (_symbol === undefined)
+          throw new Error(
+            `Unexpected undefined token symbol: ${JSON.stringify(token)}`
+          );
+        // schema doesn't allow for empty symbols, and has a max length of 20
+        else if (_symbol === "")
+          return _name.substring(0, Math.min(_name.length, 20));
+        // parse null terminated bytes32 strings
+        else if (_symbol.length === 64)
+          return utils.parseBytes32String("0x" + _symbol);
+        else return _symbol;
+      })();
 
-    const getL2ToL1 = () => {
-      if(isNova) {
-        return l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()]
-      } else {
-        return l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()]
-      }
-    };
-    
+      const name = sanitizeString(_name);
+      const symbol = sanitizeString(_symbol);
 
-    let arbTokenInfo = {
-      chainId: +l2.network.chainID,
-      address: token.l2Address,
-      name,
-      symbol,
-      decimals,
-      extensions: {
-        bridgeInfo: {
-          [l2.network.partnerChainID]: {
-            tokenAddress: token.token.l1TokenAddr,
-            originBridgeAddress: l2GatewayAddress,
-            destBridgeAddress: getL2ToL1()
-          }
+      const getL2ToL1 = () => {
+        if (isNova) {
+          return l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()];
+        } else {
+          return l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()];
         }
-      }
-    };
-    if(options && options.includeOldDataFields){
-      arbTokenInfo.extensions = {
-        ...arbTokenInfo.extensions,
-        // @ts-ignore
-        l1Address: token.token.l1TokenAddr,
-        l2GatewayAddress: l2GatewayAddress,
-        l1GatewayAddress: getL2ToL1()
-      }
-    }
-    if (logoUris[token.token.l1TokenAddr]) {
-      arbTokenInfo = { ...{ logoURI: logoUris[token.token.l1TokenAddr] }, ...arbTokenInfo };
-    } else {
-      console.log('no logo uri for ',token.token.l1TokenAddr, symbol);
-      
-    }
+      };
 
-    return arbTokenInfo;
-  })
-  .filter((tokenInfo: ArbTokenInfo | undefined )=>{
-    return tokenInfo && tokenInfo.extensions && tokenInfo.extensions.bridgeInfo[l2.network.partnerChainID].originBridgeAddress !== arbConstants.DISABLED_GATEWAY 
-  }) as ArbTokenInfo[]
+      let arbTokenInfo = {
+        chainId: +l2.network.chainID,
+        address: token.l2Address,
+        name,
+        symbol,
+        decimals,
+        extensions: {
+          bridgeInfo: {
+            [l2.network.partnerChainID]: {
+              tokenAddress: token.token.l1TokenAddr,
+              originBridgeAddress: l2GatewayAddress,
+              destBridgeAddress: getL2ToL1(),
+            },
+          },
+        },
+      };
+      if (options && options.includeOldDataFields) {
+        arbTokenInfo.extensions = {
+          ...arbTokenInfo.extensions,
+          // @ts-ignore
+          l1Address: token.token.l1TokenAddr,
+          l2GatewayAddress: l2GatewayAddress,
+          l1GatewayAddress: getL2ToL1(),
+        };
+      }
+      if (logoUris[token.token.l1TokenAddr]) {
+        arbTokenInfo = {
+          ...{ logoURI: logoUris[token.token.l1TokenAddr] },
+          ...arbTokenInfo,
+        };
+      } else {
+        console.log("no logo uri for ", token.token.l1TokenAddr, symbol);
+      }
+
+      return arbTokenInfo;
+    })
+    .filter((tokenInfo: ArbTokenInfo | undefined) => {
+      return (
+        tokenInfo &&
+        tokenInfo.extensions &&
+        tokenInfo.extensions.bridgeInfo[l2.network.partnerChainID]
+          .originBridgeAddress !== arbConstants.DISABLED_GATEWAY
+      );
+    }) as ArbTokenInfo[];
   arbifiedTokenList.sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
 
   console.log(`List has ${arbifiedTokenList.length} bridged tokens`);
