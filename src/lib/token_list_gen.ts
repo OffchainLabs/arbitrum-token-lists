@@ -14,7 +14,8 @@ import {
   listNameToArbifiedListName,
   isArbTokenList,
   removeInvalidTokensFromList,
-  getL2GatewayAddressesFromL1Token
+  getL2GatewayAddressesFromL1Token,
+  isNova
 } from './utils';
 import { addCustomNetwork, constants as arbConstants, L2Network } from "@arbitrum/sdk"
 import { writeFileSync, readFileSync, existsSync } from 'fs';
@@ -103,8 +104,7 @@ export const generateTokenList = async (
      */
     includeUnbridgedL1Tokens?: boolean,
     getAllTokensInNetwork?: boolean,
-    includeOldDataFields?: boolean,
-    isNova?: boolean
+    includeOldDataFields?: boolean
   }
 ) => {
   if(options?.includeAllL1Tokens && options.includeUnbridgedL1Tokens) {
@@ -115,10 +115,6 @@ export const generateTokenList = async (
   const mainLogoUri = l1TokenList.logoURI
 
   const { l1 , l2 } = await getNetworkConfig();
-
-  const isNova: boolean =
-    (typeof l2.network.chainID === "string" && l2.network.chainID === "42170") ||
-    (typeof l2.network.chainID === "number" && l2.network.chainID === 42170)
 
   let tokens: GraphTokenResult[] =
     options && options.getAllTokensInNetwork
@@ -343,7 +339,7 @@ export const generateTokenList = async (
   return arbTokenList;
 };
 
-export const arbifyL1List = async (pathOrUrl: string, includeOldDataFields?:boolean, isNova?: boolean) => {
+export const arbifyL1List = async (pathOrUrl: string, includeOldDataFields?:boolean) => {
   const l1TokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(l1TokenList)
   let path = "";
@@ -374,8 +370,7 @@ export const arbifyL1List = async (pathOrUrl: string, includeOldDataFields?:bool
 
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
     includeAllL1Tokens: true,
-    includeOldDataFields,
-    isNova: isNova
+    includeOldDataFields
   });
 
   writeFileSync(path, JSON.stringify(newList));
@@ -383,7 +378,7 @@ export const arbifyL1List = async (pathOrUrl: string, includeOldDataFields?:bool
   
 };
 
-export const updateArbifiedList = async (pathOrUrl: string, isNova?: boolean) => {
+export const updateArbifiedList = async (pathOrUrl: string) => {
   const arbTokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(arbTokenList)
   let path = "";
@@ -408,8 +403,7 @@ export const updateArbifiedList = async (pathOrUrl: string, isNova?: boolean) =>
   } 
 
   const newList = await generateTokenList(arbTokenList, prevArbTokenList, { 
-    includeAllL1Tokens: true,
-    isNova: isNova
+    includeAllL1Tokens: true
   });
 
   writeFileSync(path, JSON.stringify(newList));

@@ -10,6 +10,9 @@ import { L2GatewayRouter__factory } from "@arbitrum/sdk/dist/lib/abi/factories/L
 
 import { ArbTokenList } from './types'
 import path from 'path'
+import yargs from "./getClargs"
+
+export const isNova = yargs.l2NetworkID === 1;
 
 const coinGeckoBuff = readFileSync(path.resolve(__dirname, '../Assets/coingecko_uris.json'))
 const logoURIsBuff = readFileSync(path.resolve(__dirname, '../Assets/logo_uris.json'))
