@@ -12,7 +12,7 @@ import { ArbTokenList } from './types'
 import path from 'path'
 import yargs from "./getClargs"
 
-export const isNova = yargs.l2NetworkID === 1;
+export const isNova = yargs.l2NetworkID === 42170;
 
 const coinGeckoBuff = readFileSync(path.resolve(__dirname, '../Assets/coingecko_uris.json'))
 const logoURIsBuff = readFileSync(path.resolve(__dirname, '../Assets/logo_uris.json'))
@@ -340,7 +340,7 @@ export const sanitizeNameString = (str: string) =>
   str.replace(/[^ \w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)]/gi, '')
 
 export const sanitizeSymbolString = (str: string) =>
-  str.replace(/[^a-zA-Z0-9+\-%/$.]/gi, '')
+  str.replace(/[^\w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)]/gi, '')
 
 export const excludeList = [
   '0x0CE51000d5244F1EAac0B313a792D5a5f96931BF', //rkr
