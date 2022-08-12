@@ -35,7 +35,7 @@ export const listNameToFileName = (name: string) => {
 export const listNameToArbifiedListName = (name: string) => {
   const prefix = 'Arbed '
 
-  let fileName = sanitizeString(name)
+  let fileName = sanitizeNameString(name)
   if (!fileName.startsWith(prefix)) {
     fileName = prefix + fileName
   }
@@ -336,8 +336,11 @@ export const isTokenList = (obj:any)=>{
   }
 }
 
-export const sanitizeString = (str: string) =>
+export const sanitizeNameString = (str: string) =>
   str.replace(/[^ \w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)]/gi, '')
+
+export const sanitizeSymbolString = (str: string) =>
+  str.replace(/[^a-zA-Z0-9+\-%/$.]/gi, '')
 
 export const excludeList = [
   '0x0CE51000d5244F1EAac0B313a792D5a5f96931BF', //rkr

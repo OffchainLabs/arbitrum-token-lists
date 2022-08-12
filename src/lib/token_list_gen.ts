@@ -10,7 +10,8 @@ import {
   getTokenListObj,
   listNameToFileName,
   validateTokenListWithErrorThrowing,
-  sanitizeString,
+  sanitizeNameString,
+  sanitizeSymbolString,
   listNameToArbifiedListName,
   isArbTokenList,
   removeInvalidTokensFromList,
@@ -242,8 +243,8 @@ export const generateTokenList = async (
         else return _symbol;
       })();
 
-      const name = sanitizeString(_name);
-      const symbol = sanitizeString(_symbol);
+      const name = sanitizeNameString(_name);
+      const symbol = sanitizeSymbolString(_symbol);
 
       const getL2ToL1 = () => {
         if (isNova) {
