@@ -53,36 +53,7 @@ if(!existsSync(FULLLIST_DIR_PATH)){
     writeFileSync(fullListPath, JSON.stringify(etherscanData));
     console.log('List generated at', fullListPath);
 
+  } else {
+    throw new Error(`action ${args.action} not recognised`)
   }
-  else if (args.action === 'novaify') {
-    if (!args.tokenList) throw new Error('No token list provided');
-
-    await arbifyL1List(args.tokenList, !!args.includeOldDataFields, true);
-  }
-    else if(args.action === "updateNova") {
-    if (!args.tokenList) throw new Error('No token list provided');
-
-    await updateArbifiedList(args.tokenList, true)
-    }
-
-    else if (args.action === 'fullNova') {
-    const mockList: TokenList = {
-      name: "Full",
-      logoURI: "ipfs://QmTvWJ4kmzq9koK74WJQ594ov8Es1HHurHZmMmhU8VY68y",
-      timestamp: new Date().toISOString(),
-      version: {
-        major: 1,
-        minor: 0,
-        patch: 0
-      },
-      tokens: []
-    }
-    const tokenData = await generateTokenList(mockList, undefined, { getAllTokensInNetwork: true, isNova: true });
-
-    const etherscanData = arbListtoEtherscanList(tokenData)
-    const fullListPath = __dirname + '/FullList/all_tokens.json';
-    writeFileSync(fullListPath, JSON.stringify(etherscanData));
-    console.log('List generated at', fullListPath);
-
-    }
 })();

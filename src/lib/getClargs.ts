@@ -28,8 +28,13 @@ const argv = yargs(process.argv.slice(2))
     },
     includeOldDataFields: {
       type: "boolean"
+    },
+    action: {
+      type: "string"
     }
   })
+  .demandOption("action")
+  .demandOption("l2NetworkID")
   .parseSync();
 
 export default argv;

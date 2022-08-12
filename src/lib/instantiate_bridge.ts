@@ -1,7 +1,7 @@
 import { providers, Wallet, VoidSigner } from 'ethers';
 import args from './getClargs';
 import dotenv from 'dotenv';
-import { getL1Network, getL2Network, MultiCaller } from "@arbitrum/sdk"
+import { getL2Network, MultiCaller } from "@arbitrum/sdk"
 dotenv.config();
 
 const networkID = args.l2NetworkID || 42161 
@@ -13,7 +13,7 @@ export const getNetworkConfig = async () => {
   const l2Rpc = (() => {
     if(networkID === 42161) return "https://arb1.arbitrum.io/rpc"
     else if(networkID === 421611) return "https://rinkeby.arbitrum.io/rpc"
-    else if(networkID === 42170) return "https://a4ba.arbitrum.io/rpc"
+    else if(networkID === 42170) return "https://nova.arbitrum.io/rpc"
     throw new Error("No L2 RPC detected")
   })()
   const arbProvider = new providers.JsonRpcProvider(l2Rpc);
@@ -25,7 +25,6 @@ export const getNetworkConfig = async () => {
     throw new Error("No L1 RPC detected")
   })()
   const ethProvider = new providers.JsonRpcProvider(l1Rpc)
-  const l1Network = await getL1Network(ethProvider)
 
 
   const l1MultiCaller = await MultiCaller.fromProvider(ethProvider)
@@ -33,7 +32,7 @@ export const getNetworkConfig = async () => {
 
   return {
     l1: {
-      network: l1Network,
+      // network: l1Network,
       provider: ethProvider,
       multiCaller: l1MultiCaller
     },
