@@ -1,5 +1,5 @@
 import { request, gql } from 'graphql-request';
-import { excludeList } from './utils';
+import { excludeList, isNova } from './utils';
 import { GraphTokenResult, GraphTokensResult } from './types'
 
 const apolloL2GatewaysRinkebyClient =
@@ -40,11 +40,11 @@ export const getTokens = async (
   tokenList: {addr: string, logo: string | undefined}[],
   _networkID: string | number
 ): Promise<Array<GraphTokenResult>> => {
-  const networkID = typeof _networkID === 'number' ? _networkID.toString(): _networkID
-  if(networkID === '42170') {
+  if(isNova) {
     console.warn('empty subgraph for nova')
     return []
   }
+  const networkID = typeof _networkID === 'number' ? _networkID.toString(): _networkID
   const clientUrl = chaidIdToGraphClientUrl(networkID);
   // lazy solution for big lists for now; we'll have to paginate once we have > 500 tokens registed
   if (tokenList.length > 500){
