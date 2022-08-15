@@ -19,11 +19,15 @@ export const getNetworkConfig = async () => {
   const arbProvider = new providers.JsonRpcProvider(l2Rpc);
   const l2Network = await getL2Network(arbProvider)
 
-  const l1Rpc = (() => {
-    if(l2Network.partnerChainID === 1) return process.env['MAINNET_RPC'] as string
-    else if(l2Network.partnerChainID === 4) return process.env['RINKEBY_RPC'] as string
+  const expectedEnv = (() => {
+    if(l2Network.partnerChainID === 1) return "MAINNET_RPC"
+    else if(l2Network.partnerChainID === 4) return 'RINKEBY_RPC'
+    else if(l2Network.partnerChainID === 5) return 'GOERLI_RPC'
     throw new Error("No L1 RPC detected")
   })()
+  const l1Rpc = process.env[expectedEnv]
+  if(!l1Rpc) throw new Error(`Please set ${expectedEnv}`)
+
   const ethProvider = new providers.JsonRpcProvider(l1Rpc)
 
 
