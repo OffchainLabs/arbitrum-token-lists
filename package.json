@@ -13,7 +13,7 @@
     "fullList": "yarn ts-node src/main.ts --action full --tokenList full",
     "updateNova": "yarn ts-node src/main.ts --action update --l2NetworkID 42170",
     "novaify": "yarn ts-node src/main.ts --action arbify --l2NetworkID 42170",
-    "fullNova": "yarn ts-node src/main.ts --action fullNova --l2NetworkID 42170",
+    "fullNova": "yarn ts-node src/main.ts --action full --tokenList full --l2NetworkID 42170",
     "start_server": "yarn ts-node server/app.ts"
   },
   "dependencies": {

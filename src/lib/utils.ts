@@ -13,6 +13,7 @@ import path from 'path'
 import yargs from "./getClargs"
 
 export const isNova = yargs.l2NetworkID === 42170;
+export const isArb1 = yargs.l2NetworkID === 42161;
 
 const coinGeckoBuff = readFileSync(path.resolve(__dirname, '../Assets/coingecko_uris.json'))
 const logoURIsBuff = readFileSync(path.resolve(__dirname, '../Assets/logo_uris.json'))
@@ -62,46 +63,7 @@ export const getL2GatewayAddressesFromL1Token = async (
   }
 
   return gateways
-
-  // const l2Addrs = await getL2GatewayAddressesFromL1Gateway(
-  //   gateways as string[],
-  //   multiCaller
-  // );
-
-  // const res = l2Addrs.map((_, i) => ({
-  //   l1Token: l1TokenAddresses[i],
-  //   l1GatewayAddr: gateways[i],
-  //   l2GatewayAddr: l2Addrs[i],
-  // }));
-
-  // for(const curr of res) {
-  //   if(curr.l1Token.toLowerCase() === "0x6B175474E89094C44Da98b954EedeAC495271d0F".toLowerCase()) {
-  //     console.log(curr)
-  //   }
-  // }
-
-  // return res;
 };
-
-export const getL2GatewayAddressesFromL1Gateway = async (
-  l1RouterAddresses: string[],
-  multiCaller: MultiCaller
-) => {
-  const iFace = L1GatewayRouter__factory.createInterface()
-
-  return await multiCaller.multiCall(
-    l1RouterAddresses.map((addr) => ({
-      encoder: () =>
-        iFace.encodeFunctionData('counterpartGateway'),
-      decoder: (returnData: string) =>
-        iFace.decodeFunctionResult(
-          'calculateL2TokenAddress',
-          returnData,
-        )[0] as string,
-      targetAddr: addr,
-    })),
-  )
-}
 
 export const getL2TokenAddressesFromL1 = async (
   l1TokenAddresses: string[],
