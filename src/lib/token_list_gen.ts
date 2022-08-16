@@ -87,6 +87,23 @@ function* getChunks<T>(arr: Array<T>, chunkSize: number = 500)  {
   }
 }
 
+const promiseErrorMultiplier = <T, Q extends Error>(
+  prom: Promise<T>,
+  handler: (err: Q) => Promise<T>,
+  tries: number,
+  verbose = false
+) => {
+  let counter = 0;
+  while (counter < tries) {
+    prom = prom.catch((err) => handler(err));
+    counter++;
+  }
+  return prom.catch((err) => {
+    if(verbose) console.error("Failed " + tries + " times. Giving up");
+    throw err;
+  });
+};
+
 export const generateTokenList = async (
   l1TokenList: TokenList,
   prevArbTokenList?: ArbTokenList,
@@ -110,18 +127,28 @@ export const generateTokenList = async (
   const name = l1TokenList.name
   const mainLogoUri = l1TokenList.logoURI
 
-  const { l1 , l2 } = await getNetworkConfig();
+  const { l1 , l2 } = await promiseErrorMultiplier(getNetworkConfig(), (error) => getNetworkConfig(), 3, false);
 
   let tokens: GraphTokenResult[] =
     options && options.getAllTokensInNetwork
-      ? await getAllTokens(l2.network.chainID)
-      : await getTokens(
+      ?  await promiseErrorMultiplier(getAllTokens(l2.network.chainID), (error) => getAllTokens(l2.network.chainID), 3, false)
+      : await promiseErrorMultiplier(
+        getTokens(
           l1TokenList.tokens.map((token) => ({
             addr: token.address.toLowerCase(),
             logo: token.logoURI
           })),
           l2.network.chainID
-        );
+        ),
+        (error) => getTokens(
+          l1TokenList.tokens.map((token) => ({
+            addr: token.address.toLowerCase(),
+            logo: token.logoURI
+          })),
+          l2.network.chainID
+        ), 
+        3, 
+        false);
   
   const l1TokenAddresses =
     options && options.getAllTokensInNetwork
@@ -131,9 +158,9 @@ export const generateTokenList = async (
   let intermediatel2AddressesFromL1 = [];
   let intermediatel2AddressesFromL2 = [];
   for (const addrs of getChunks(l1TokenAddresses)){
-      let l2AddressesFromL1Temp = await getL2TokenAddressesFromL1(addrs, l1.multiCaller, l2.network.tokenBridge.l1GatewayRouter);
+      let l2AddressesFromL1Temp = await promiseErrorMultiplier(getL2TokenAddressesFromL1(addrs, l1.multiCaller, l2.network.tokenBridge.l1GatewayRouter), (error) => getL2TokenAddressesFromL1(addrs, l1.multiCaller, l2.network.tokenBridge.l1GatewayRouter), 3, false);
       intermediatel2AddressesFromL1.push(l2AddressesFromL1Temp);
-      let l2AddressesFromL2Temp = await getL2TokenAddressesFromL2(addrs, l2.multiCaller, l2.network.tokenBridge.l2GatewayRouter);
+      let l2AddressesFromL2Temp = await promiseErrorMultiplier(getL2TokenAddressesFromL2(addrs, l2.multiCaller, l2.network.tokenBridge.l2GatewayRouter), (error) => getL2TokenAddressesFromL2(addrs, l2.multiCaller, l2.network.tokenBridge.l2GatewayRouter), 3, false);
       intermediatel2AddressesFromL2.push(l2AddressesFromL2Temp);
   }
   const l2AddressesFromL1 = intermediatel2AddressesFromL1.flat(1);
@@ -147,7 +174,7 @@ export const generateTokenList = async (
     
     let intermediatel2GatewayAddrs = [];
     for (const addrs of getChunks(l1TokenAddresses)){
-      let l2GatewayAddressesFromL1Temp = await getL2GatewayAddressesFromL1Token(addrs, l2.multiCaller, l2.network);
+      let l2GatewayAddressesFromL1Temp = await promiseErrorMultiplier(getL2GatewayAddressesFromL1Token(addrs, l2.multiCaller, l2.network), (error) => getL2GatewayAddressesFromL1Token(addrs, l2.multiCaller, l2.network), 3, false);
       intermediatel2GatewayAddrs.push(l2GatewayAddressesFromL1Temp);
     }
     const l2Gateways = intermediatel2GatewayAddrs.flat(1);
@@ -174,17 +201,23 @@ export const generateTokenList = async (
 
   let intermediateTokenData = [];
   for (const addrs of getChunks(l2AddressesFromL1)) {
-    let tokenDataTemp = await l2.multiCaller.getTokenData(
-      addrs.map((t) => t || constants.AddressZero),
-      { name: true, decimals: true, symbol: true }
-    );
+    let tokenDataTemp = await promiseErrorMultiplier(l2.multiCaller.getTokenData(
+                          addrs.map((t) => t || constants.AddressZero),
+                          { name: true, decimals: true, symbol: true }
+                        ), 
+                        (error) => l2.multiCaller.getTokenData(
+                          addrs.map((t) => t || constants.AddressZero),
+                          { name: true, decimals: true, symbol: true }
+                        ), 
+                        3, 
+                        false);
     intermediateTokenData.push(tokenDataTemp);
   }
   const tokenData = intermediateTokenData.flat(1);
 
   const logoUris: { [l1addr: string]: string } = {};
   for (const token of tokens) {
-    const uri = token.logoUri || await getLogoUri(token.l1TokenAddr);
+    const uri = token.logoUri || await promiseErrorMultiplier(getLogoUri(token.l1TokenAddr), (error) => getLogoUri(token.l1TokenAddr), 3, false);
     if (uri) logoUris[token.l1TokenAddr] = uri;
   }
 
@@ -359,7 +392,7 @@ export const generateTokenList = async (
 };
 
 export const arbifyL1List = async (pathOrUrl: string, includeOldDataFields?:boolean) => {
-  const l1TokenList = await getTokenListObj(pathOrUrl);
+  const l1TokenList = await promiseErrorMultiplier(getTokenListObj(pathOrUrl), (error) => getTokenListObj(pathOrUrl), 3, false);
   removeInvalidTokensFromList(l1TokenList)
   let path = "";
   if(isNova){
@@ -398,7 +431,7 @@ export const arbifyL1List = async (pathOrUrl: string, includeOldDataFields?:bool
 };
 
 export const updateArbifiedList = async (pathOrUrl: string) => {
-  const arbTokenList = await getTokenListObj(pathOrUrl);
+  const arbTokenList =  await promiseErrorMultiplier(getTokenListObj(pathOrUrl), (error) => getTokenListObj(pathOrUrl), 3, false);
   removeInvalidTokensFromList(arbTokenList)
   let path = "";
   if(isNova){
