@@ -4,7 +4,7 @@ import {
   arbifyL1List,
   arbListtoEtherscanList,
   updateArbifiedList,
-  permitTest
+  permitTest,
 } from './lib/token_list_gen';
 import { writeFileSync, existsSync, mkdirSync } from 'fs';
 import args from './lib/getClargs';
@@ -50,6 +50,10 @@ if (!existsSync(FULLLIST_DIR_PATH)) {
     const fullListPath = __dirname + '/FullList/all_tokens.json';
     writeFileSync(fullListPath, JSON.stringify(etherscanData));
     console.log('List generated at', fullListPath);
+  } else if (args.action === 'permit') {
+    if (!args.tokenList) throw new Error('No token list provided');
+
+    await permitTest(args.tokenList);
   } else {
     throw new Error(`action ${args.action} not recognised`);
   }

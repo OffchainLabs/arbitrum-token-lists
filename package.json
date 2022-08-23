@@ -10,15 +10,11 @@
     "format": "prettier './**/*.{js,json,md,ts,yml}' --write && yarn run lint --fix",
     "update": "yarn ts-node src/main.ts --action update",
     "arbify": "yarn ts-node src/main.ts --action arbify",
-<<<<<<< HEAD
-    "fullList": "yarn ts-node src/main.ts --action full",
     "permit": "yarn ts-node src/main.ts --action permit",
-=======
     "fullList": "yarn ts-node src/main.ts --action full --tokenList full",
     "updateNova": "yarn ts-node src/main.ts --action update --l2NetworkID 42170",
     "novaify": "yarn ts-node src/main.ts --action arbify --l2NetworkID 42170",
     "fullNova": "yarn ts-node src/main.ts --action full --tokenList full --l2NetworkID 42170",
->>>>>>> master
     "start_server": "yarn ts-node server/app.ts"
   },
   "dependencies": {

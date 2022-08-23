@@ -43,11 +43,5 @@ export const getNetworkConfig = async () => {
       provider: arbProvider,
       multiCaller: l2MultiCaller,
     },
-<<<<<<< HEAD
-  }  
-}
-
-=======
   };
 };
->>>>>>> master
