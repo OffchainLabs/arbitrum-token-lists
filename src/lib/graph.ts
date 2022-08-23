@@ -1,6 +1,6 @@
 import { request, gql } from 'graphql-request';
-import { excludeList } from './utils';
-import { GraphTokenResult, GraphTokensResult } from './types'
+import { excludeList, isNova } from './utils';
+import { GraphTokenResult, GraphTokensResult } from './types';
 
 const apolloL2GatewaysRinkebyClient =
   'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-rinkeby';
@@ -18,30 +18,36 @@ const chaidIdToGraphClientUrl = (chainID: string) => {
   }
 };
 
-const isGraphTokenResult = (obj: any)=>{
-  if(!obj){
-    throw new Error("Graph result: undefined")
+const isGraphTokenResult = (obj: any) => {
+  if (!obj) {
+    throw new Error('Graph result: undefined');
   }
-  const expectedKeys = ["joinTableEntry", "l1TokenAddr"]
-  const actualKeys = new Set(Object.keys(obj))
+  const expectedKeys = ['joinTableEntry', 'l1TokenAddr'];
+  const actualKeys = new Set(Object.keys(obj));
 
-  if(!expectedKeys.every((key)=> actualKeys.has(key))){
-    throw new Error("Graph result: missing top level key")
+  if (!expectedKeys.every((key) => actualKeys.has(key))) {
+    throw new Error('Graph result: missing top level key');
   }
-  const joinTableEntry = obj.joinTableEntry[0]
-  if(!joinTableEntry){
-    throw new Error("Graph result: no joinTableEntry")
+  const joinTableEntry = obj.joinTableEntry[0];
+  if (!joinTableEntry) {
+    throw new Error('Graph result: no joinTableEntry');
   }
-  if(!joinTableEntry.gateway.gatewayAddr){
-    throw new Error("Graph result: could not get gateway address")
+  if (!joinTableEntry.gateway.gatewayAddr) {
+    throw new Error('Graph result: could not get gateway address');
   }
-}
+};
 export const getTokens = async (
-  tokenList: {addr: string, logo: string | undefined}[],
+  tokenList: { addr: string; logo: string | undefined }[],
   _networkID: string | number
 ): Promise<Array<GraphTokenResult>> => {
-  const networkID = typeof _networkID === 'number' ? _networkID.toString(): _networkID
+  if (isNova) {
+    console.warn('empty subgraph for nova');
+    return [];
+  }
+  const networkID =
+    typeof _networkID === 'number' ? _networkID.toString() : _networkID;
   const clientUrl = chaidIdToGraphClientUrl(networkID);
+<<<<<<< HEAD
   // lazy solution for big lists for now; we'll have to paginate once we have > 500 tokens registered
   if (tokenList.length > 500){
     const allTokens = await getAllTokens(networkID)
@@ -49,6 +55,20 @@ export const getTokens = async (
     tokenList = tokenList.filter((token)=> allTokenAddresses.has(token.addr.toLowerCase()))
     if(tokenList.length > 500) throw new Error("Too many tokens for graph query")
   }  
+=======
+  // lazy solution for big lists for now; we'll have to paginate once we have > 500 tokens registed
+  if (tokenList.length > 500) {
+    const allTokens = await getAllTokens(networkID);
+    const allTokenAddresses = new Set(
+      allTokens.map((token) => token.l1TokenAddr.toLowerCase())
+    );
+    tokenList = tokenList.filter((token) =>
+      allTokenAddresses.has(token.addr.toLowerCase())
+    );
+    if (tokenList.length > 500)
+      throw new Error('Too many tokens for graph query');
+  }
+>>>>>>> master
   const formattedAddresses = tokenList
     .map((token) => `"${token.addr}"`.toLowerCase())
     .join(',');
@@ -80,16 +100,16 @@ export const getTokens = async (
     (acc, curr) => ((acc[curr.addr.toLowerCase()] = curr.logo), acc),
     {} as { [addr: string]: string | undefined }
   );
-  
-  const { tokens } = await request(clientUrl, query) as GraphTokensResult
-  const res = tokens.map((token)=> {
-    isGraphTokenResult(token)
-    const logoUri = logos[token.l1TokenAddr] || token.logoUri
+
+  const { tokens } = (await request(clientUrl, query)) as GraphTokensResult;
+  const res = tokens.map((token) => {
+    isGraphTokenResult(token);
+    const logoUri = logos[token.l1TokenAddr] || token.logoUri;
     return {
       ...token,
-      logoUri: logoUri
-    }
-  })
+      logoUri: logoUri,
+    };
+  });
 
   return res.filter(
     (token) => !excludeList.includes(token.l1TokenAddr.toLowerCase())
@@ -100,7 +120,7 @@ export const getAllTokens = async (
   _networkID: string | number
 ): Promise<Array<GraphTokenResult>> => {
   const networkID =
-    typeof _networkID === "number" ? _networkID.toString() : _networkID;
+    typeof _networkID === 'number' ? _networkID.toString() : _networkID;
   const clientUrl = chaidIdToGraphClientUrl(networkID);
   const query = gql`
     {

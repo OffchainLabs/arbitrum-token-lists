@@ -1,50 +1,80 @@
-import Ajv from 'ajv'
-import betterAjvErrors from 'better-ajv-errors'
-import addFormats from 'ajv-formats'
-import { schema, TokenList } from '@uniswap/token-lists'
-import { readFileSync, existsSync } from 'fs'
-import axios from 'axios'
-import { MultiCaller } from '@arbitrum/sdk'
-import { L1GatewayRouter__factory } from "@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory";
-import { L2GatewayRouter__factory } from "@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory";
+import Ajv from 'ajv';
+import betterAjvErrors from 'better-ajv-errors';
+import addFormats from 'ajv-formats';
+import { schema, TokenList } from '@uniswap/token-lists';
+import { readFileSync, existsSync } from 'fs';
+import axios from 'axios';
+import { L2Network, MultiCaller } from '@arbitrum/sdk';
+import { L1GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory';
+import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory';
 
-import { ArbTokenList } from './types'
-import path from 'path'
+import { ArbTokenList } from './types';
+import path from 'path';
+import yargs from './getClargs';
 
-const coinGeckoBuff = readFileSync(path.resolve(__dirname, '../Assets/coingecko_uris.json'))
-const logoURIsBuff = readFileSync(path.resolve(__dirname, '../Assets/logo_uris.json'))
+export const isNova = yargs.l2NetworkID === 42170;
 
-const coingeckoURIs = JSON.parse(coinGeckoBuff.toString())
-const logoUris = JSON.parse(logoURIsBuff.toString())
-for (let address of Object.keys(logoUris)) {
-  logoUris[address.toLowerCase()] = logoUris[address]
+const coinGeckoBuff = readFileSync(
+  path.resolve(__dirname, '../Assets/coingecko_uris.json')
+);
+const logoURIsBuff = readFileSync(
+  path.resolve(__dirname, '../Assets/logo_uris.json')
+);
+
+const coingeckoURIs = JSON.parse(coinGeckoBuff.toString());
+const logoUris = JSON.parse(logoURIsBuff.toString());
+for (const address of Object.keys(logoUris)) {
+  logoUris[address.toLowerCase()] = logoUris[address];
 }
 
 export const listNameToFileName = (name: string) => {
-  const prefix = 'arbed_'
-  let fileName = name.split(' ').join('_').toLowerCase() + '.json'
+  const prefix = 'arbed_';
+  let fileName = name.split(' ').join('_').toLowerCase() + '.json';
   if (!fileName.startsWith(prefix)) {
-    fileName = prefix + fileName
+    fileName = prefix + fileName;
   }
-  return fileName
-}
+  return fileName;
+};
 
 export const listNameToArbifiedListName = (name: string) => {
-  const prefix = 'Arbed '
+  const prefix = 'Arbed ';
 
-  let fileName = sanitizeString(name)
+  let fileName = sanitizeNameString(name);
   if (!fileName.startsWith(prefix)) {
-    fileName = prefix + fileName
+    fileName = prefix + fileName;
   }
-  return fileName.split(' ').slice(0, 2).join(' ').slice(0, 20)
-}
+  return fileName.split(' ').slice(0, 2).join(' ').slice(0, 20);
+};
+
+export const getL2GatewayAddressesFromL1Token = async (
+  l1TokenAddresses: string[],
+  multiCaller: MultiCaller,
+  l2Network: L2Network
+) => {
+  const iFace = L1GatewayRouter__factory.createInterface();
+
+  const gateways = await multiCaller.multiCall(
+    l1TokenAddresses.map((addr) => ({
+      encoder: () => iFace.encodeFunctionData('getGateway', [addr]),
+      decoder: (returnData: string) =>
+        iFace.decodeFunctionResult('getGateway', returnData)[0] as string,
+      targetAddr: l2Network.tokenBridge.l2GatewayRouter,
+    }))
+  );
+
+  for (const curr of gateways) {
+    if (typeof curr === 'undefined') throw new Error('undefined gateway!');
+  }
+
+  return gateways;
+};
 
 export const getL2TokenAddressesFromL1 = async (
   l1TokenAddresses: string[],
   multiCaller: MultiCaller,
-  l1GatewayRouterAddress: string,
+  l1GatewayRouterAddress: string
 ) => {
-  const iFace = L1GatewayRouter__factory.createInterface()
+  const iFace = L1GatewayRouter__factory.createInterface();
 
   return await multiCaller.multiCall(
     l1TokenAddresses.map((addr) => ({
@@ -53,19 +83,19 @@ export const getL2TokenAddressesFromL1 = async (
       decoder: (returnData: string) =>
         iFace.decodeFunctionResult(
           'calculateL2TokenAddress',
-          returnData,
+          returnData
         )[0] as string,
       targetAddr: l1GatewayRouterAddress,
-    })),
-  )
-}
+    }))
+  );
+};
 
 export const getL2TokenAddressesFromL2 = async (
   l1TokenAddresses: string[],
   multiCaller: MultiCaller,
-  l2GatewayRouterAddress: string,
+  l2GatewayRouterAddress: string
 ) => {
-  const iFace = L2GatewayRouter__factory.createInterface()
+  const iFace = L2GatewayRouter__factory.createInterface();
 
   return await multiCaller.multiCall(
     l1TokenAddresses.map((addr) => ({
@@ -74,206 +104,222 @@ export const getL2TokenAddressesFromL2 = async (
       decoder: (returnData: string) =>
         iFace.decodeFunctionResult(
           'calculateL2TokenAddress',
-          returnData,
+          returnData
         )[0] as string,
       targetAddr: l2GatewayRouterAddress,
-    })),
-  )
-}
+    }))
+  );
+};
 
 export const getLogoUri = async (l1TokenAddress: string) => {
-  const l1TokenAddressLCase = l1TokenAddress.toLowerCase()
-  const logoUri: string | undefined = logoUris[l1TokenAddressLCase]
-  const coinGeckoURI: string | undefined = coingeckoURIs[l1TokenAddressLCase]
-  const trustWalletUri = `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${l1TokenAddress}/logo.png`
+  const l1TokenAddressLCase = l1TokenAddress.toLowerCase();
+  const logoUri: string | undefined = logoUris[l1TokenAddressLCase];
+  const coinGeckoURI: string | undefined = coingeckoURIs[l1TokenAddressLCase];
+  const trustWalletUri = `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${l1TokenAddress}/logo.png`;
   const uris = [logoUri, coinGeckoURI, trustWalletUri].filter(
-    (x): x is string => !!x,
-  )
+    (x): x is string => !!x
+  );
 
   for (const uri of uris) {
     try {
-      const res = await axios.get(uri)
+      const res = await axios.get(uri);
       if (res.status === 200) {
-        return uri
+        return uri;
       }
     } catch (e) {}
   }
-  return
-}
+  return;
+};
 export const getTokenListObjFromUrl = async (url: string) => {
-  return (await axios.get(url)).data as TokenList
-}
+  return (await axios.get(url)).data as TokenList;
+};
 export const getTokenListObjFromLocalPath = async (path: string) => {
-  return JSON.parse(readFileSync(path).toString()) as TokenList
-}
+  return JSON.parse(readFileSync(path).toString()) as TokenList;
+};
 
 export const tokenListIsValid = (tokenList: ArbTokenList | TokenList) => {
-  const ajv = new Ajv()
-  addFormats(ajv)
-  const validate = ajv.compile(schema)
+  const ajv = new Ajv();
+  addFormats(ajv);
+  const validate = ajv.compile(schema);
 
-  const res = validate(tokenList)
+  const res = validate(tokenList);
   if (validate.errors) {
     const output = betterAjvErrors(schema, tokenList, validate.errors, {
       indent: 2,
-    })
-    console.log(output)
+    });
+    console.log(output);
   }
 
-  return res
-}
+  return res;
+};
 
 export const validateTokenListWithErrorThrowing = (
-  tokenList: ArbTokenList | TokenList,
+  tokenList: ArbTokenList | TokenList
 ) => {
   try {
-    let valid = tokenListIsValid(tokenList)
-    if (valid) return true
-    else throw new Error('Data does not conform to token list schema; not sure why')
-  } catch(e) {
-    console.log('Invalid token list:')
-    throw e
+    const valid = tokenListIsValid(tokenList);
+    if (valid) return true;
+    else
+      throw new Error(
+        'Data does not conform to token list schema; not sure why'
+      );
+  } catch (e) {
+    console.log('Invalid token list:');
+    throw e;
   }
-}
+};
 
-export const removeInvalidTokensFromList = (tokenList: ArbTokenList | TokenList):ArbTokenList | TokenList  =>{
+export const removeInvalidTokensFromList = (
+  tokenList: ArbTokenList | TokenList
+): ArbTokenList | TokenList => {
   let valid = tokenListIsValid(tokenList);
-  const startingTokenListLen = tokenList.tokens.length
-  
+  const startingTokenListLen = tokenList.tokens.length;
+
   if (valid) {
     return tokenList;
   } else {
-    let tokenListCopy = JSON.parse(JSON.stringify(tokenList)) as typeof tokenList
-    console.log("Invalid token list:");
-    while (!valid && tokenListCopy.tokens.length > 0){
-      const targetToken = tokenListCopy.tokens.pop()
-      const tokenTokenIndex = tokenListCopy.tokens.length 
+    const tokenListCopy = JSON.parse(
+      JSON.stringify(tokenList)
+    ) as typeof tokenList;
+    console.log('Invalid token list:');
+    while (!valid && tokenListCopy.tokens.length > 0) {
+      const targetToken = tokenListCopy.tokens.pop();
+      const tokenTokenIndex = tokenListCopy.tokens.length;
       valid = tokenListIsValid(tokenListCopy);
-      if(valid){
+      if (valid) {
         console.log('Invalid token token, removing from list', targetToken);
-        
-        tokenList.tokens.splice(tokenTokenIndex , 1)
+
+        tokenList.tokens.splice(tokenTokenIndex, 1);
         // pre-recursion sanity check:
-        if( tokenList.tokens.length >= startingTokenListLen ){
-          throw new Error("666: removeInvalidTokensFromList failed basic sanity check")
+        if (tokenList.tokens.length >= startingTokenListLen) {
+          throw new Error(
+            '666: removeInvalidTokensFromList failed basic sanity check'
+          );
         }
-        return removeInvalidTokensFromList(tokenList)
+        return removeInvalidTokensFromList(tokenList);
       }
     }
     throw new Error('Data does not confirm to token list schema; not sure why');
   }
-}
+};
 
 export const getTokenListObj = async (pathOrUrl: string) => {
   const tokenList: TokenList = await (async (pathOrUrl: string) => {
-    const localFileExists = existsSync(pathOrUrl)
-    const looksLikeUrl = isValidHttpUrl(pathOrUrl)
+    const localFileExists = existsSync(pathOrUrl);
+    const looksLikeUrl = isValidHttpUrl(pathOrUrl);
     if (localFileExists) {
-      return getTokenListObjFromLocalPath(pathOrUrl)
+      return getTokenListObjFromLocalPath(pathOrUrl);
     } else if (looksLikeUrl) {
-      return await getTokenListObjFromUrl(pathOrUrl)
+      return await getTokenListObjFromUrl(pathOrUrl);
     } else {
-      throw new Error('Could not find token list')
+      throw new Error('Could not find token list');
     }
   })(pathOrUrl);
-  isTokenList(tokenList)
-  return tokenList
+  isTokenList(tokenList);
+  return tokenList;
 };
 
 // https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url
 
 function isValidHttpUrl(urlString: string) {
-  let url
+  let url;
 
   try {
-    url = new URL(urlString)
+    url = new URL(urlString);
   } catch (_) {
-    return false
+    return false;
   }
 
-  return url.protocol === 'http:' || url.protocol === 'https:'
+  return url.protocol === 'http:' || url.protocol === 'https:';
 }
 
 // typeguard:
 export const isArbTokenList = (obj: any) => {
-  const expectedListKeys = ['name', 'timestamp', 'version', 'tokens']
-  const actualListKeys = new Set(Object.keys(obj))
+  const expectedListKeys = ['name', 'timestamp', 'version', 'tokens'];
+  const actualListKeys = new Set(Object.keys(obj));
   if (!expectedListKeys.every((key) => actualListKeys.has(key))) {
     throw new Error(
-      'ArbTokenList typeguard error: requried list key not included',
-    )
+      'ArbTokenList typeguard error: requried list key not included'
+    );
   }
-  const { version, tokens } = obj
+  const { version, tokens } = obj;
   if (
     !['major', 'minor', 'patch'].every((key) => {
-      return typeof version[key] === 'number'
+      return typeof version[key] === 'number';
     })
   ) {
-    throw new Error('ArbTokenList typeguard error: invalid version')
+    throw new Error('ArbTokenList typeguard error: invalid version');
   }
   if (
     !tokens.every((token: any) => {
-      const tokenKeys = new Set(Object.keys(token))
+      const tokenKeys = new Set(Object.keys(token));
       return ['chainId', 'address', 'name', 'decimals', 'symbol'].every(
         (key) => {
-          return tokenKeys.has(key)
-        },
-      )
+          return tokenKeys.has(key);
+        }
+      );
     })
   ) {
-    throw new Error('ArbTokenList typeguard error: token missing required key')
+    throw new Error('ArbTokenList typeguard error: token missing required key');
   }
   tokens.forEach((token: any) => {
     if (token.extensions && token.extensions.bridgeInfo) {
       const {
         extensions: { bridgeInfo },
-      } = token
-      const bridges = Object.keys(bridgeInfo)
+      } = token;
+      const bridges = Object.keys(bridgeInfo);
       if (!bridges.length) {
-        throw new Error('ArbTokenList typeguard error: no bridge info found')
+        throw new Error('ArbTokenList typeguard error: no bridge info found');
       }
-      const someDestinationChain = bridges[0]
-      const {
-        tokenAddress,
-        originBridgeAddress,
-        destBridgeAddress,
-      } = bridgeInfo[someDestinationChain]
+      const someDestinationChain = bridges[0];
+      const { tokenAddress, originBridgeAddress, destBridgeAddress } =
+        bridgeInfo[someDestinationChain];
 
       if (
         ![tokenAddress, originBridgeAddress, destBridgeAddress].every((k) => k)
       ) {
-        throw new Error('ArbTokenList typeguard error: missing extension')
+        throw new Error('ArbTokenList typeguard error: missing extension');
       }
     }
-  })
-}
-
+  });
+};
 
 // typeguard:
-export const isTokenList = (obj:any)=>{
-  const expectedListKeys = ['name', 'timestamp', 'version', 'tokens']
-  const actualListKeys = new Set(Object.keys(obj))
-  if(!expectedListKeys.every((key)=>actualListKeys.has(key) )){
-    throw new Error("tokenlist typeguard error: requried list key not included")
+export const isTokenList = (obj: any) => {
+  const expectedListKeys = ['name', 'timestamp', 'version', 'tokens'];
+  const actualListKeys = new Set(Object.keys(obj));
+  if (!expectedListKeys.every((key) => actualListKeys.has(key))) {
+    throw new Error(
+      'tokenlist typeguard error: requried list key not included'
+    );
   }
-  const { version, tokens } = obj
-  if(!['major','minor', 'patch'].every((key)=>{    
-    return typeof version[key] === 'number'
-  })){
-    throw new Error("tokenlist typeguard error: invalid version")
-  }
-  if(!tokens.every((token:any)=>{
-    const tokenKeys = new Set(Object.keys(token))
-    return ['chainId', 'address','name', 'decimals','symbol' ].every((key)=>{
-      return tokenKeys.has(key)
+  const { version, tokens } = obj;
+  if (
+    !['major', 'minor', 'patch'].every((key) => {
+      return typeof version[key] === 'number';
     })
-  })){
-    throw new Error ("tokenlist typeguard error: token missing required key")
+  ) {
+    throw new Error('tokenlist typeguard error: invalid version');
   }
-}
+  if (
+    !tokens.every((token: any) => {
+      const tokenKeys = new Set(Object.keys(token));
+      return ['chainId', 'address', 'name', 'decimals', 'symbol'].every(
+        (key) => {
+          return tokenKeys.has(key);
+        }
+      );
+    })
+  ) {
+    throw new Error('tokenlist typeguard error: token missing required key');
+  }
+};
 
-export const sanitizeString = (str: string) =>
-  str.replace(/[^ \w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)]/gi, '')
+export const sanitizeNameString = (str: string) =>
+  str.replace(/[^ \w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)]/gi, '');
+
+export const sanitizeSymbolString = (str: string) =>
+  str.replace(/[^\w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)]/gi, '');
 
 export const excludeList = [
   '0x0CE51000d5244F1EAac0B313a792D5a5f96931BF', //rkr
@@ -285,4 +331,4 @@ export const excludeList = [
   '0x106538cc16f938776c7c180186975bca23875287', // remove once bridged (basv2)
   '0xB4A3B0Faf0Ab53df58001804DdA5Bfc6a3D59008', // spera
   // "0x960b236a07cf122663c4303350609a66a7b288c0", //aragon old
-].map((s) => s.toLowerCase())
+].map((s) => s.toLowerCase());
