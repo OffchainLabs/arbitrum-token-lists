@@ -10,12 +10,15 @@
     "format": "prettier './**/*.{js,json,md,ts,yml}' --write && yarn run lint --fix",
     "update": "yarn ts-node src/main.ts --action update",
     "arbify": "yarn ts-node src/main.ts --action arbify",
-    "fullList": "yarn ts-node src/main.ts --action full",
+    "fullList": "yarn ts-node src/main.ts --action full --tokenList full",
+    "updateNova": "yarn ts-node src/main.ts --action update --l2NetworkID 42170",
+    "novaify": "yarn ts-node src/main.ts --action arbify --l2NetworkID 42170",
+    "fullNova": "yarn ts-node src/main.ts --action full --tokenList full --l2NetworkID 42170",
     "start_server": "yarn ts-node server/app.ts"
   },
   "dependencies": {
-    "@arbitrum/sdk": "2.0.0",
-    "@uniswap/token-lists": "^1.0.0-beta.27",
+    "@arbitrum/sdk": "^2.0.13",
+    "@uniswap/token-lists": "^1.0.0-beta.30",
     "ajv": "^8.6.3",
     "ajv-formats": "^2.1.1",
     "axios": "^0.23.0",
