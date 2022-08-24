@@ -43,6 +43,8 @@ import multicallAbi from '../PermitTokens/multicallAbi.json';
 import { getPermitSigNoVersion } from '../PermitTokens/permitSignature';
 import { getPermitSig } from '../PermitTokens/permitSignature';
 import { getDaiLikePermitSignature } from '../PermitTokens/permitSignature';
+import { Console } from 'console';
+import { VariablesInAllowedPositionRule } from 'graphql';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -185,10 +187,17 @@ export const generateTokenList = async (
             )
         );
 
-  const l1TokenAddresses =
-    options && options.getAllTokensInNetwork
-      ? tokens.map((curr) => curr.l1TokenAddr)
-      : l1TokenList.tokens.map((token) => token.address);
+  // attention!
+  // this does not get the proper l1 token address if the ternary condition is false
+
+  // const l1TokenAddresses =
+  //   options && options.getAllTokensInNetwork
+  //     ? tokens.map((curr) => curr.l1TokenAddr)
+  //     : l1TokenList.tokens.map((token) => token.address);
+
+  const l1TokenAddresses = tokens.map(
+    (token: GraphTokenResult) => token.l1TokenAddr
+  );
 
   const intermediatel2AddressesFromL1 = [];
   const intermediatel2AddressesFromL2 = [];
@@ -281,6 +290,7 @@ export const generateTokenList = async (
     );
     intermediateTokenData.push(tokenDataTemp);
   }
+
   const tokenData = intermediateTokenData.flat(1);
 
   const logoUris: { [l1addr: string]: string } = {};
@@ -361,13 +371,14 @@ export const generateTokenList = async (
         extensions: {
           bridgeInfo: {
             [l2.network.partnerChainID]: {
-              tokenAddress: token.token.l1TokenAddr,
+              tokenAddress: token.token.l1TokenAddr, // this is the wrong address
               originBridgeAddress: l2GatewayAddress,
               destBridgeAddress: getL2ToL1(),
             },
           },
         },
       };
+
       if (options && options.includeOldDataFields) {
         arbTokenInfo.extensions = {
           ...arbTokenInfo.extensions,
@@ -475,7 +486,8 @@ export const generateTokenList = async (
 
 export const arbifyL1List = async (
   pathOrUrl: string,
-  includeOldDataFields?: boolean
+  includeOldDataFields?: boolean,
+  includePermitTags?: boolean
 ) => {
   const l1TokenList = await promiseErrorMultiplier(
     getTokenListObj(pathOrUrl),
@@ -514,11 +526,19 @@ export const arbifyL1List = async (
     includeOldDataFields,
   });
 
-  writeFileSync(path, JSON.stringify(newList));
+  if (includePermitTags) {
+    const listWithPermitTags = await hasPermit(newList, true);
+    writeFileSync(path, JSON.stringify(listWithPermitTags));
+  } else {
+    writeFileSync(path, JSON.stringify(newList));
+  }
   console.log('Token list generated at', path);
 };
 
-export const updateArbifiedList = async (pathOrUrl: string) => {
+export const updateArbifiedList = async (
+  pathOrUrl: string,
+  includePermitTags?: boolean
+) => {
   const arbTokenList = await promiseErrorMultiplier(
     getTokenListObj(pathOrUrl),
     (error) => getTokenListObj(pathOrUrl)
@@ -549,6 +569,13 @@ export const updateArbifiedList = async (pathOrUrl: string) => {
   const newList = await generateTokenList(arbTokenList, prevArbTokenList, {
     includeAllL1Tokens: true,
   });
+
+  if (includePermitTags) {
+    const listWithPermitTags = await hasPermit(newList, true);
+    writeFileSync(path, JSON.stringify(listWithPermitTags));
+  } else {
+    writeFileSync(path, JSON.stringify(newList));
+  }
 
   writeFileSync(path, JSON.stringify(newList));
   console.log('Token list generated at', path);
@@ -600,12 +627,12 @@ export const arbListtoEtherscanList = (
   return list;
 };
 
-export const permitTest = async (pathOrUrl: string) => {
+export const permitList = async (pathOrUrl: string) => {
   const l1TokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(l1TokenList);
   const path =
     process.env.PWD +
-    '/src/ArbTokenLists/permit1_' +
+    '/src/ArbTokenLists/permit_' +
     listNameToFileName(l1TokenList.name);
   let prevPermitTokenList: ArbTokenList | undefined;
 
@@ -621,7 +648,10 @@ export const permitTest = async (pathOrUrl: string) => {
     includeUnbridgedL1Tokens: false,
   });
 
-  const permitTokenListInfo: ArbTokenInfo[] = await hasPermit(newList, false);
+  const permitTokenListInfo = (await hasPermit(
+    newList,
+    false
+  )) as ArbTokenInfo[];
 
   const version = (() => {
     return {
@@ -635,7 +665,7 @@ export const permitTest = async (pathOrUrl: string) => {
     name: newList.name,
     timestamp: new Date().toISOString(),
     version,
-    tokens: permitTokenListInfo, // need to get this token list
+    tokens: permitTokenListInfo,
     logoURI: newList.logoURI,
   };
 
@@ -644,13 +674,16 @@ export const permitTest = async (pathOrUrl: string) => {
 };
 
 enum PermitTypes {
-  Standard = "Standard Permit",
-  NoVersionInDomain = "No Version in Domain",
-  DaiLike = "Dai-Like Sig/Permit"
+  Standard = 'Standard Permit',
+  NoVersionInDomain = 'No Version in Domain',
+  DaiLike = 'Dai-Like Sig/Permit',
+  NoPermit = 'No Permit Enabled',
 }
 
-
-export const hasPermit = async (tokenList: ArbTokenList, onlyAddPermitTags: boolean) => {
+export const hasPermit = async (
+  tokenList: ArbTokenList,
+  onlyAddPermitTags: boolean
+) => {
   const { l1, l2 } = await getNetworkConfig();
 
   const wallet = ethers.Wallet.createRandom().connect(l1.provider);
@@ -668,12 +701,14 @@ export const hasPermit = async (tokenList: ArbTokenList, onlyAddPermitTags: bool
   const idxToTokenInfo: { [key: number]: { l1Address: string; token: any } } =
     {};
 
-  const permitTokenList: ArbTokenInfo[] = [];
+  const permitTokenInfo: ArbTokenInfo[] = [];
 
   for (let i = 0; i < tokenList.tokens.length; i++) {
     try {
       const tokenContract = new ethers.Contract(
-        tokenList.tokens[i].extensions?.bridgeInfo[1].tokenAddress!,
+        tokenList.tokens[i].extensions?.bridgeInfo[
+          l2.network.partnerChainID
+        ].tokenAddress!,
         permitTokenAbi['abi'],
         wallet
       );
@@ -721,7 +756,9 @@ export const hasPermit = async (tokenList: ArbTokenList, onlyAddPermitTags: bool
 
       // DAI permit
       const daiTokenContract = new ethers.Contract(
-        tokenList.tokens[i].extensions?.bridgeInfo[1].tokenAddress!,
+        tokenList.tokens[i].extensions?.bridgeInfo[
+          l2.network.partnerChainID
+        ].tokenAddress!,
         daiPermitTokenAbi,
         wallet
       );
@@ -750,20 +787,31 @@ export const hasPermit = async (tokenList: ArbTokenList, onlyAddPermitTags: bool
 
       permitCalls.push(
         {
-          target: tokenList.tokens[i].extensions?.bridgeInfo[1].tokenAddress!,
+          target:
+            tokenList.tokens[i].extensions?.bridgeInfo[
+              l2.network.partnerChainID
+            ].tokenAddress!,
           callData: callData, // normal permit
         },
         {
-          target: tokenList.tokens[i].extensions?.bridgeInfo[1].tokenAddress!,
+          target:
+            tokenList.tokens[i].extensions?.bridgeInfo[
+              l2.network.partnerChainID
+            ].tokenAddress!,
           callData: callDataNoVersion, // no version permit
         },
         {
-          target: tokenList.tokens[i].extensions?.bridgeInfo[1].tokenAddress!,
+          target:
+            tokenList.tokens[i].extensions?.bridgeInfo[
+              l2.network.partnerChainID
+            ].tokenAddress!,
           callData: callDataDAI, // DAI permit
         }
       );
       idxToTokenInfo[dictIdx] = {
-        l1Address: tokenList.tokens[i].extensions?.bridgeInfo[1].tokenAddress!,
+        l1Address:
+          tokenList.tokens[i].extensions?.bridgeInfo[l2.network.partnerChainID]
+            .tokenAddress!,
         token: tokenList.tokens[i],
       };
       dictIdx += 3;
@@ -788,33 +836,46 @@ export const hasPermit = async (tokenList: ArbTokenList, onlyAddPermitTags: bool
       tag = PermitTypes.NoVersionInDomain;
     } else if (tryPermit[i + 2].success === true) {
       tag = PermitTypes.DaiLike;
+    } else {
+      tag = PermitTypes.NoPermit;
     }
-    
-    if (tag) {
-      let permitTokenInfo: ArbTokenInfo;
 
-      if(onlyAddPermitTags) {
-        permitTokenInfo = {
-          ...tokenList.tokens[i],
-          tags: [tag],
-        };
+    let tokenInfo: ArbTokenInfo;
+
+    if (onlyAddPermitTags) {
+      // add to existing token lists w tags for all tokens (permit or no permit)
+      tokenInfo = {
+        ...tokenList.tokens[i],
+        tags: [tag],
+      };
+    } else if (!onlyAddPermitTags && tag != PermitTypes.NoPermit) {
+      // generate new solely permit token list
+      tokenInfo = {
+        chainId: +l2.network.chainID,
+        address: tokenAddress,
+        name: token.name,
+        decimals: token.decimals,
+        symbol: token.symbol,
+        tags: [tag],
+        extensions: token.extensions,
+      };
+      if (token.logoURI) {
+        // if there is a logoURI for this token
+        tokenInfo = { ...{ logoURI: token.logoURI }, ...tokenInfo };
       }
-      else {
-        permitTokenInfo = {
-          chainId: +l2.network.chainID,
-          address: tokenAddress,
-          name: token.name,
-          decimals: token.decimals,
-          symbol: token.symbol,
-          tags: [tag],
-          extensions: token.extensions,
-        };
-        if (token.logoURI) { // if there is a logoURI for this token
-          permitTokenInfo = { ...{ logoURI: token.logoURI }, ...permitTokenInfo };
-        }
-      }
-      permitTokenList.push(permitTokenInfo);
+    } else {
+      continue;
     }
+    permitTokenInfo.push(tokenInfo);
   }
-  return permitTokenList;
+
+  if (onlyAddPermitTags) {
+    const permitTokenList: ArbTokenList = {
+      ...tokenList,
+      tokens: permitTokenInfo,
+    };
+    return permitTokenList;
+  } else {
+    return permitTokenInfo;
+  }
 };

@@ -1,11 +1,11 @@
-import { Wallet } from 'ethers';
+import { BigNumberish, Contract, Wallet } from 'ethers';
 
 export async function getPermitSig(
   wallet: Wallet,
-  token: any,
+  token: Contract,
   spender: string,
-  value: any,
-  deadline: any,
+  value: BigNumberish,
+  deadline: BigNumberish,
   optional?: {
     nonce?: number;
     name?: string;
@@ -51,10 +51,10 @@ export async function getPermitSig(
 
 export async function getPermitSigNoVersion(
   wallet: Wallet,
-  token: any,
+  token: Contract,
   spender: string,
-  value: any,
-  deadline: any,
+  value: BigNumberish,
+  deadline: BigNumberish,
   optional?: { nonce?: number; name?: string; chainId?: number }
 ) {
   const [nonce, name, chainId] = await Promise.all([
@@ -93,11 +93,11 @@ export async function getPermitSigNoVersion(
 
 export async function getDaiLikePermitSignature(
   wallet: Wallet,
-  token: any,
+  token: Contract,
   spender: string,
-  deadline: any,
+  deadline: BigNumberish,
   optional?: { nonce?: number; name?: string; chainId?: number }
-) {
+): Promise<[string, number]> {
   const [nonce, name, chainId] = await Promise.all([
     optional?.nonce ?? token.nonces(wallet.address),
     optional?.name ?? token.name(),

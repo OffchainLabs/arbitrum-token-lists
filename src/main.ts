@@ -4,11 +4,13 @@ import {
   arbifyL1List,
   arbListtoEtherscanList,
   updateArbifiedList,
-  permitTest,
+  permitList,
+  hasPermit,
 } from './lib/token_list_gen';
 import { writeFileSync, existsSync, mkdirSync } from 'fs';
 import args from './lib/getClargs';
 import { TokenList } from '@uniswap/token-lists';
+import { ArbTokenList } from './lib/types';
 
 const TOKENLIST_DIR_PATH = __dirname + '/ArbTokenLists';
 const FULLLIST_DIR_PATH = __dirname + '/FullList';
@@ -25,9 +27,13 @@ if (!existsSync(FULLLIST_DIR_PATH)) {
 
 (async () => {
   if (args.action === 'arbify') {
-    await arbifyL1List(args.tokenList, !!args.includeOldDataFields);
+    await arbifyL1List(
+      args.tokenList,
+      !!args.includeOldDataFields,
+      !!args.includePermitTags
+    );
   } else if (args.action === 'update') {
-    await updateArbifiedList(args.tokenList);
+    await updateArbifiedList(args.tokenList, !!args.includePermitTags);
   } else if (args.action === 'full') {
     if (args.tokenList !== 'full')
       throw new Error("expected --tokenList 'full'");
@@ -53,7 +59,7 @@ if (!existsSync(FULLLIST_DIR_PATH)) {
   } else if (args.action === 'permit') {
     if (!args.tokenList) throw new Error('No token list provided');
 
-    await permitTest(args.tokenList);
+    await permitList(args.tokenList);
   } else {
     throw new Error(`action ${args.action} not recognised`);
   }
