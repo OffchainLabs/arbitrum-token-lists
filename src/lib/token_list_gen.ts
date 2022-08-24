@@ -191,13 +191,18 @@ export const generateTokenList = async (
   // this does not get the proper l1 token address if the ternary condition is false
 
   // const l1TokenAddresses =
-  //   options && options.getAllTokensInNetwork
-  //     ? tokens.map((curr) => curr.l1TokenAddr)
-  //     : l1TokenList.tokens.map((token) => token.address);
+  // options && options.getAllTokensInNetwork
+  //   ? tokens.map((curr) => curr.l1TokenAddr)
+  //   : l1TokenList.tokens.map((token) => token.address);
 
-  const l1TokenAddresses = tokens.map(
-    (token: GraphTokenResult) => token.l1TokenAddr
-  );
+  const l1TokenAddresses =
+    isNova
+      ? l1TokenList.tokens.map((token) => token.address)
+      : tokens.map((curr) => curr.l1TokenAddr);
+
+  // const l1TokenAddresses = tokens.map(
+  //   (token: GraphTokenResult) => token.l1TokenAddr
+  // );
 
   const intermediatel2AddressesFromL1 = [];
   const intermediatel2AddressesFromL2 = [];
@@ -249,6 +254,7 @@ export const generateTokenList = async (
       );
       intermediatel2GatewayAddrs.push(l2GatewayAddressesFromL1Temp);
     }
+
     const l2Gateways = intermediatel2GatewayAddrs.flat(1);
 
     const res: GraphTokenResult[] = l1TokenList.tokens.map((curr, index) => {
