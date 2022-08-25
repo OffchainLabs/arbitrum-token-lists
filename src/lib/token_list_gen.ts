@@ -4,7 +4,7 @@ import {
   VersionUpgrade,
   TokenList,
 } from "@uniswap/token-lists";
-import { getAllTokens, getTokens } from "./graph";
+import { getAllTokens } from "./graph";
 import { constants, utils } from "ethers";
 
 import {
@@ -25,6 +25,7 @@ import {
   getL2GatewayAddressesFromL1Token,
   isNova,
   listNameToArbifiedListName,
+  getL1TokenAndL2Gateway,
 } from "./utils";
 import { constants as arbConstants } from "@arbitrum/sdk";
 import { getNetworkConfig } from "./instantiate_bridge";
@@ -88,6 +89,9 @@ export const generateTokenList = async (
     getNetworkConfig()
   );
 
+  if (options && options.getAllTokensInNetwork && isNova)
+    throw new Error("Subgraph not enabled for nova");
+
   let tokens: GraphTokenResult[] =
     options && options.getAllTokensInNetwork
       ? await promiseErrorMultiplier(
@@ -95,30 +99,24 @@ export const generateTokenList = async (
           (error) => getAllTokens(l2.network.chainID)
         )
       : await promiseErrorMultiplier(
-          getTokens(
+          getL1TokenAndL2Gateway(
             l1TokenList.tokens.map((token) => ({
               addr: token.address.toLowerCase(),
               logo: token.logoURI,
             })),
-            l2.network.chainID
+            l2.multiCaller,
+            l2.network
           ),
           (error) =>
-            getTokens(
+            getL1TokenAndL2Gateway(
               l1TokenList.tokens.map((token) => ({
                 addr: token.address.toLowerCase(),
                 logo: token.logoURI,
               })),
-              l2.network.chainID
+              l2.multiCaller,
+              l2.network
             )
         );
-
-  // attention!
-  // this does not get the proper l1 token address if the ternary condition is false
-
-  // const l1TokenAddresses =
-  // options && options.getAllTokensInNetwork
-  //   ? tokens.map((curr) => curr.l1TokenAddr)
-  //   : l1TokenList.tokens.map((token) => token.address);
 
   const l1TokenAddresses =
     options && options.getAllTokensInNetwork && !isNova
@@ -164,42 +162,10 @@ export const generateTokenList = async (
   const l2AddressesFromL1 = intermediatel2AddressesFromL1.flat(1);
   const l2AddressesFromL2 = intermediatel2AddressesFromL2.flat(1);
 
-  if (isNova) {
-    const logos = l1TokenList.tokens.reduce(
-      (acc, curr) => ((acc[curr.address.toLowerCase()] = curr.logoURI), acc),
-      {} as { [addr: string]: string | undefined }
-    );
-
-    const intermediatel2GatewayAddrs = [];
-    for (const addrs of getChunks(l1TokenAddresses)) {
-      const l2GatewayAddressesFromL1Temp = await promiseErrorMultiplier(
-        getL2GatewayAddressesFromL1Token(addrs, l2.multiCaller, l2.network),
-        (error) =>
-          getL2GatewayAddressesFromL1Token(addrs, l2.multiCaller, l2.network)
-      );
-      intermediatel2GatewayAddrs.push(l2GatewayAddressesFromL1Temp);
-    }
-
-    const l2Gateways = intermediatel2GatewayAddrs.flat(1);
-
-    const res: GraphTokenResult[] = l1TokenList.tokens.map((curr, index) => {
-      if (!l2Gateways[index]) throw new Error('no l2 gateway!!');
-      return {
-        l2Address: l2AddressesFromL2[index] || null,
-        joinTableEntry: [
-          {
-            gateway: {
-              gatewayAddr: l2Gateways[index]!,
-            },
-          },
-        ],
-        l1TokenAddr: curr.address,
-        logoUri: logos[curr.address] || undefined,
-        // logoUri: curr.logoURI
-      };
-    });
-    tokens = res;
-  }
+  const logos = l1TokenList.tokens.reduce(
+    (acc, curr) => ((acc[curr.address.toLowerCase()] = curr.logoURI), acc),
+    {} as { [addr: string]: string | undefined }
+  );
 
   // if the l2 route hasn't been updated yet we remove the token from the bridged tokens
   tokens = tokens.filter(
@@ -223,16 +189,6 @@ export const generateTokenList = async (
   }
 
   const tokenData = intermediateTokenData.flat(1);
-
-  const logoUris: { [l1addr: string]: string } = {};
-  for (const token of tokens) {
-    const uri =
-      token.logoUri ||
-      (await promiseErrorMultiplier(getLogoUri(token.l1TokenAddr), (error) =>
-        getLogoUri(token.l1TokenAddr)
-      ));
-    if (uri) logoUris[token.l1TokenAddr] = uri;
-  }
 
   let arbifiedTokenList: ArbTokenInfo[] = tokens
     .map((t, i) => ({
@@ -299,6 +255,7 @@ export const generateTokenList = async (
         name,
         symbol,
         decimals,
+        logoURI: logos[token.token.l1TokenAddr],
         extensions: {
           bridgeInfo: {
             [l2.network.partnerChainID]: {
@@ -318,14 +275,6 @@ export const generateTokenList = async (
           l2GatewayAddress: l2GatewayAddress,
           l1GatewayAddress: getL2ToL1(),
         };
-      }
-      if (logoUris[token.token.l1TokenAddr]) {
-        arbTokenInfo = {
-          ...{ logoURI: logoUris[token.token.l1TokenAddr] },
-          ...arbTokenInfo,
-        };
-      } else {
-        console.log('no logo uri for ', token.token.l1TokenAddr, symbol);
       }
 
       return arbTokenInfo;
@@ -426,10 +375,6 @@ export const arbifyL1List = async (
   removeInvalidTokensFromList(l1TokenList);
   
   const prevArbTokenList = getPrevList(l1TokenList.name)
-
-  const l1Addresses = l1TokenList.tokens.map((token) =>
-    token.address.toLowerCase()
-  );
 
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
     includeAllL1Tokens: true,

@@ -8,7 +8,7 @@ import { L2Network, MultiCaller } from '@arbitrum/sdk';
 import { L1GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory';
 import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory';
 
-import { ArbTokenList } from './types';
+import { ArbTokenList, GraphTokenResult } from './types';
 import path from 'path';
 import yargs from './getClargs';
 
@@ -37,14 +37,38 @@ export const listNameToArbifiedListName = (name: string) => {
   return fileName.split(' ').slice(0, 2).join(' ').slice(0, 20);
 };
 
+
+export const getL1TokenAndL2Gateway = async (
+  tokenList: { addr: string; logo: string | undefined }[],
+  l2Multicaller: MultiCaller,
+  l2Network: L2Network
+): Promise<Array<GraphTokenResult>> => {
+  const routerData = await getL2GatewayAddressesFromL1Token(
+    tokenList.map((curr) => curr.addr),
+    l2Multicaller,
+    l2Network
+  );
+  
+  return tokenList.map((curr, i) => ({
+    joinTableEntry: [
+      {
+        gateway: {
+          gatewayAddr: routerData[i]
+        },
+      }
+    ],
+    l1TokenAddr: curr.addr,
+  }))
+};
+
 export const getL2GatewayAddressesFromL1Token = async (
   l1TokenAddresses: string[],
-  multiCaller: MultiCaller,
+  l2Multicaller: MultiCaller,
   l2Network: L2Network
-) => {
+): Promise<string[]> => {
   const iFace = L1GatewayRouter__factory.createInterface();
 
-  const gateways = await multiCaller.multiCall(
+  const gateways = await l2Multicaller.multiCall(
     l1TokenAddresses.map((addr) => ({
       encoder: () => iFace.encodeFunctionData('getGateway', [addr]),
       decoder: (returnData: string) =>
@@ -57,7 +81,7 @@ export const getL2GatewayAddressesFromL1Token = async (
     if (typeof curr === 'undefined') throw new Error('undefined gateway!');
   }
 
-  return gateways;
+  return gateways as string[];
 };
 
 export const getL2TokenAddressesFromL1 = async (
