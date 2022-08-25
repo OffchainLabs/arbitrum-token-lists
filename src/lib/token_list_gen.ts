@@ -121,9 +121,9 @@ export const generateTokenList = async (
   //   : l1TokenList.tokens.map((token) => token.address);
 
   const l1TokenAddresses =
-    isNova
-      ? l1TokenList.tokens.map((token) => token.address)
-      : tokens.map((curr) => curr.l1TokenAddr);
+    options && options.getAllTokensInNetwork && !isNova
+      ? tokens.map((curr) => curr.l1TokenAddr)
+      : l1TokenList.tokens.map((token) => token.address);
 
   // const l1TokenAddresses = tokens.map(
   //   (token: GraphTokenResult) => token.l1TokenAddr

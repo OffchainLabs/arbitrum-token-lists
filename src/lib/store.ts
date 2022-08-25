@@ -1,5 +1,5 @@
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from "fs";
-import { ETHERSCAN_LIST_NAME } from "./constants";
+import { ETHERSCAN_LIST_NAME, ETHERSCAN_PATH, FULLLIST_DIR_PATH, TOKENLIST_DIR_PATH } from "./constants";
 import { ArbTokenList, EtherscanList } from "./types";
 import { isArbTokenList, isNova } from "./utils";
 
@@ -13,21 +13,15 @@ export const listNameToFileName = (name: string) => {
 };
 
 const getPath = (l1ListName: string) => {
-    if(l1ListName === ETHERSCAN_LIST_NAME) return __dirname + '/FullList/all_tokens.json';
-    let path = '';
-    if (isNova) {
-      path =
-        process.env.PWD +
-        '/src/ArbTokenLists/42170_' +
-        listNameToFileName(l1ListName);
-    } else {
-      path =
-        process.env.PWD +
-        '/src/ArbTokenLists/' +
-        listNameToFileName(l1ListName);
-    }
-    return path
-}
+  if (l1ListName === ETHERSCAN_LIST_NAME) return ETHERSCAN_PATH;
+  let path = "";
+  if (isNova) {
+    path = TOKENLIST_DIR_PATH + "/42170_" + listNameToFileName(l1ListName);
+  } else {
+    path = TOKENLIST_DIR_PATH + "/" + listNameToFileName(l1ListName);
+  }
+  return path;
+};
 
 export const getPrevList = (
   l1ListName: string
@@ -45,9 +39,6 @@ export const getPrevList = (
 };
 
 export const writeToFile = (list: ArbTokenList | EtherscanList) => { 
-    const TOKENLIST_DIR_PATH = __dirname + '/ArbTokenLists';
-    const FULLLIST_DIR_PATH = __dirname + '/FullList';
-
     if (!existsSync(TOKENLIST_DIR_PATH)) {
         console.log(`Setting up token list dir at ${TOKENLIST_DIR_PATH}`);
         mkdirSync(TOKENLIST_DIR_PATH);
