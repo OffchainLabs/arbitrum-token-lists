@@ -5,12 +5,10 @@ import {
   arbListtoEtherscanList,
   updateArbifiedList,
   permitList,
-  hasPermit,
 } from './lib/token_list_gen';
 import { writeFileSync, existsSync, mkdirSync } from 'fs';
 import args from './lib/getClargs';
 import { TokenList } from '@uniswap/token-lists';
-import { ArbTokenList } from './lib/types';
 
 const TOKENLIST_DIR_PATH = __dirname + '/ArbTokenLists';
 const FULLLIST_DIR_PATH = __dirname + '/FullList';

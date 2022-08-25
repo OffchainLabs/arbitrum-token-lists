@@ -1,6 +1,13 @@
-import { BigNumberish, Contract, Wallet } from 'ethers';
+import { BigNumberish, Contract, Wallet, utils, constants } from 'ethers';
+import { ArbTokenInfo, ArbTokenList } from '../lib/types';
 
-export async function getPermitSig(
+import permitTokenAbi from '../PermitTokens/permitTokenAbi.json';
+import daiPermitTokenAbi from '../PermitTokens/daiPermitTokenAbi.json';
+import multicallAbi from '../PermitTokens/multicallAbi.json';
+import { getNetworkConfig } from '../lib/instantiate_bridge';
+
+
+async function getPermitSig(
   wallet: Wallet,
   token: Contract,
   spender: string,
@@ -49,7 +56,7 @@ export async function getPermitSig(
   return sig;
 }
 
-export async function getPermitSigNoVersion(
+async function getPermitSigNoVersion(
   wallet: Wallet,
   token: Contract,
   spender: string,
@@ -91,7 +98,7 @@ export async function getPermitSigNoVersion(
   return sig;
 }
 
-export async function getDaiLikePermitSignature(
+async function getDaiLikePermitSignature(
   wallet: Wallet,
   token: Contract,
   spender: string,
@@ -132,3 +139,210 @@ export async function getDaiLikePermitSignature(
   const sig = await wallet._signTypedData(domain, types, message);
   return [sig, nonce];
 }
+
+enum PermitTypes {
+  Standard = 'Standard Permit',
+  NoVersionInDomain = 'No Version in Domain',
+  DaiLike = 'Dai-Like Sig/Permit',
+  NoPermit = 'No Permit Enabled',
+}
+
+export const hasPermit = async (
+  tokenList: ArbTokenList,
+  onlyAddPermitTags: boolean
+) => {
+  const { l1, l2 } = await getNetworkConfig();
+
+  const wallet = Wallet.createRandom().connect(l1.provider);
+  const spender = Wallet.createRandom().connect(l1.provider);
+  const value = utils.parseUnits('1.0', 18);
+  const deadline = constants.MaxUint256;
+
+  const multicall = new Contract(
+    '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696',
+    multicallAbi,
+    wallet
+  );
+  const permitCalls = [];
+  let dictIdx = 0;
+  const idxToTokenInfo: { [key: number]: { l1Address: string; token: any } } =
+    {};
+
+  const permitTokenInfo: ArbTokenInfo[] = [];
+
+  for (let i = 0; i < tokenList.tokens.length; i++) {
+    try {
+      const tokenContract = new Contract(
+        tokenList.tokens[i].extensions?.bridgeInfo[
+          l2.network.partnerChainID
+        ].tokenAddress!,
+        permitTokenAbi['abi'],
+        wallet
+      );
+      const signature = await getPermitSig(
+        wallet,
+        tokenContract,
+        spender.address,
+        value,
+        deadline
+      );
+      const { v, r, s } = utils.splitSignature(signature);
+      const iface = new utils.Interface(permitTokenAbi['abi']);
+      const callData = iface.encodeFunctionData('permit', [
+        wallet.address,
+        spender.address,
+        value,
+        deadline,
+        v,
+        r,
+        s,
+      ]);
+
+      // Permit no version
+      const signatureNoVersion = await getPermitSigNoVersion(
+        wallet,
+        tokenContract,
+        spender.address,
+        value,
+        deadline
+      );
+      const {
+        v: vNo,
+        r: rNo,
+        s: sNo,
+      } = utils.splitSignature(signatureNoVersion);
+      const callDataNoVersion = iface.encodeFunctionData('permit', [
+        wallet.address,
+        spender.address,
+        value,
+        deadline,
+        vNo,
+        rNo,
+        sNo,
+      ]);
+
+      // DAI permit
+      const daiTokenContract = new Contract(
+        tokenList.tokens[i].extensions?.bridgeInfo[
+          l2.network.partnerChainID
+        ].tokenAddress!,
+        daiPermitTokenAbi,
+        wallet
+      );
+      const signatureDAI = await getDaiLikePermitSignature(
+        wallet,
+        daiTokenContract,
+        spender.address,
+        deadline
+      );
+      const {
+        v: vDAI,
+        r: rDAI,
+        s: sDAI,
+      } = utils.splitSignature(signatureDAI[0]);
+      const ifaceDAI = new utils.Interface(daiPermitTokenAbi);
+      const callDataDAI = ifaceDAI.encodeFunctionData('permit', [
+        wallet.address,
+        spender.address,
+        signatureDAI[1],
+        deadline,
+        true,
+        vDAI,
+        rDAI,
+        sDAI,
+      ]);
+
+      permitCalls.push(
+        {
+          target:
+            tokenList.tokens[i].extensions?.bridgeInfo[
+              l2.network.partnerChainID
+            ].tokenAddress!,
+          callData: callData, // normal permit
+        },
+        {
+          target:
+            tokenList.tokens[i].extensions?.bridgeInfo[
+              l2.network.partnerChainID
+            ].tokenAddress!,
+          callData: callDataNoVersion, // no version permit
+        },
+        {
+          target:
+            tokenList.tokens[i].extensions?.bridgeInfo[
+              l2.network.partnerChainID
+            ].tokenAddress!,
+          callData: callDataDAI, // DAI permit
+        }
+      );
+      idxToTokenInfo[dictIdx] = {
+        l1Address:
+          tokenList.tokens[i].extensions?.bridgeInfo[l2.network.partnerChainID]
+            .tokenAddress!,
+        token: tokenList.tokens[i],
+      };
+      dictIdx += 3;
+    } catch (e) {
+      // if contract doesn't have permit
+    }
+  }
+
+  // get array of results from tryAggregate
+  const tryPermit = await multicall.callStatic.tryAggregate(
+    false,
+    permitCalls,
+    { gasLimit: 2000000 }
+  );
+
+  for (let i = 0; i < tryPermit.length; i += 3) {
+    const { l1Address: tokenAddress, token } = idxToTokenInfo[i];
+    let tag;
+    if (tryPermit[i].success === true) {
+      tag = PermitTypes.Standard;
+    } else if (tryPermit[i + 1].success === true) {
+      tag = PermitTypes.NoVersionInDomain;
+    } else if (tryPermit[i + 2].success === true) {
+      tag = PermitTypes.DaiLike;
+    } else {
+      tag = PermitTypes.NoPermit;
+    }
+
+    let tokenInfo: ArbTokenInfo;
+
+    if (onlyAddPermitTags) {
+      // add to existing token lists w tags for all tokens (permit or no permit)
+      tokenInfo = {
+        ...tokenList.tokens[i],
+        tags: [tag],
+      };
+    } else if (!onlyAddPermitTags && tag != PermitTypes.NoPermit) {
+      // generate new solely permit token list
+      tokenInfo = {
+        chainId: +l2.network.chainID,
+        address: tokenAddress,
+        name: token.name,
+        decimals: token.decimals,
+        symbol: token.symbol,
+        tags: [tag],
+        extensions: token.extensions,
+      };
+      if (token.logoURI) {
+        // if there is a logoURI for this token
+        tokenInfo = { ...{ logoURI: token.logoURI }, ...tokenInfo };
+      }
+    } else {
+      continue;
+    }
+    permitTokenInfo.push(tokenInfo);
+  }
+
+  if (onlyAddPermitTags) {
+    const permitTokenList: ArbTokenList = {
+      ...tokenList,
+      tokens: permitTokenInfo,
+    };
+    return permitTokenList;
+  } else {
+    return permitTokenInfo;
+  }
+};
