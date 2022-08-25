@@ -20,9 +20,10 @@ async function getPermitSig(
     version?: string;
   }
 ) {
+  // TODO: check that error is that function instead available (differentiate network fails)
   const [nonce, name, version, chainId] = await Promise.all([
-    optional?.nonce ?? token.nonces(wallet.address),
-    optional?.name ?? token.name(),
+    optional?.nonce ?? token.nonces(wallet.address).catch((err: Error) => 0),
+    optional?.name ?? token.name().catch((err: Error) => ""),
     optional?.version ?? '1',
     optional?.chainId ?? wallet.getChainId(),
   ]);
@@ -64,9 +65,10 @@ async function getPermitSigNoVersion(
   deadline: BigNumberish,
   optional?: { nonce?: number; name?: string; chainId?: number }
 ) {
+  // TODO: check that error is that function instead available (differentiate network fails)
   const [nonce, name, chainId] = await Promise.all([
-    optional?.nonce ?? token.nonces(wallet.address),
-    optional?.name ?? token.name(),
+    optional?.nonce ?? token.nonces(wallet.address).catch((err: Error)=> 0),
+    optional?.name ?? token.name().catch((err: Error) => ""),
     optional?.chainId ?? wallet.getChainId(),
   ]);
 
@@ -105,9 +107,10 @@ async function getDaiLikePermitSignature(
   deadline: BigNumberish,
   optional?: { nonce?: number; name?: string; chainId?: number }
 ): Promise<[string, number]> {
+  // TODO: check that error is that function instead available (differentiate network fails)
   const [nonce, name, chainId] = await Promise.all([
-    optional?.nonce ?? token.nonces(wallet.address),
-    optional?.name ?? token.name(),
+    optional?.nonce ?? token.nonces(wallet.address).catch((err: Error) => 0),
+    optional?.name ?? token.name().catch((err: Error) => ""),
     optional?.chainId ?? wallet.getChainId(),
   ]);
 
@@ -178,104 +181,100 @@ export const addPermitTags = async (
     const wallet = Wallet.createRandom().connect(provider);
     const spender = Wallet.createRandom().connect(provider);
 
-    try {
-      const tokenContract = new Contract(
-        curr.address,
-        permitTokenAbi["abi"],
-        wallet
-      );
-      const signature = await getPermitSig(
-        wallet,
-        tokenContract,
-        spender.address,
-        value,
-        deadline
-      );
-      const { v, r, s } = utils.splitSignature(signature);
-      const iface = new utils.Interface(permitTokenAbi["abi"]);
-      const callData = iface.encodeFunctionData("permit", [
-        wallet.address,
-        spender.address,
-        value,
-        deadline,
-        v,
-        r,
-        s,
-      ]);
+    const tokenContract = new Contract(
+      curr.address,
+      permitTokenAbi["abi"],
+      wallet
+    );
 
-      // Permit no version
-      const signatureNoVersion = await getPermitSigNoVersion(
-        wallet,
-        tokenContract,
-        spender.address,
-        value,
-        deadline
-      );
-      const {
-        v: vNo,
-        r: rNo,
-        s: sNo,
-      } = utils.splitSignature(signatureNoVersion);
-      const callDataNoVersion = iface.encodeFunctionData("permit", [
-        wallet.address,
-        spender.address,
-        value,
-        deadline,
-        vNo,
-        rNo,
-        sNo,
-      ]);
+    const signature = await getPermitSig(
+      wallet,
+      tokenContract,
+      spender.address,
+      value,
+      deadline
+    );
+    const { v, r, s } = utils.splitSignature(signature);
+    const iface = new utils.Interface(permitTokenAbi["abi"]);
+    const callData = iface.encodeFunctionData("permit", [
+      wallet.address,
+      spender.address,
+      value,
+      deadline,
+      v,
+      r,
+      s,
+    ]);
 
-      // DAI permit
-      const daiTokenContract = new Contract(
-        curr.address,
-        daiPermitTokenAbi,
-        wallet
-      );
-      const signatureDAI = await getDaiLikePermitSignature(
-        wallet,
-        daiTokenContract,
-        spender.address,
-        deadline
-      );
-      const {
-        v: vDAI,
-        r: rDAI,
-        s: sDAI,
-      } = utils.splitSignature(signatureDAI[0]);
-      const ifaceDAI = new utils.Interface(daiPermitTokenAbi);
-      const callDataDAI = ifaceDAI.encodeFunctionData("permit", [
-        wallet.address,
-        spender.address,
-        signatureDAI[1],
-        deadline,
-        true,
-        vDAI,
-        rDAI,
-        sDAI,
-      ]);
+    // Permit no version
+    const signatureNoVersion = await getPermitSigNoVersion(
+      wallet,
+      tokenContract,
+      spender.address,
+      value,
+      deadline
+    );
+    const {
+      v: vNo,
+      r: rNo,
+      s: sNo,
+    } = utils.splitSignature(signatureNoVersion);
+    const callDataNoVersion = iface.encodeFunctionData("permit", [
+      wallet.address,
+      spender.address,
+      value,
+      deadline,
+      vNo,
+      rNo,
+      sNo,
+    ]);
 
-      (isL1Token ? l1Calls : l2Calls).push(
-        {
-          tokenIndex: i,
-          target: curr.address,
-          callData: callData, // normal permit
-        },
-        {
-          tokenIndex: i,
-          target: curr.address,
-          callData: callDataNoVersion, // no version permit
-        },
-        {
-          tokenIndex: i,
-          target: curr.address,
-          callData: callDataDAI, // DAI permit
-        }
-      );
-    } catch (e) {
-      // if contract doesn't have permit
-      // TODO: check its the expected error message
-    }
+    // DAI permit
+    const daiTokenContract = new Contract(
+      curr.address,
+      daiPermitTokenAbi,
+      wallet
+    );
+    const signatureDAI = await getDaiLikePermitSignature(
+      wallet,
+      daiTokenContract,
+      spender.address,
+      deadline
+    );
+    const {
+      v: vDAI,
+      r: rDAI,
+      s: sDAI,
+    } = utils.splitSignature(signatureDAI[0]);
+    const ifaceDAI = new utils.Interface(daiPermitTokenAbi);
+    const callDataDAI = ifaceDAI.encodeFunctionData("permit", [
+      wallet.address,
+      spender.address,
+      signatureDAI[1],
+      deadline,
+      true,
+      vDAI,
+      rDAI,
+      sDAI,
+    ]);
+
+    (isL1Token ? l1Calls : l2Calls).push(
+      {
+        tokenIndex: i,
+        target: curr.address,
+        callData: callData, // normal permit
+      },
+      {
+        tokenIndex: i,
+        target: curr.address,
+        callData: callDataNoVersion, // no version permit
+      },
+      {
+        tokenIndex: i,
+        target: curr.address,
+        callData: callDataDAI, // DAI permit
+      }
+    );
   }
 
   const handleCalls = async (calls: Array<Call>, layer: 1 | 2) => {
