@@ -27,15 +27,6 @@ for (const address of Object.keys(logoUris)) {
   logoUris[address.toLowerCase()] = logoUris[address];
 }
 
-export const listNameToFileName = (name: string) => {
-  const prefix = 'arbed_';
-  let fileName = name.split(' ').join('_').toLowerCase() + '.json';
-  if (!fileName.startsWith(prefix)) {
-    fileName = prefix + fileName;
-  }
-  return fileName;
-};
-
 export const listNameToArbifiedListName = (name: string) => {
   const prefix = 'Arbed ';
 

@@ -5,10 +5,13 @@ import {
   arbListtoEtherscanList,
   updateArbifiedList,
   permitList,
+  generateFullList,
 } from './lib/token_list_gen';
 import { writeFileSync, existsSync, mkdirSync } from 'fs';
 import args from './lib/getClargs';
 import { TokenList } from '@uniswap/token-lists';
+import { ArbTokenList, EtherscanList } from './lib/types';
+import { writeToFile } from './lib/store';
 
 const TOKENLIST_DIR_PATH = __dirname + '/ArbTokenLists';
 const FULLLIST_DIR_PATH = __dirname + '/FullList';
@@ -23,42 +26,37 @@ if (!existsSync(FULLLIST_DIR_PATH)) {
   mkdirSync(FULLLIST_DIR_PATH);
 }
 
-(async () => {
+const main = async () => {
+  let tokenList: ArbTokenList | EtherscanList;
+
   if (args.action === 'arbify') {
-    await arbifyL1List(
+    tokenList = await arbifyL1List(
       args.tokenList,
-      !!args.includeOldDataFields,
-      !!args.includePermitTags
+      !!args.includeOldDataFields
     );
   } else if (args.action === 'update') {
-    await updateArbifiedList(args.tokenList, !!args.includePermitTags);
+
+    tokenList = await updateArbifiedList(args.tokenList);
+
   } else if (args.action === 'full') {
     if (args.tokenList !== 'full')
       throw new Error("expected --tokenList 'full'");
-    const mockList: TokenList = {
-      name: 'Full',
-      logoURI: 'ipfs://QmTvWJ4kmzq9koK74WJQ594ov8Es1HHurHZmMmhU8VY68y',
-      timestamp: new Date().toISOString(),
-      version: {
-        major: 1,
-        minor: 0,
-        patch: 0,
-      },
-      tokens: [],
-    };
-    const tokenData = await generateTokenList(mockList, undefined, {
-      getAllTokensInNetwork: true,
-    });
-
-    const etherscanData = arbListtoEtherscanList(tokenData);
-    const fullListPath = __dirname + '/FullList/all_tokens.json';
-    writeFileSync(fullListPath, JSON.stringify(etherscanData));
-    console.log('List generated at', fullListPath);
+    
+      tokenList = await generateFullList()
   } else if (args.action === 'permit') {
     if (!args.tokenList) throw new Error('No token list provided');
 
-    await permitList(args.tokenList);
+    tokenList = await permitList(args.tokenList);
   } else {
     throw new Error(`action ${args.action} not recognised`);
   }
-})();
+
+  writeToFile(tokenList)
+};
+
+main()
+  .then(() => console.log("Done."))
+  .catch((err) => {
+    console.error(err)
+    throw err
+  });

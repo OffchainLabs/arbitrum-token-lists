@@ -18,20 +18,19 @@ import {
   getL2TokenAddressesFromL2,
   getLogoUri,
   getTokenListObj,
-  listNameToFileName,
   validateTokenListWithErrorThrowing,
   sanitizeNameString,
   sanitizeSymbolString,
-  listNameToArbifiedListName,
   isArbTokenList,
   removeInvalidTokensFromList,
   getL2GatewayAddressesFromL1Token,
   isNova,
+  listNameToArbifiedListName,
 } from "./utils";
 import { constants as arbConstants } from "@arbitrum/sdk";
-import { writeFileSync, readFileSync, existsSync } from "fs";
 import { getNetworkConfig } from "./instantiate_bridge";
 import { hasPermit } from "../PermitTokens/permitSignature";
+import { getPrevList } from "./store";
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -480,35 +479,14 @@ export const generateTokenList = async (
 export const arbifyL1List = async (
   pathOrUrl: string,
   includeOldDataFields?: boolean,
-  includePermitTags?: boolean
-) => {
+): Promise<ArbTokenList> => {
   const l1TokenList = await promiseErrorMultiplier(
     getTokenListObj(pathOrUrl),
     (error) => getTokenListObj(pathOrUrl)
   );
   removeInvalidTokensFromList(l1TokenList);
-  let path = '';
-  if (isNova) {
-    path =
-      process.env.PWD +
-      '/src/ArbTokenLists/42170_' +
-      listNameToFileName(l1TokenList.name);
-  } else {
-    path =
-      process.env.PWD +
-      '/src/ArbTokenLists/' +
-      listNameToFileName(l1TokenList.name);
-  }
-
-  let prevArbTokenList: ArbTokenList | undefined;
-
-  if (existsSync(path)) {
-    const data = readFileSync(path);
-    console.log('Prev version of Arb List found');
-
-    prevArbTokenList = JSON.parse(data.toString()) as ArbTokenList;
-    isArbTokenList(prevArbTokenList);
-  }
+  
+  const prevArbTokenList = getPrevList(l1TokenList.name)
 
   const l1Addresses = l1TokenList.tokens.map((token) =>
     token.address.toLowerCase()
@@ -519,60 +497,46 @@ export const arbifyL1List = async (
     includeOldDataFields,
   });
 
-  if (includePermitTags) {
-    const listWithPermitTags = await hasPermit(newList, true);
-    writeFileSync(path, JSON.stringify(listWithPermitTags));
-  } else {
-    writeFileSync(path, JSON.stringify(newList));
-  }
-  console.log('Token list generated at', path);
+  return newList
 };
 
 export const updateArbifiedList = async (
   pathOrUrl: string,
-  includePermitTags?: boolean
-) => {
+): Promise<ArbTokenList> => {
   const arbTokenList = await promiseErrorMultiplier(
     getTokenListObj(pathOrUrl),
     (error) => getTokenListObj(pathOrUrl)
   );
   removeInvalidTokensFromList(arbTokenList);
-  let path = '';
-  if (isNova) {
-    path =
-      process.env.PWD +
-      '/src/ArbTokenLists/42170_' +
-      listNameToFileName(arbTokenList.name);
-  } else {
-    path =
-      process.env.PWD +
-      '/src/ArbTokenLists/' +
-      listNameToFileName(arbTokenList.name);
-  }
-  let prevArbTokenList: ArbTokenList | undefined;
 
-  if (existsSync(path)) {
-    const data = readFileSync(path);
-    console.log('Prev version of Arb List found');
-
-    prevArbTokenList = JSON.parse(data.toString()) as ArbTokenList;
-    isArbTokenList(prevArbTokenList);
-  }
+  let prevArbTokenList = getPrevList(arbTokenList.name);
 
   const newList = await generateTokenList(arbTokenList, prevArbTokenList, {
     includeAllL1Tokens: true,
   });
 
-  if (includePermitTags) {
-    const listWithPermitTags = await hasPermit(newList, true);
-    writeFileSync(path, JSON.stringify(listWithPermitTags));
-  } else {
-    writeFileSync(path, JSON.stringify(newList));
-  }
-
-  writeFileSync(path, JSON.stringify(newList));
-  console.log('Token list generated at', path);
+  return newList
 };
+
+export const generateFullList = async () => {
+  const mockList: TokenList = {
+    name: 'Full',
+    logoURI: 'ipfs://QmTvWJ4kmzq9koK74WJQ594ov8Es1HHurHZmMmhU8VY68y',
+    timestamp: new Date().toISOString(),
+    version: {
+      major: 1,
+      minor: 0,
+      patch: 0,
+    },
+    tokens: [],
+  };
+  const tokenData = await generateTokenList(mockList, undefined, {
+    getAllTokensInNetwork: true,
+  });
+
+  const etherscanData = arbListtoEtherscanList(tokenData);
+  return etherscanData;
+}
 
 // export const updateLogoURIs = async (path: string)=> {
 //   const data = readFileSync(path)
@@ -620,22 +584,10 @@ export const arbListtoEtherscanList = (
   return list;
 };
 
-export const permitList = async (pathOrUrl: string) => {
+export const permitList = async (pathOrUrl: string): Promise<ArbTokenList> => {
   const l1TokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(l1TokenList);
-  const path =
-    process.env.PWD +
-    '/src/ArbTokenLists/permit_' +
-    listNameToFileName(l1TokenList.name);
-  let prevPermitTokenList: ArbTokenList | undefined;
-
-  if (existsSync(path)) {
-    const data = readFileSync(path);
-    console.log('Previous version of permit list found!');
-
-    prevPermitTokenList = JSON.parse(data.toString()) as ArbTokenList;
-    isArbTokenList(prevPermitTokenList);
-  }
+  const prevPermitTokenList = getPrevList(l1TokenList.name)
 
   const newList = await generateTokenList(l1TokenList, prevPermitTokenList, {
     includeUnbridgedL1Tokens: false,
@@ -662,6 +614,5 @@ export const permitList = async (pathOrUrl: string) => {
     logoURI: newList.logoURI,
   };
 
-  writeFileSync(path, JSON.stringify(arbTokenList));
-  console.log('Token list generated at ', path);
+  return arbTokenList
 };
