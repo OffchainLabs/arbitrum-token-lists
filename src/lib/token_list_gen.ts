@@ -22,14 +22,12 @@ import {
   sanitizeNameString,
   sanitizeSymbolString,
   removeInvalidTokensFromList,
-  getL2GatewayAddressesFromL1Token,
   isNova,
   listNameToArbifiedListName,
   getL1TokenAndL2Gateway,
 } from "./utils";
 import { constants as arbConstants } from "@arbitrum/sdk";
 import { getNetworkConfig } from "./instantiate_bridge";
-import { hasPermit } from "../PermitTokens/permitSignature";
 import { getPrevList } from "./store";
 import { l2ToL1GatewayAddresses, l2ToL1GatewayAddressesNova } from "./constants";
 
@@ -466,37 +464,4 @@ export const arbListtoEtherscanList = (
     }
   });
   return list;
-};
-
-export const permitList = async (pathOrUrl: string): Promise<ArbTokenList> => {
-  const l1TokenList = await getTokenListObj(pathOrUrl);
-  removeInvalidTokensFromList(l1TokenList);
-  const prevPermitTokenList = getPrevList(l1TokenList.name)
-
-  const newList = await generateTokenList(l1TokenList, prevPermitTokenList, {
-    includeUnbridgedL1Tokens: false,
-  });
-
-  const permitTokenListInfo = (await hasPermit(
-    newList,
-    false
-  )) as ArbTokenInfo[];
-
-  const version = (() => {
-    return {
-      major: 1,
-      minor: 0,
-      patch: 0,
-    };
-  })();
-
-  const arbTokenList: ArbTokenList = {
-    name: newList.name,
-    timestamp: new Date().toISOString(),
-    version,
-    tokens: permitTokenListInfo,
-    logoURI: newList.logoURI,
-  };
-
-  return arbTokenList
 };

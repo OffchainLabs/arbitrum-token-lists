@@ -147,19 +147,18 @@ enum PermitTypes {
   NoPermit = 'No Permit Enabled',
 }
 
-export const hasPermit = async (
-  tokenList: ArbTokenList,
-  onlyAddPermitTags: boolean
-) => {
+export const addPermitTags = async (
+  tokenList: ArbTokenList
+): Promise<ArbTokenList> => {
   const { l1, l2 } = await getNetworkConfig();
 
   const wallet = Wallet.createRandom().connect(l1.provider);
   const spender = Wallet.createRandom().connect(l1.provider);
-  const value = utils.parseUnits('1.0', 18);
+  const value = utils.parseUnits("1.0", 18);
   const deadline = constants.MaxUint256;
 
   const multicall = new Contract(
-    '0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696',
+    "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696",
     multicallAbi,
     wallet
   );
@@ -176,7 +175,7 @@ export const hasPermit = async (
         tokenList.tokens[i].extensions?.bridgeInfo[
           l2.network.partnerChainID
         ].tokenAddress!,
-        permitTokenAbi['abi'],
+        permitTokenAbi["abi"],
         wallet
       );
       const signature = await getPermitSig(
@@ -187,8 +186,8 @@ export const hasPermit = async (
         deadline
       );
       const { v, r, s } = utils.splitSignature(signature);
-      const iface = new utils.Interface(permitTokenAbi['abi']);
-      const callData = iface.encodeFunctionData('permit', [
+      const iface = new utils.Interface(permitTokenAbi["abi"]);
+      const callData = iface.encodeFunctionData("permit", [
         wallet.address,
         spender.address,
         value,
@@ -211,7 +210,7 @@ export const hasPermit = async (
         r: rNo,
         s: sNo,
       } = utils.splitSignature(signatureNoVersion);
-      const callDataNoVersion = iface.encodeFunctionData('permit', [
+      const callDataNoVersion = iface.encodeFunctionData("permit", [
         wallet.address,
         spender.address,
         value,
@@ -241,7 +240,7 @@ export const hasPermit = async (
         s: sDAI,
       } = utils.splitSignature(signatureDAI[0]);
       const ifaceDAI = new utils.Interface(daiPermitTokenAbi);
-      const callDataDAI = ifaceDAI.encodeFunctionData('permit', [
+      const callDataDAI = ifaceDAI.encodeFunctionData("permit", [
         wallet.address,
         spender.address,
         signatureDAI[1],
@@ -284,6 +283,7 @@ export const hasPermit = async (
       dictIdx += 3;
     } catch (e) {
       // if contract doesn't have permit
+      // TODO: check its the expected error message
     }
   }
 
@@ -295,7 +295,6 @@ export const hasPermit = async (
   );
 
   for (let i = 0; i < tryPermit.length; i += 3) {
-    const { l1Address: tokenAddress, token } = idxToTokenInfo[i];
     let tag;
     if (tryPermit[i].success === true) {
       tag = PermitTypes.Standard;
@@ -307,42 +306,16 @@ export const hasPermit = async (
       tag = PermitTypes.NoPermit;
     }
 
-    let tokenInfo: ArbTokenInfo;
-
-    if (onlyAddPermitTags) {
-      // add to existing token lists w tags for all tokens (permit or no permit)
-      tokenInfo = {
-        ...tokenList.tokens[i],
-        tags: [tag],
-      };
-    } else if (!onlyAddPermitTags && tag != PermitTypes.NoPermit) {
-      // generate new solely permit token list
-      tokenInfo = {
-        chainId: +l2.network.chainID,
-        address: tokenAddress,
-        name: token.name,
-        decimals: token.decimals,
-        symbol: token.symbol,
-        tags: [tag],
-        extensions: token.extensions,
-      };
-      if (token.logoURI) {
-        // if there is a logoURI for this token
-        tokenInfo = { ...{ logoURI: token.logoURI }, ...tokenInfo };
-      }
-    } else {
-      continue;
-    }
+    // add to existing token lists w tags for all tokens (permit or no permit)
+    const tokenInfo = {
+      ...tokenList.tokens[i],
+    };
+    tokenInfo.tags?.push(tag);
     permitTokenInfo.push(tokenInfo);
   }
 
-  if (onlyAddPermitTags) {
-    const permitTokenList: ArbTokenList = {
-      ...tokenList,
-      tokens: permitTokenInfo,
-    };
-    return permitTokenList;
-  } else {
-    return permitTokenInfo;
-  }
+  return {
+    ...tokenList,
+    tokens: permitTokenInfo,
+  };
 };
