@@ -150,31 +150,37 @@ enum PermitTypes {
 export const addPermitTags = async (
   tokenList: ArbTokenList
 ): Promise<ArbTokenList> => {
+  console.log("Adding permit tags")
   const { l1, l2 } = await getNetworkConfig();
 
-  const wallet = Wallet.createRandom().connect(l1.provider);
-  const spender = Wallet.createRandom().connect(l1.provider);
   const value = utils.parseUnits("1.0", 18);
   const deadline = constants.MaxUint256;
 
-  const multicall = new Contract(
-    "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696",
-    multicallAbi,
-    wallet
-  );
-  const permitCalls = [];
-  let dictIdx = 0;
-  const idxToTokenInfo: { [key: number]: { l1Address: string; token: any } } =
-    {};
+  type Call = {
+    tokenIndex: number,
+    target: string,
+    callData: string,
+  }
+  const l1Calls: Array<Call> = [];
+  const l2Calls: Array<Call> = [];
 
-  const permitTokenInfo: ArbTokenInfo[] = [];
+  const permitTokenInfo: ArbTokenInfo[] = [
+    ...tokenList.tokens
+  ];
 
-  for (let i = 0; i < tokenList.tokens.length; i++) {
+  for (let i=0; i<permitTokenInfo.length; i++) {
+    const curr = permitTokenInfo[i]
+    const isL1Token = curr.chainId !== l2.network.partnerChainID
+    const isL2Token = curr.chainId !== l2.network.chainID
+    if(!isL1Token && !isL2Token) continue;
+
+    const provider = isL1Token ? l1.provider : l2.provider
+    const wallet = Wallet.createRandom().connect(provider);
+    const spender = Wallet.createRandom().connect(provider);
+
     try {
       const tokenContract = new Contract(
-        tokenList.tokens[i].extensions?.bridgeInfo[
-          l2.network.partnerChainID
-        ].tokenAddress!,
+        curr.address,
         permitTokenAbi["abi"],
         wallet
       );
@@ -222,9 +228,7 @@ export const addPermitTags = async (
 
       // DAI permit
       const daiTokenContract = new Contract(
-        tokenList.tokens[i].extensions?.bridgeInfo[
-          l2.network.partnerChainID
-        ].tokenAddress!,
+        curr.address,
         daiPermitTokenAbi,
         wallet
       );
@@ -251,68 +255,62 @@ export const addPermitTags = async (
         sDAI,
       ]);
 
-      permitCalls.push(
+      (isL1Token ? l1Calls : l2Calls).push(
         {
-          target:
-            tokenList.tokens[i].extensions?.bridgeInfo[
-              l2.network.partnerChainID
-            ].tokenAddress!,
+          tokenIndex: i,
+          target: curr.address,
           callData: callData, // normal permit
         },
         {
-          target:
-            tokenList.tokens[i].extensions?.bridgeInfo[
-              l2.network.partnerChainID
-            ].tokenAddress!,
+          tokenIndex: i,
+          target: curr.address,
           callData: callDataNoVersion, // no version permit
         },
         {
-          target:
-            tokenList.tokens[i].extensions?.bridgeInfo[
-              l2.network.partnerChainID
-            ].tokenAddress!,
+          tokenIndex: i,
+          target: curr.address,
           callData: callDataDAI, // DAI permit
         }
       );
-      idxToTokenInfo[dictIdx] = {
-        l1Address:
-          tokenList.tokens[i].extensions?.bridgeInfo[l2.network.partnerChainID]
-            .tokenAddress!,
-        token: tokenList.tokens[i],
-      };
-      dictIdx += 3;
     } catch (e) {
       // if contract doesn't have permit
       // TODO: check its the expected error message
     }
   }
 
-  // get array of results from tryAggregate
-  const tryPermit = await multicall.callStatic.tryAggregate(
-    false,
-    permitCalls,
-    { gasLimit: 2000000 }
-  );
+  const handleCalls = async (calls: Array<Call>, layer: 1 | 2) => {
+    // TODO: use SDKs multicaller
+    const multiCallAddr = l2.network.tokenBridge[layer === 2 ? "l2Multicall" : "l1MultiCall"]
+    const provider = (layer === 1 ? l1 : l2).provider
+    const multicall = new Contract(multiCallAddr, multicallAbi, provider)
+    // get array of results from tryAggregate
+    const tryPermit = await multicall.callStatic.tryAggregate(
+      false,
+      calls.map(curr => ({target: curr.target, callData: curr.callData})),
+      { gasLimit: 2000000 }
+    );
 
-  for (let i = 0; i < tryPermit.length; i += 3) {
-    let tag;
-    if (tryPermit[i].success === true) {
-      tag = PermitTypes.Standard;
-    } else if (tryPermit[i + 1].success === true) {
-      tag = PermitTypes.NoVersionInDomain;
-    } else if (tryPermit[i + 2].success === true) {
-      tag = PermitTypes.DaiLike;
-    } else {
-      tag = PermitTypes.NoPermit;
+    for (let i = 0; i < tryPermit.length; i += 3) {
+      let tag;
+      if (tryPermit[i].success === true) {
+        tag = PermitTypes.Standard;
+      } else if (tryPermit[i + 1].success === true) {
+        tag = PermitTypes.NoVersionInDomain;
+      } else if (tryPermit[i + 2].success === true) {
+        tag = PermitTypes.DaiLike;
+      } else {
+        tag = PermitTypes.NoPermit;
+      }
+      const originalIndex = l1Calls[i].tokenIndex
+      // add to existing token lists w tags for all tokens (permit or no permit)
+      if (!permitTokenInfo[originalIndex].tags)
+        (permitTokenInfo[originalIndex].tags as any) = [];
+      permitTokenInfo[originalIndex].tags!.push(tag)
     }
-
-    // add to existing token lists w tags for all tokens (permit or no permit)
-    const tokenInfo = {
-      ...tokenList.tokens[i],
-    };
-    tokenInfo.tags?.push(tag);
-    permitTokenInfo.push(tokenInfo);
   }
+
+  await handleCalls(l1Calls, 1)
+  await handleCalls(l2Calls, 2)
 
   return {
     ...tokenList,
