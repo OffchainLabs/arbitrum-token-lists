@@ -1,6 +1,7 @@
 import { request, gql } from 'graphql-request';
-import { excludeList, isNova } from './utils';
+import { isNova } from './utils';
 import { GraphTokenResult, GraphTokensResult } from './types';
+import { excludeList } from './constants';
 
 const apolloL2GatewaysRinkebyClient =
   'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-rinkeby';

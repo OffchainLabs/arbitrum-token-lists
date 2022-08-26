@@ -5,6 +5,7 @@ import permitTokenAbi from '../PermitTokens/permitTokenAbi.json';
 import daiPermitTokenAbi from '../PermitTokens/daiPermitTokenAbi.json';
 import multicallAbi from '../PermitTokens/multicallAbi.json';
 import { getNetworkConfig } from '../lib/instantiate_bridge';
+import { getChunks, promiseRetrier } from '../lib/utils';
 
 
 async function getPermitSig(
@@ -173,8 +174,8 @@ export const addPermitTags = async (
 
   for (let i=0; i<permitTokenInfo.length; i++) {
     const curr = permitTokenInfo[i]
-    const isL1Token = curr.chainId !== l2.network.partnerChainID
-    const isL2Token = curr.chainId !== l2.network.chainID
+    const isL1Token = curr.chainId === l2.network.partnerChainID
+    const isL2Token = curr.chainId === l2.network.chainID
     if(!isL1Token && !isL2Token) continue;
 
     const provider = isL1Token ? l1.provider : l2.provider
@@ -279,15 +280,28 @@ export const addPermitTags = async (
 
   const handleCalls = async (calls: Array<Call>, layer: 1 | 2) => {
     // TODO: use SDKs multicaller
-    const multiCallAddr = l2.network.tokenBridge[layer === 2 ? "l2Multicall" : "l1MultiCall"]
+    let multiCallAddr = l2.network.tokenBridge[layer === 2 ? "l2Multicall" : "l1MultiCall"]
+    const isL1Mainnet = layer === 1 && l2.network.partnerChainID === 1
+    if(isL1Mainnet) multiCallAddr = "0x1b193bedb0b0a29c5759355d4193cb2838d2e170"
+    
     const provider = (layer === 1 ? l1 : l2).provider
     const multicall = new Contract(multiCallAddr, multicallAbi, provider)
     // get array of results from tryAggregate
-    const tryPermit = await multicall.callStatic.tryAggregate(
-      false,
-      calls.map(curr => ({target: curr.target, callData: curr.callData})),
-      { gasLimit: 2000000 }
-    );
+    let tryPermit = [];
+    for (const chunk of getChunks(calls, 10)) {
+      console.log("handling chunk of size", chunk.length);
+      const curr = promiseRetrier(() =>
+        multicall.callStatic[isL1Mainnet ? "tryAggregateGasRation" : "tryAggregate"](
+          false,
+          chunk.map((curr) => ({
+            target: curr.target,
+            callData: curr.callData,
+          }))
+        )
+      );
+      tryPermit.push(...await curr);
+    }
+    tryPermit.flat(1);
 
     for (let i = 0; i < tryPermit.length; i += 3) {
       let tag;
@@ -300,7 +314,7 @@ export const addPermitTags = async (
       } else {
         tag = PermitTypes.NoPermit;
       }
-      const originalIndex = l1Calls[i].tokenIndex
+      const originalIndex = calls[i].tokenIndex
       // add to existing token lists w tags for all tokens (permit or no permit)
       if (!permitTokenInfo[originalIndex].tags)
         (permitTokenInfo[originalIndex].tags as any) = [];
