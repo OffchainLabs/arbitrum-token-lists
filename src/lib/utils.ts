@@ -2,7 +2,7 @@ import Ajv from 'ajv';
 import betterAjvErrors from 'better-ajv-errors';
 import addFormats from 'ajv-formats';
 import { schema, TokenList } from '@uniswap/token-lists';
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync, writeFileSync } from 'fs';
 import axios from 'axios';
 import { L2Network, MultiCaller } from '@arbitrum/sdk';
 import { L1GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory';
@@ -11,6 +11,7 @@ import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L
 import { ArbTokenList, GraphTokenResult } from './types';
 import path from 'path';
 import yargs from './getClargs';
+import { TOKENLIST_DIR_PATH } from './constants';
 
 export const isNova = yargs.l2NetworkID === 42170;
 
@@ -336,14 +337,32 @@ export const sanitizeNameString = (str: string) =>
 export const sanitizeSymbolString = (str: string) =>
   str.replace(/[^\w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)]/gi, '');
 
-export const excludeList = [
-  '0x0CE51000d5244F1EAac0B313a792D5a5f96931BF', //rkr
-  '0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f', //in
-  '0xEDA6eFE5556e134Ef52f2F858aa1e81c84CDA84b', // bad cap
-  '0xe54942077Df7b8EEf8D4e6bCe2f7B58B0082b0cd', // swapr
-  '0x282db609e787a132391eb64820ba6129fceb2695', // amy
-  '0x99d8a9c45b2eca8864373a26d1459e3dff1e17f3', // mim
-  '0x106538cc16f938776c7c180186975bca23875287', // remove once bridged (basv2)
-  '0xB4A3B0Faf0Ab53df58001804DdA5Bfc6a3D59008', // spera
-  // "0x960b236a07cf122663c4303350609a66a7b288c0", //aragon old
-].map((s) => s.toLowerCase());
+export function* getChunks<T>(arr: Array<T>, chunkSize = 500) {
+  for (let i = 0; i < arr.length; i += chunkSize) {
+    yield arr.slice(i, i + chunkSize);
+  }
+}
+
+export const promiseErrorMultiplier = <T, Q extends Error>(
+  prom: Promise<T>,
+  handler: (err: Q) => Promise<T>,
+  tries = 3,
+  verbose = false
+) => {
+  let counter = 0;
+  while (counter < tries) {
+    prom = prom.catch((err) => handler(err));
+    counter++;
+  }
+  return prom.catch((err) => {
+    if (verbose) console.error('Failed ' + tries + ' times. Giving up');
+    // throw err;
+    console.log("reason" in err ? err.reason : "failed")
+    
+    writeFileSync(TOKENLIST_DIR_PATH+"/error.json", JSON.stringify(err));
+    throw new Error("promise retrier failed")
+  });
+};
+
+export const promiseRetrier = <T>(createProm: () => Promise<T>): Promise<T> =>
+  promiseErrorMultiplier(createProm(), (err) => createProm())

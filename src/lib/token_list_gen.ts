@@ -25,6 +25,8 @@ import {
   isNova,
   listNameToArbifiedListName,
   getL1TokenAndL2Gateway,
+  getChunks,
+  promiseErrorMultiplier,
 } from "./utils";
 import { constants as arbConstants } from "@arbitrum/sdk";
 import { getNetworkConfig } from "./instantiate_bridge";
@@ -34,29 +36,6 @@ import { l2ToL1GatewayAddresses, l2ToL1GatewayAddressesNova } from "./constants"
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
 }
-
-function* getChunks<T>(arr: Array<T>, chunkSize = 500) {
-  for (let i = 0; i < arr.length; i += chunkSize) {
-    yield arr.slice(i, i + chunkSize);
-  }
-}
-
-const promiseErrorMultiplier = <T, Q extends Error>(
-  prom: Promise<T>,
-  handler: (err: Q) => Promise<T>,
-  tries = 3,
-  verbose = false
-) => {
-  let counter = 0;
-  while (counter < tries) {
-    prom = prom.catch((err) => handler(err));
-    counter++;
-  }
-  return prom.catch((err) => {
-    if (verbose) console.error('Failed ' + tries + ' times. Giving up');
-    throw err;
-  });
-};
 
 export const generateTokenList = async (
   l1TokenList: TokenList,
