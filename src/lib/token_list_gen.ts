@@ -35,6 +35,7 @@ import {
 } from '@arbitrum/sdk';
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
+import { TokenGateway__factory } from '@arbitrum/sdk/dist/lib/abi/factories/TokenGateway__factory';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -79,6 +80,8 @@ const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses = objKeyAndValToLowerCase({
   // livepeer gateway mainnet
   '0x6d2457a4ad276000a615295f7a80f79e48ccd318':
     '0x6142f1C8bBF02E6A6bd074E8d564c9A5420a0676',
+  // Lido gateway Arb1
+    "0x07d4692291b9e30e326fd31706f686f83f331b82":"0x0f25c1dc2a9922304f2eac71dca9b07e310e8e5a"
 });
 
 // nova
@@ -285,7 +288,26 @@ export const generateTokenList = async (
     if (uri) logoUris[token.l1TokenAddr] = uri;
   }
 
-  let arbifiedTokenList: ArbTokenInfo[] = tokens
+  const getL1GatewayAddress = async (l2GatewayAddress: string) => {
+    let l2Gateway:string; 
+    if (isNova) {
+      if (l2Gateway = l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()]) {
+        return l2Gateway
+      }
+    } else {
+      if( l2Gateway = l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()])
+      return l2Gateway;
+    }
+    try {
+      const tokenGateway = TokenGateway__factory.connect(l2GatewayAddress,l2.provider)
+      const l1Gateway =  await  tokenGateway.counterpartGateway()
+      return l1Gateway
+    } catch(e){
+      return ''      
+    }
+  };
+
+  let _arbifiedTokenList = tokens
     .map((t, i) => ({
       token: t,
       l2Address: l2AddressesFromL2[i],
@@ -297,7 +319,18 @@ export const generateTokenList = async (
       (t): t is typeof t & { l2Address: string } =>
         t.l2Address != undefined && t.l2Address !== constants.AddressZero
     )
-    .map((token, i: number) => {
+
+    const gatewayAddresses = await Promise.all(_arbifiedTokenList.map( async (token, i:number)=>{
+      const l2GatewayAddress = token.token.joinTableEntry[0].gateway.gatewayAddr;
+      const l1GatewayAddress = await getL1GatewayAddress(l2GatewayAddress)
+      return {
+        l1GatewayAddress,
+        l2GatewayAddress
+      }
+    }))
+
+
+    let arbifiedTokenList: ArbTokenInfo[] =  _arbifiedTokenList.map((token, i: number) => {
       const l2GatewayAddress =
         token.token.joinTableEntry[0].gateway.gatewayAddr;
       let { name: _name, decimals, symbol: _symbol } = token.tokenDatum;
@@ -336,13 +369,6 @@ export const generateTokenList = async (
       const name = sanitizeNameString(_name);
       const symbol = sanitizeSymbolString(_symbol);
 
-      const getL2ToL1 = () => {
-        if (isNova) {
-          return l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()];
-        } else {
-          return l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()];
-        }
-      };
 
       let arbTokenInfo = {
         chainId: +l2.network.chainID,
@@ -354,8 +380,8 @@ export const generateTokenList = async (
           bridgeInfo: {
             [l2.network.partnerChainID]: {
               tokenAddress: token.token.l1TokenAddr,
-              originBridgeAddress: l2GatewayAddress,
-              destBridgeAddress: getL2ToL1(),
+              originBridgeAddress: gatewayAddresses[i].l2GatewayAddress,
+              destBridgeAddress: gatewayAddresses[i].l1GatewayAddress,
             },
           },
         },
@@ -365,8 +391,8 @@ export const generateTokenList = async (
           ...arbTokenInfo.extensions,
           // @ts-ignore
           l1Address: token.token.l1TokenAddr,
-          l2GatewayAddress: l2GatewayAddress,
-          l1GatewayAddress: getL2ToL1(),
+          l2GatewayAddress: gatewayAddresses[i].l2GatewayAddress,
+          l1GatewayAddress:  gatewayAddresses[i].l1GatewayAddress,
         };
       }
       if (logoUris[token.token.l1TokenAddr]) {
