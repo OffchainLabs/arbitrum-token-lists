@@ -81,7 +81,8 @@ const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses = objKeyAndValToLowerCase({
   '0x6d2457a4ad276000a615295f7a80f79e48ccd318':
     '0x6142f1C8bBF02E6A6bd074E8d564c9A5420a0676',
   // Lido gateway Arb1
-    "0x07d4692291b9e30e326fd31706f686f83f331b82":"0x0f25c1dc2a9922304f2eac71dca9b07e310e8e5a"
+    '0x07d4692291b9e30e326fd31706f686f83f331b82':
+    '0x0f25c1dc2a9922304f2eac71dca9b07e310e8e5a'
 });
 
 // nova
@@ -289,21 +290,26 @@ export const generateTokenList = async (
   }
 
   const getL1GatewayAddress = async (l2GatewayAddress: string) => {
-    let l2Gateway:string; 
+    let l2Gateway: string;
     if (isNova) {
-      if (l2Gateway = l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()]) {
-        return l2Gateway
+      if (
+        (l2Gateway = l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()])
+      ) {
+        return l2Gateway;
       }
     } else {
-      if( l2Gateway = l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()])
-      return l2Gateway;
+      if ((l2Gateway = l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()]))
+        return l2Gateway;
     }
     try {
-      const tokenGateway = TokenGateway__factory.connect(l2GatewayAddress,l2.provider)
-      const l1Gateway =  await  tokenGateway.counterpartGateway()
-      return l1Gateway
-    } catch(e){
-      return ''      
+      const tokenGateway = TokenGateway__factory.connect(
+        l2GatewayAddress,
+        l2.provider
+      );
+      const l1Gateway = await tokenGateway.counterpartGateway();
+      return l1Gateway;
+    } catch (e) {
+      return '';
     }
   };
 
