@@ -337,8 +337,6 @@ export const generateTokenList = async (
 
 
     let arbifiedTokenList: ArbTokenInfo[] =  _arbifiedTokenList.map((token, i: number) => {
-      const l2GatewayAddress =
-        token.token.joinTableEntry[0].gateway.gatewayAddr;
       let { name: _name, decimals, symbol: _symbol } = token.tokenDatum;
 
       // we queried the L2 token and got nothing, so token doesn't exist yet
