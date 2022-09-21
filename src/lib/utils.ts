@@ -76,19 +76,22 @@ export const getL1GatewayAddress = async (
 
   if (l2Gateway) return l2Gateway;
 
-  try {
-    const tokenGateway = TokenGateway__factory.connect(
-      l2GatewayAddress,
-      l2Provider
-    );
-    const l1Gateway = await promiseErrorMultiplier(
-      tokenGateway.counterpartGateway(),
-      (error) => tokenGateway.counterpartGateway()
-    );
-    return l1Gateway;
-  } catch (e) {
-    return undefined;
-  }
+  return undefined
+
+  // TODO: discuss:
+  // try {
+  //   const tokenGateway = TokenGateway__factory.connect(
+  //     l2GatewayAddress,
+  //     l2Provider
+  //   );
+  //   const l1Gateway = await promiseErrorMultiplier(
+  //     tokenGateway.counterpartGateway(),
+  //     (error) => tokenGateway.counterpartGateway()
+  //   );
+  //   return l1Gateway;
+  // } catch (e) {
+  //   return undefined;
+  // }
 };
 
 export const getL2GatewayAddressesFromL1Token = async (
