@@ -69,14 +69,26 @@ export const getL2GatewayAddressesFromL1Token = async (
 ): Promise<string[]> => {
   const iFace = L1GatewayRouter__factory.createInterface();
 
-  const gateways = await l2Multicaller.multiCall(
-    l1TokenAddresses.map((addr) => ({
+  const INC = 500
+  let index = 0   
+  console.info('getL2GatewayAddressesFromL1Token for', l1TokenAddresses.length, 'tokens');
+  
+  let gateways:(string | undefined)[] =[];
+
+  while (index < l1TokenAddresses.length){
+    console.log('Getting tokens', index, 'through', index + INC);
+    
+    const l1TokenAddressesSlice = l1TokenAddresses.slice(index, index + INC)
+    const result = await l2Multicaller.multiCall( l1TokenAddressesSlice.map((addr) => ({
       encoder: () => iFace.encodeFunctionData('getGateway', [addr]),
       decoder: (returnData: string) =>
         iFace.decodeFunctionResult('getGateway', returnData)[0] as string,
       targetAddr: l2Network.tokenBridge.l2GatewayRouter,
-    }))
-  );
+      }))
+    )
+    gateways = gateways.concat(result)
+    index += INC
+  };
 
   for (const curr of gateways) {
     if (typeof curr === 'undefined') throw new Error('undefined gateway!');
