@@ -15,7 +15,7 @@ const main = async () => {
     if (args.includePermitTags)
       throw new Error("full list mode does not support permit tagging");
 
-    writeToFile(await generateFullList());
+    return writeToFile(await generateFullList());
   }
 
   let tokenList: ArbTokenList;
