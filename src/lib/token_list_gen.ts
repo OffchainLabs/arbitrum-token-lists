@@ -290,16 +290,11 @@ export const generateTokenList = async (
   }
 
   const getL1GatewayAddress = async (l2GatewayAddress: string) => {
-    let l2Gateway: string;
-    if (isNova) {
-      if (
-        (l2Gateway = l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()])
-      ) {
-        return l2Gateway;
-      }
-    } else {
-      if ((l2Gateway = l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()]))
-        return l2Gateway;
+    let l2Gateway: string = isNova
+      ? l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()]
+      : l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()];
+    if (l2Gateway) {
+      return l2Gateway;
     }
     try {
       const tokenGateway = TokenGateway__factory.connect(
