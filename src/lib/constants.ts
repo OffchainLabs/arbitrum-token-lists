@@ -39,6 +39,9 @@ export const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses = objKeyAndValToLowe
 // livepeer gateway mainnet
 '0x6d2457a4ad276000a615295f7a80f79e48ccd318':
   '0x6142f1C8bBF02E6A6bd074E8d564c9A5420a0676',
+// Lido gateway Arb1
+  '0x07d4692291b9e30e326fd31706f686f83f331b82':
+  '0x0f25c1dc2a9922304f2eac71dca9b07e310e8e5a'
 });
 
 // nova
