@@ -8,9 +8,12 @@ import { L2Network, MultiCaller } from '@arbitrum/sdk';
 import { L1GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory';
 import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory';
 
+import { providers } from "ethers"
 import { ArbTokenList } from './types';
 import path from 'path';
 import yargs from './getClargs';
+import { l2ToL1GatewayAddresses, l2ToL1GatewayAddressesNova } from './constants';
+import { TokenGateway__factory } from '@arbitrum/sdk/dist/lib/abi/factories/TokenGateway__factory';
 
 export const isNova = yargs.l2NetworkID === 42170;
 
@@ -44,6 +47,48 @@ export const listNameToArbifiedListName = (name: string) => {
     fileName = prefix + fileName;
   }
   return fileName.split(' ').slice(0, 2).join(' ').slice(0, 20);
+};
+
+export const promiseErrorMultiplier = <T, Q extends Error>(
+  prom: Promise<T>,
+  handler: (err: Q) => Promise<T>,
+  tries = 3,
+  verbose = false
+) => {
+  let counter = 0;
+  while (counter < tries) {
+    prom = prom.catch((err) => handler(err));
+    counter++;
+  }
+  return prom.catch((err) => {
+    if (verbose) console.error('Failed ' + tries + ' times. Giving up');
+    throw err;
+  });
+};
+
+export const getL1GatewayAddress = async (
+  l2GatewayAddress: string,
+  l2Provider: providers.Provider
+) => {
+  const l2Gateway = isNova
+    ? l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()]
+    : l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()];
+
+  if (l2Gateway) return l2Gateway;
+
+  try {
+    const tokenGateway = TokenGateway__factory.connect(
+      l2GatewayAddress,
+      l2Provider
+    );
+    const l1Gateway = await promiseErrorMultiplier(
+      tokenGateway.counterpartGateway(),
+      (error) => tokenGateway.counterpartGateway()
+    );
+    return l1Gateway;
+  } catch (e) {
+    return undefined;
+  }
 };
 
 export const getL2GatewayAddressesFromL1Token = async (
