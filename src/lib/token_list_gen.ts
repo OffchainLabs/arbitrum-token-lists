@@ -226,7 +226,7 @@ export const generateTokenList = async (
     .map(async (token, i: number) => {
       const l2GatewayAddress =
         token.token.joinTableEntry[0].gateway.gatewayAddr;
-      const l1GatewayAddress = getL1GatewayAddress(l2GatewayAddress, l2.provider)
+      const l1GatewayAddress = (await getL1GatewayAddress(l2GatewayAddress, l2.provider)) ?? "N/A"
 
       let { name: _name, decimals, symbol: _symbol } = token.tokenDatum;
 
@@ -276,7 +276,7 @@ export const generateTokenList = async (
             [l2.network.partnerChainID]: {
               tokenAddress: token.token.l1TokenAddr,
               originBridgeAddress: l2GatewayAddress,
-              destBridgeAddress: await getL1GatewayAddress(l2GatewayAddress, l2.provider) ?? "na",
+              destBridgeAddress: l1GatewayAddress,
             },
           },
         },
@@ -287,7 +287,7 @@ export const generateTokenList = async (
           // @ts-ignore
           l1Address: token.token.l1TokenAddr,
           l2GatewayAddress: l2GatewayAddress,
-          l1GatewayAddress:  await getL1GatewayAddress(l2GatewayAddress, l2.provider) ?? "na",
+          l1GatewayAddress:  l1GatewayAddress,
         };
       }
       if (logoUris[token.token.l1TokenAddr]) {
