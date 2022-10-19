@@ -9,9 +9,12 @@ import { L1GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L
 import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory';
 
 import { ArbTokenList, GraphTokenResult } from './types';
-import path from 'path';
 import yargs from './getClargs';
 import { TOKENLIST_DIR_PATH } from './constants';
+import { providers } from "ethers"
+import path from 'path';
+import { l2ToL1GatewayAddresses, l2ToL1GatewayAddressesNova } from './constants';
+import { TokenGateway__factory } from '@arbitrum/sdk/dist/lib/abi/factories/TokenGateway__factory';
 
 export const isNova = yargs.l2NetworkID === 42170;
 
@@ -60,6 +63,50 @@ export const getL1TokenAndL2Gateway = async (
     ],
     l1TokenAddr: curr.addr,
   }))
+}
+export const promiseErrorMultiplier = <T, Q extends Error>(
+  prom: Promise<T>,
+  handler: (err: Q) => Promise<T>,
+  tries = 3,
+  verbose = false
+) => {
+  let counter = 0;
+  while (counter < tries) {
+    prom = prom.catch((err) => handler(err));
+    counter++;
+  }
+  return prom.catch((err) => {
+    if (verbose) console.error('Failed ' + tries + ' times. Giving up');
+    throw err;
+  });
+};
+
+export const getL1GatewayAddress = async (
+  l2GatewayAddress: string,
+  l2Provider: providers.Provider
+) => {
+  const l2Gateway = isNova
+    ? l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()]
+    : l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()];
+
+  if (l2Gateway) return l2Gateway;
+
+  return undefined
+
+  // TODO: discuss:
+  // try {
+  //   const tokenGateway = TokenGateway__factory.connect(
+  //     l2GatewayAddress,
+  //     l2Provider
+  //   );
+  //   const l1Gateway = await promiseErrorMultiplier(
+  //     tokenGateway.counterpartGateway(),
+  //     (error) => tokenGateway.counterpartGateway()
+  //   );
+  //   return l1Gateway;
+  // } catch (e) {
+  //   return undefined;
+  // }
 };
 
 export const getL2GatewayAddressesFromL1Token = async (
@@ -354,27 +401,26 @@ export function* getChunks<T>(arr: Array<T>, chunkSize = 500) {
     yield arr.slice(i, i + chunkSize);
   }
 }
-
-export const promiseErrorMultiplier = <T, Q extends Error>(
-  prom: Promise<T>,
-  handler: (err: Q) => Promise<T>,
-  tries = 3,
-  verbose = false
-) => {
-  let counter = 0;
-  while (counter < tries) {
-    prom = prom.catch((err) => handler(err));
-    counter++;
-  }
-  return prom.catch((err) => {
-    if (verbose) console.error('Failed ' + tries + ' times. Giving up');
-    // throw err;
-    console.log("reason" in err ? err.reason : "failed")
+// export const promiseErrorMultiplier = <T, Q extends Error>(
+//   prom: Promise<T>,
+//   handler: (err: Q) => Promise<T>,
+//   tries = 3,
+//   verbose = false
+// ) => {
+//   let counter = 0;
+//   while (counter < tries) {
+//     prom = prom.catch((err) => handler(err));
+//     counter++;
+//   }
+//   return prom.catch((err) => {
+//     if (verbose) console.error('Failed ' + tries + ' times. Giving up');
+//     // throw err;
+//     console.log("reason" in err ? err.reason : "failed")
     
-    writeFileSync(TOKENLIST_DIR_PATH+"/error.json", JSON.stringify(err));
-    throw new Error("promise retrier failed")
-  });
-};
+//     writeFileSync(TOKENLIST_DIR_PATH+"/error.json", JSON.stringify(err));
+//     throw new Error("promise retrier failed")
+//   });
+// };
 
 export const promiseRetrier = <T>(createProm: () => Promise<T>): Promise<T> =>
   promiseErrorMultiplier(createProm(), (err) => createProm())

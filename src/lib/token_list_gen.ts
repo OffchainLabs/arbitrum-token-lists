@@ -27,15 +27,19 @@ import {
   getL1TokenAndL2Gateway,
   getChunks,
   promiseErrorMultiplier,
+  getL1GatewayAddress
 } from "./utils";
-import { constants as arbConstants } from "@arbitrum/sdk";
-import { getNetworkConfig } from "./instantiate_bridge";
-import { getPrevList } from "./store";
-import { l2ToL1GatewayAddresses, l2ToL1GatewayAddressesNova } from "./constants";
+import {
+  constants as arbConstants,
+} from '@arbitrum/sdk';
+import { writeFileSync, readFileSync, existsSync } from 'fs';
+import { getNetworkConfig } from './instantiate_bridge';
+import { getPrevList } from './store'
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
 }
+
 
 export const generateTokenList = async (
   l1TokenList: TokenList,
@@ -167,7 +171,8 @@ export const generateTokenList = async (
 
   const tokenData = intermediateTokenData.flat(1);
 
-  let arbifiedTokenList: ArbTokenInfo[] = tokens
+
+  let _arbifiedTokenList = tokens
     .map((t, i) => ({
       token: t,
       l2Address: l2AddressesFromL2[i],
@@ -179,9 +184,11 @@ export const generateTokenList = async (
       (t): t is typeof t & { l2Address: string } =>
         t.l2Address != undefined && t.l2Address !== constants.AddressZero
     )
-    .map((token, i: number) => {
+    .map(async (token, i: number) => {
       const l2GatewayAddress =
         token.token.joinTableEntry[0].gateway.gatewayAddr;
+      const l1GatewayAddress = (await getL1GatewayAddress(l2GatewayAddress, l2.provider)) ?? "N/A"
+
       let { name: _name, decimals, symbol: _symbol } = token.tokenDatum;
 
       // we queried the L2 token and got nothing, so token doesn't exist yet
@@ -218,13 +225,6 @@ export const generateTokenList = async (
       const name = sanitizeNameString(_name);
       const symbol = sanitizeSymbolString(_symbol);
 
-      const getL2ToL1 = () => {
-        if (isNova) {
-          return l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()];
-        } else {
-          return l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()];
-        }
-      };
 
       let arbTokenInfo = {
         chainId: +l2.network.chainID,
@@ -238,7 +238,7 @@ export const generateTokenList = async (
             [l2.network.partnerChainID]: {
               tokenAddress: token.token.l1TokenAddr, // this is the wrong address
               originBridgeAddress: l2GatewayAddress,
-              destBridgeAddress: getL2ToL1(),
+              destBridgeAddress: l1GatewayAddress,
             },
           },
         },
@@ -250,12 +250,14 @@ export const generateTokenList = async (
           // @ts-ignore
           l1Address: token.token.l1TokenAddr,
           l2GatewayAddress: l2GatewayAddress,
-          l1GatewayAddress: getL2ToL1(),
+          l1GatewayAddress:  l1GatewayAddress,
         };
       }
 
       return arbTokenInfo;
     })
+
+  let arbifiedTokenList: ArbTokenInfo[] = (await Promise.all(_arbifiedTokenList))
     .filter((tokenInfo: ArbTokenInfo | undefined) => {
       return (
         tokenInfo &&
