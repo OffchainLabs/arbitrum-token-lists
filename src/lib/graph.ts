@@ -1,6 +1,7 @@
 import { request, gql } from 'graphql-request';
-import { excludeList, isNova } from './utils';
+import { isNova } from './utils';
 import { GraphTokenResult, GraphTokensResult } from './types';
+import { excludeList } from './constants';
 
 const apolloL2GatewaysRinkebyClient =
   'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-rinkeby';
@@ -86,22 +87,10 @@ export const getTokens = async (
   }
 `;
 
-  const logos = tokenList.reduce(
-    (acc, curr) => ((acc[curr.addr.toLowerCase()] = curr.logo), acc),
-    {} as { [addr: string]: string | undefined }
-  );
-
   const { tokens } = (await request(clientUrl, query)) as GraphTokensResult;
-  const res = tokens.map((token) => {
-    isGraphTokenResult(token);
-    const logoUri = logos[token.l1TokenAddr] || token.logoUri;
-    return {
-      ...token,
-      logoUri: logoUri,
-    };
-  });
+  tokens.map((token) => isGraphTokenResult(token));
 
-  return res.filter(
+  return tokens.filter(
     (token) => !excludeList.includes(token.l1TokenAddr.toLowerCase())
   );
 };
@@ -137,7 +126,7 @@ export const getAllTokens = async (
   const { tokens } = (await request(clientUrl, query)) as GraphTokensResult;
   const res = tokens.map((token) => {
     isGraphTokenResult(token);
-    return { ...token, logoUri: undefined };
+    return { ...token };
   });
 
   return res.filter(

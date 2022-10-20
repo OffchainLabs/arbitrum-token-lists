@@ -32,6 +32,9 @@ const argv = yargs(process.argv.slice(2))
     action: {
       type: 'string',
     },
+    includePermitTags: {
+      type: 'boolean',
+    },
   })
   .demandOption('action')
   .demandOption('l2NetworkID')

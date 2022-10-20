@@ -28,7 +28,6 @@ export interface EtherscanToken {
 export type EtherscanList = EtherscanToken[];
 
 export interface GraphTokenResult {
-  l2Address: string | null;
   joinTableEntry: [
     {
       gateway: {
@@ -37,7 +36,6 @@ export interface GraphTokenResult {
     }
   ];
   l1TokenAddr: string;
-  logoUri: string | undefined;
 }
 
 export interface GraphTokensResult {

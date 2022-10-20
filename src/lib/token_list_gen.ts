@@ -3,49 +3,41 @@ import {
   nextVersion,
   VersionUpgrade,
   TokenList,
-} from '@uniswap/token-lists';
-import { getAllTokens, getTokens } from './graph';
-import { constants, utils } from 'ethers';
+} from "@uniswap/token-lists";
+import { getAllTokens } from "./graph";
+import { constants, utils } from "ethers";
 
 import {
   ArbTokenList,
   ArbTokenInfo,
   EtherscanList,
   GraphTokenResult,
-} from './types';
+} from "./types";
 import {
   getL2TokenAddressesFromL1,
   getL2TokenAddressesFromL2,
   getLogoUri,
   getTokenListObj,
-  listNameToFileName,
   validateTokenListWithErrorThrowing,
   sanitizeNameString,
   sanitizeSymbolString,
-  listNameToArbifiedListName,
-  isArbTokenList,
   removeInvalidTokensFromList,
-  getL2GatewayAddressesFromL1Token,
   isNova,
+  listNameToArbifiedListName,
+  getL1TokenAndL2Gateway,
+  getChunks,
   promiseErrorMultiplier,
-  getL1GatewayAddress,
-} from './utils';
+  getL1GatewayAddress
+} from "./utils";
 import {
-  addCustomNetwork,
   constants as arbConstants,
-  L2Network,
 } from '@arbitrum/sdk';
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
+import { getPrevList } from './store'
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
-}
-
-function* getChunks<T>(arr: Array<T>, chunkSize = 500) {
-  for (let i = 0; i < arr.length; i += chunkSize) {
-    yield arr.slice(i, i + chunkSize);
-  }
 }
 
 
@@ -78,6 +70,9 @@ export const generateTokenList = async (
     getNetworkConfig()
   );
 
+  if (options && options.getAllTokensInNetwork && isNova)
+    throw new Error("Subgraph not enabled for nova");
+
   let tokens: GraphTokenResult[] =
     options && options.getAllTokensInNetwork
       ? await promiseErrorMultiplier(
@@ -85,27 +80,33 @@ export const generateTokenList = async (
           (error) => getAllTokens(l2.network.chainID)
         )
       : await promiseErrorMultiplier(
-          getTokens(
+          getL1TokenAndL2Gateway(
             l1TokenList.tokens.map((token) => ({
               addr: token.address.toLowerCase(),
               logo: token.logoURI,
             })),
-            l2.network.chainID
+            l2.multiCaller,
+            l2.network
           ),
           (error) =>
-            getTokens(
+            getL1TokenAndL2Gateway(
               l1TokenList.tokens.map((token) => ({
                 addr: token.address.toLowerCase(),
                 logo: token.logoURI,
               })),
-              l2.network.chainID
+              l2.multiCaller,
+              l2.network
             )
         );
 
   const l1TokenAddresses =
-    options && options.getAllTokensInNetwork
+    options && options.getAllTokensInNetwork && !isNova
       ? tokens.map((curr) => curr.l1TokenAddr)
       : l1TokenList.tokens.map((token) => token.address);
+
+  // const l1TokenAddresses = tokens.map(
+  //   (token: GraphTokenResult) => token.l1TokenAddr
+  // );
 
   const intermediatel2AddressesFromL1 = [];
   const intermediatel2AddressesFromL2 = [];
@@ -142,41 +143,10 @@ export const generateTokenList = async (
   const l2AddressesFromL1 = intermediatel2AddressesFromL1.flat(1);
   const l2AddressesFromL2 = intermediatel2AddressesFromL2.flat(1);
 
-  if (isNova) {
-    const logos = l1TokenList.tokens.reduce(
-      (acc, curr) => ((acc[curr.address.toLowerCase()] = curr.logoURI), acc),
-      {} as { [addr: string]: string | undefined }
-    );
-
-    const intermediatel2GatewayAddrs = [];
-    for (const addrs of getChunks(l1TokenAddresses)) {
-      const l2GatewayAddressesFromL1Temp = await promiseErrorMultiplier(
-        getL2GatewayAddressesFromL1Token(addrs, l2.multiCaller, l2.network),
-        (error) =>
-          getL2GatewayAddressesFromL1Token(addrs, l2.multiCaller, l2.network)
-      );
-      intermediatel2GatewayAddrs.push(l2GatewayAddressesFromL1Temp);
-    }
-    const l2Gateways = intermediatel2GatewayAddrs.flat(1);
-
-    const res: GraphTokenResult[] = l1TokenList.tokens.map((curr, index) => {
-      if (!l2Gateways[index]) throw new Error('no l2 gateway!!');
-      return {
-        l2Address: l2AddressesFromL2[index] || null,
-        joinTableEntry: [
-          {
-            gateway: {
-              gatewayAddr: l2Gateways[index]!,
-            },
-          },
-        ],
-        l1TokenAddr: curr.address,
-        logoUri: logos[curr.address] || undefined,
-        // logoUri: curr.logoURI
-      };
-    });
-    tokens = res;
-  }
+  const logos = l1TokenList.tokens.reduce(
+    (acc, curr) => ((acc[curr.address.toLowerCase()] = curr.logoURI), acc),
+    {} as { [addr: string]: string | undefined }
+  );
 
   // if the l2 route hasn't been updated yet we remove the token from the bridged tokens
   tokens = tokens.filter(
@@ -198,17 +168,8 @@ export const generateTokenList = async (
     );
     intermediateTokenData.push(tokenDataTemp);
   }
-  const tokenData = intermediateTokenData.flat(1);
 
-  const logoUris: { [l1addr: string]: string } = {};
-  for (const token of tokens) {
-    const uri =
-      token.logoUri ||
-      (await promiseErrorMultiplier(getLogoUri(token.l1TokenAddr), (error) =>
-        getLogoUri(token.l1TokenAddr)
-      ));
-    if (uri) logoUris[token.l1TokenAddr] = uri;
-  }
+  const tokenData = intermediateTokenData.flat(1);
 
 
   let _arbifiedTokenList = tokens
@@ -271,16 +232,18 @@ export const generateTokenList = async (
         name,
         symbol,
         decimals,
+        logoURI: logos[token.token.l1TokenAddr],
         extensions: {
           bridgeInfo: {
             [l2.network.partnerChainID]: {
-              tokenAddress: token.token.l1TokenAddr,
+              tokenAddress: token.token.l1TokenAddr, // this is the wrong address
               originBridgeAddress: l2GatewayAddress,
               destBridgeAddress: l1GatewayAddress,
             },
           },
         },
       };
+
       if (options && options.includeOldDataFields) {
         arbTokenInfo.extensions = {
           ...arbTokenInfo.extensions,
@@ -289,14 +252,6 @@ export const generateTokenList = async (
           l2GatewayAddress: l2GatewayAddress,
           l1GatewayAddress:  l1GatewayAddress,
         };
-      }
-      if (logoUris[token.token.l1TokenAddr]) {
-        arbTokenInfo = {
-          ...{ logoURI: logoUris[token.token.l1TokenAddr] },
-          ...arbTokenInfo,
-        };
-      } else {
-        console.log('no logo uri for ', token.token.l1TokenAddr, symbol);
       }
 
       return arbTokenInfo;
@@ -390,84 +345,61 @@ export const generateTokenList = async (
 
 export const arbifyL1List = async (
   pathOrUrl: string,
-  includeOldDataFields?: boolean
-) => {
+  includeOldDataFields?: boolean,
+): Promise<ArbTokenList> => {
   const l1TokenList = await promiseErrorMultiplier(
     getTokenListObj(pathOrUrl),
     (error) => getTokenListObj(pathOrUrl)
   );
   removeInvalidTokensFromList(l1TokenList);
-  let path = '';
-  if (isNova) {
-    path =
-      process.env.PWD +
-      '/src/ArbTokenLists/42170_' +
-      listNameToFileName(l1TokenList.name);
-  } else {
-    path =
-      process.env.PWD +
-      '/src/ArbTokenLists/' +
-      listNameToFileName(l1TokenList.name);
-  }
-
-  let prevArbTokenList: ArbTokenList | undefined;
-
-  if (existsSync(path)) {
-    const data = readFileSync(path);
-    console.log('Prev version of Arb List found');
-
-    prevArbTokenList = JSON.parse(data.toString()) as ArbTokenList;
-    isArbTokenList(prevArbTokenList);
-  }
-
-  const l1Addresses = l1TokenList.tokens.map((token) =>
-    token.address.toLowerCase()
-  );
+  
+  const prevArbTokenList = getPrevList(l1TokenList.name)
 
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
     includeAllL1Tokens: true,
     includeOldDataFields,
   });
 
-  writeFileSync(path, JSON.stringify(newList));
-  console.log('Token list generated at', path);
+  return newList
 };
 
-export const updateArbifiedList = async (pathOrUrl: string) => {
+export const updateArbifiedList = async (
+  pathOrUrl: string,
+): Promise<ArbTokenList> => {
   const arbTokenList = await promiseErrorMultiplier(
     getTokenListObj(pathOrUrl),
     (error) => getTokenListObj(pathOrUrl)
   );
   removeInvalidTokensFromList(arbTokenList);
-  let path = '';
-  if (isNova) {
-    path =
-      process.env.PWD +
-      '/src/ArbTokenLists/42170_' +
-      listNameToFileName(arbTokenList.name);
-  } else {
-    path =
-      process.env.PWD +
-      '/src/ArbTokenLists/' +
-      listNameToFileName(arbTokenList.name);
-  }
-  let prevArbTokenList: ArbTokenList | undefined;
 
-  if (existsSync(path)) {
-    const data = readFileSync(path);
-    console.log('Prev version of Arb List found');
-
-    prevArbTokenList = JSON.parse(data.toString()) as ArbTokenList;
-    isArbTokenList(prevArbTokenList);
-  }
+  let prevArbTokenList = getPrevList(arbTokenList.name);
 
   const newList = await generateTokenList(arbTokenList, prevArbTokenList, {
     includeAllL1Tokens: true,
   });
 
-  writeFileSync(path, JSON.stringify(newList));
-  console.log('Token list generated at', path);
+  return newList
 };
+
+export const generateFullList = async () => {
+  const mockList: TokenList = {
+    name: 'Full',
+    logoURI: 'ipfs://QmTvWJ4kmzq9koK74WJQ594ov8Es1HHurHZmMmhU8VY68y',
+    timestamp: new Date().toISOString(),
+    version: {
+      major: 1,
+      minor: 0,
+      patch: 0,
+    },
+    tokens: [],
+  };
+  const tokenData = await generateTokenList(mockList, undefined, {
+    getAllTokensInNetwork: true,
+  });
+
+  const etherscanData = arbListtoEtherscanList(tokenData);
+  return etherscanData;
+}
 
 // export const updateLogoURIs = async (path: string)=> {
 //   const data = readFileSync(path)

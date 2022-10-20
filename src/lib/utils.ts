@@ -2,16 +2,17 @@ import Ajv from 'ajv';
 import betterAjvErrors from 'better-ajv-errors';
 import addFormats from 'ajv-formats';
 import { schema, TokenList } from '@uniswap/token-lists';
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync, writeFileSync } from 'fs';
 import axios from 'axios';
 import { L2Network, MultiCaller } from '@arbitrum/sdk';
 import { L1GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory';
 import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory';
 
-import { providers } from "ethers"
-import { ArbTokenList } from './types';
-import path from 'path';
+import { ArbTokenList, GraphTokenResult } from './types';
 import yargs from './getClargs';
+import { TOKENLIST_DIR_PATH } from './constants';
+import { providers } from "ethers"
+import path from 'path';
 import { l2ToL1GatewayAddresses, l2ToL1GatewayAddressesNova } from './constants';
 import { TokenGateway__factory } from '@arbitrum/sdk/dist/lib/abi/factories/TokenGateway__factory';
 
@@ -30,15 +31,6 @@ for (const address of Object.keys(logoUris)) {
   logoUris[address.toLowerCase()] = logoUris[address];
 }
 
-export const listNameToFileName = (name: string) => {
-  const prefix = 'arbed_';
-  let fileName = name.split(' ').join('_').toLowerCase() + '.json';
-  if (!fileName.startsWith(prefix)) {
-    fileName = prefix + fileName;
-  }
-  return fileName;
-};
-
 export const listNameToArbifiedListName = (name: string) => {
   const prefix = 'Arbed ';
 
@@ -49,6 +41,29 @@ export const listNameToArbifiedListName = (name: string) => {
   return fileName.split(' ').slice(0, 2).join(' ').slice(0, 20);
 };
 
+
+export const getL1TokenAndL2Gateway = async (
+  tokenList: { addr: string; logo: string | undefined }[],
+  l2Multicaller: MultiCaller,
+  l2Network: L2Network
+): Promise<Array<GraphTokenResult>> => {
+  const routerData = await getL2GatewayAddressesFromL1Token(
+    tokenList.map((curr) => curr.addr),
+    l2Multicaller,
+    l2Network
+  );
+  
+  return tokenList.map((curr, i) => ({
+    joinTableEntry: [
+      {
+        gateway: {
+          gatewayAddr: routerData[i]
+        },
+      }
+    ],
+    l1TokenAddr: curr.addr,
+  }))
+}
 export const promiseErrorMultiplier = <T, Q extends Error>(
   prom: Promise<T>,
   handler: (err: Q) => Promise<T>,
@@ -96,25 +111,37 @@ export const getL1GatewayAddress = async (
 
 export const getL2GatewayAddressesFromL1Token = async (
   l1TokenAddresses: string[],
-  multiCaller: MultiCaller,
+  l2Multicaller: MultiCaller,
   l2Network: L2Network
-) => {
+): Promise<string[]> => {
   const iFace = L1GatewayRouter__factory.createInterface();
 
-  const gateways = await multiCaller.multiCall(
-    l1TokenAddresses.map((addr) => ({
+  const INC = 500
+  let index = 0   
+  console.info('getL2GatewayAddressesFromL1Token for', l1TokenAddresses.length, 'tokens');
+  
+  let gateways:(string | undefined)[] =[];
+
+  while (index < l1TokenAddresses.length){
+    console.log('Getting tokens', index, 'through', index + INC);
+    
+    const l1TokenAddressesSlice = l1TokenAddresses.slice(index, index + INC)
+    const result = await l2Multicaller.multiCall( l1TokenAddressesSlice.map((addr) => ({
       encoder: () => iFace.encodeFunctionData('getGateway', [addr]),
       decoder: (returnData: string) =>
         iFace.decodeFunctionResult('getGateway', returnData)[0] as string,
       targetAddr: l2Network.tokenBridge.l2GatewayRouter,
-    }))
-  );
+      }))
+    )
+    gateways = gateways.concat(result)
+    index += INC
+  };
 
   for (const curr of gateways) {
     if (typeof curr === 'undefined') throw new Error('undefined gateway!');
   }
 
-  return gateways;
+  return gateways as string[];
 };
 
 export const getL2TokenAddressesFromL1 = async (
@@ -369,14 +396,31 @@ export const sanitizeNameString = (str: string) =>
 export const sanitizeSymbolString = (str: string) =>
   str.replace(/[^\w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)]/gi, '');
 
-export const excludeList = [
-  '0x0CE51000d5244F1EAac0B313a792D5a5f96931BF', //rkr
-  '0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f', //in
-  '0xEDA6eFE5556e134Ef52f2F858aa1e81c84CDA84b', // bad cap
-  '0xe54942077Df7b8EEf8D4e6bCe2f7B58B0082b0cd', // swapr
-  '0x282db609e787a132391eb64820ba6129fceb2695', // amy
-  '0x99d8a9c45b2eca8864373a26d1459e3dff1e17f3', // mim
-  '0x106538cc16f938776c7c180186975bca23875287', // remove once bridged (basv2)
-  '0xB4A3B0Faf0Ab53df58001804DdA5Bfc6a3D59008', // spera
-  // "0x960b236a07cf122663c4303350609a66a7b288c0", //aragon old
-].map((s) => s.toLowerCase());
+export function* getChunks<T>(arr: Array<T>, chunkSize = 500) {
+  for (let i = 0; i < arr.length; i += chunkSize) {
+    yield arr.slice(i, i + chunkSize);
+  }
+}
+// export const promiseErrorMultiplier = <T, Q extends Error>(
+//   prom: Promise<T>,
+//   handler: (err: Q) => Promise<T>,
+//   tries = 3,
+//   verbose = false
+// ) => {
+//   let counter = 0;
+//   while (counter < tries) {
+//     prom = prom.catch((err) => handler(err));
+//     counter++;
+//   }
+//   return prom.catch((err) => {
+//     if (verbose) console.error('Failed ' + tries + ' times. Giving up');
+//     // throw err;
+//     console.log("reason" in err ? err.reason : "failed")
+    
+//     writeFileSync(TOKENLIST_DIR_PATH+"/error.json", JSON.stringify(err));
+//     throw new Error("promise retrier failed")
+//   });
+// };
+
+export const promiseRetrier = <T>(createProm: () => Promise<T>): Promise<T> =>
+  promiseErrorMultiplier(createProm(), (err) => createProm())
