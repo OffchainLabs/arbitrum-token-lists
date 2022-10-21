@@ -1,7 +1,7 @@
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from "fs";
 import { ETHERSCAN_LIST_NAME, ETHERSCAN_PATH, FULLLIST_DIR_PATH, TOKENLIST_DIR_PATH } from "./constants";
 import { ArbTokenList, EtherscanList } from "./types";
-import { isArbTokenList, isNova } from "./utils";
+import { isArbTokenList, isGoerliRollup, isNova } from "./utils";
 
 export const listNameToFileName = (name: string) => {
     const prefix = 'arbed_';
@@ -17,6 +17,8 @@ const getPath = (l1ListName: string) => {
   let path = "";
   if (isNova) {
     path = TOKENLIST_DIR_PATH + "/42170_" + listNameToFileName(l1ListName);
+  } else if (isGoerliRollup) {
+    path = TOKENLIST_DIR_PATH + "/421613_" + listNameToFileName(l1ListName);
   } else {
     path = TOKENLIST_DIR_PATH + "/" + listNameToFileName(l1ListName);
   }
