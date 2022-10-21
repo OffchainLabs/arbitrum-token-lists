@@ -337,7 +337,7 @@ export const generateTokenList = async (
       tags:  {
         "sourceList":{
           name: "Source list url",
-          description: `${sourceListURL} _ for forwardslash`
+          description: `${sourceListURL} replace _ with forwardslash`
         }
       }
     }
