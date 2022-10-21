@@ -27,9 +27,18 @@ const argv = yargs(process.argv.slice(2))
       type: 'string',
     },
     includeOldDataFields: {
-      type: "boolean"
-    }
+      type: 'boolean',
+    },
+    action: {
+      type: 'string',
+    },
+    includePermitTags: {
+      type: 'boolean',
+    },
   })
+  .demandOption('action')
+  .demandOption('l2NetworkID')
+  .demandOption('tokenList')
   .parseSync();
 
 export default argv;

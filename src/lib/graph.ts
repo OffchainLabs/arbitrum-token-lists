@@ -1,6 +1,7 @@
 import { request, gql } from 'graphql-request';
-import { excludeList } from './utils';
-import { GraphTokensResult } from './types'
+import { isNova } from './utils';
+import { GraphTokenResult, GraphTokensResult } from './types';
+import { excludeList } from './constants';
 
 const apolloL2GatewaysRinkebyClient =
   'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-rinkeby';
@@ -18,39 +19,49 @@ const chaidIdToGraphClientUrl = (chainID: string) => {
   }
 };
 
-const isGraphTokenResult = (obj: any)=>{
-  if(!obj){
-    throw new Error("Graph result: undefined")
+const isGraphTokenResult = (obj: any) => {
+  if (!obj) {
+    throw new Error('Graph result: undefined');
   }
-  const expectedKeys = ["joinTableEntry", "l1TokenAddr"]
-  const actualKeys = new Set(Object.keys(obj))
+  const expectedKeys = ['joinTableEntry', 'l1TokenAddr'];
+  const actualKeys = new Set(Object.keys(obj));
 
-  if(!expectedKeys.every((key)=> actualKeys.has(key))){
-    throw new Error("Graph result: missing top level key")
+  if (!expectedKeys.every((key) => actualKeys.has(key))) {
+    throw new Error('Graph result: missing top level key');
   }
-  const joinTableEntry = obj.joinTableEntry[0]
-  if(!joinTableEntry){
-    throw new Error("Graph result: no joinTableEntry")
+  const joinTableEntry = obj.joinTableEntry[0];
+  if (!joinTableEntry) {
+    throw new Error('Graph result: no joinTableEntry');
   }
-  if(!joinTableEntry.gateway.gatewayAddr){
-    throw new Error("Graph result: could not get gateway address")
+  if (!joinTableEntry.gateway.gatewayAddr) {
+    throw new Error('Graph result: could not get gateway address');
   }
-}
+};
 export const getTokens = async (
-  l1TokenAddresses: string[],
+  tokenList: { addr: string; logo: string | undefined }[],
   _networkID: string | number
-) => {
-  const networkID = typeof _networkID === 'number' ? _networkID.toString(): _networkID
+): Promise<Array<GraphTokenResult>> => {
+  if (isNova) {
+    console.warn('empty subgraph for nova');
+    return [];
+  }
+  const networkID =
+    typeof _networkID === 'number' ? _networkID.toString() : _networkID;
   const clientUrl = chaidIdToGraphClientUrl(networkID);
   // lazy solution for big lists for now; we'll have to paginate once we have > 500 tokens registed
-  if (l1TokenAddresses.length > 500){
-    const allTokens = await getAllTokens(networkID)
-    const allTokenAddresses = new Set(allTokens.map((token)=> token.l1TokenAddr.toLowerCase()))
-    l1TokenAddresses = l1TokenAddresses.filter((addr)=> allTokenAddresses.has(addr.toLowerCase()))
-    if(l1TokenAddresses.length > 500) throw new Error("Too many tokens for graph query")
-  }  
-  const formattedAddresses = l1TokenAddresses
-    .map((a: string) => `"${a}"`.toLowerCase())
+  if (tokenList.length > 500) {
+    const allTokens = await getAllTokens(networkID);
+    const allTokenAddresses = new Set(
+      allTokens.map((token) => token.l1TokenAddr.toLowerCase())
+    );
+    tokenList = tokenList.filter((token) =>
+      allTokenAddresses.has(token.addr.toLowerCase())
+    );
+    if (tokenList.length > 500)
+      throw new Error('Too many tokens for graph query');
+  }
+  const formattedAddresses = tokenList
+    .map((token) => `"${token.addr}"`.toLowerCase())
     .join(',');
   const query = gql`
   {
@@ -75,44 +86,50 @@ export const getTokens = async (
     }
   }
 `;
-  
-  const { tokens } = await request(clientUrl, query)  as GraphTokensResult
-  tokens.map((token)=> isGraphTokenResult(token))
+
+  const { tokens } = (await request(clientUrl, query)) as GraphTokensResult;
+  tokens.map((token) => isGraphTokenResult(token));
 
   return tokens.filter(
     (token) => !excludeList.includes(token.l1TokenAddr.toLowerCase())
   );
 };
 
-export const getAllTokens = async (_networkID: string | number) => {
-  const networkID = typeof _networkID === 'number' ? _networkID.toString(): _networkID
+export const getAllTokens = async (
+  _networkID: string | number
+): Promise<Array<GraphTokenResult>> => {
+  const networkID =
+    typeof _networkID === 'number' ? _networkID.toString() : _networkID;
   const clientUrl = chaidIdToGraphClientUrl(networkID);
   const query = gql`
     {
       tokens(first: 500, skip: 0) {
         l1TokenAddr: id
-      joinTableEntry: gateway(
-        first: 1
-        orderBy: blockNum
-        orderDirection: desc
-      ) {
-        id
-        blockNum
-        token {
-          tokenAddr: id
+        joinTableEntry: gateway(
+          first: 1
+          orderBy: blockNum
+          orderDirection: desc
+        ) {
+          id
+          blockNum
+          token {
+            tokenAddr: id
+          }
+          gateway {
+            gatewayAddr: id
+          }
         }
-        gateway {
-          gatewayAddr: id
-        }
-      }
       }
     }
   `;
 
-  const { tokens } = await request(clientUrl, query) as GraphTokensResult
-  tokens.map((token)=> isGraphTokenResult(token))
+  const { tokens } = (await request(clientUrl, query)) as GraphTokensResult;
+  const res = tokens.map((token) => {
+    isGraphTokenResult(token);
+    return { ...token };
+  });
 
-  return tokens.filter(
+  return res.filter(
     (token) => !excludeList.includes(token.l1TokenAddr.toLowerCase())
   );
 };

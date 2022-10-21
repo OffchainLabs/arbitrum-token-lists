@@ -4,17 +4,22 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "build": "tsc",
     "main": "ts-node src/main.ts",
     "lint": "eslint .",
     "format": "prettier './**/*.{js,json,md,ts,yml}' --write && yarn run lint --fix",
     "update": "yarn ts-node src/main.ts --action update",
     "arbify": "yarn ts-node src/main.ts --action arbify",
-    "fullList": "yarn ts-node src/main.ts --action full",
+    "permit": "yarn ts-node src/main.ts --action permit",
+    "fullList": "yarn ts-node src/main.ts --action full --tokenList full",
+    "updateNova": "yarn ts-node src/main.ts --action update --l2NetworkID 42170",
+    "novaify": "yarn ts-node src/main.ts --action arbify --l2NetworkID 42170",
+    "fullNova": "yarn ts-node src/main.ts --action full --tokenList full --l2NetworkID 42170",
     "start_server": "yarn ts-node server/app.ts"
   },
   "dependencies": {
-    "@arbitrum/sdk": "^1.0.0",
-    "@uniswap/token-lists": "^1.0.0-beta.27",
+    "@arbitrum/sdk": "^2.0.13",
+    "@uniswap/token-lists": "^1.0.0-beta.30",
     "ajv": "^8.6.3",
     "ajv-formats": "^2.1.1",
     "axios": "^0.23.0",
@@ -25,8 +30,8 @@
     "graphql": "^15.6.1",
     "graphql-request": "^3.6.1",
     "prettier": "^2.4.1",
-    "ts-node": "^10.3.0",
-    "typescript": "^4.4.4",
+    "ts-node": "^10.8.1",
+    "typescript": "^4.7.3",
     "yargs": "^17.2.1"
   },
   "devDependencies": {
