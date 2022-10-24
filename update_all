@@ -11,3 +11,6 @@ yarn arbify --l2NetworkID 42161 --tokenList https://api.coinmarketcap.com/data-a
 yarn arbify --l2NetworkID 42170 --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org
 yarn arbify --l2NetworkID 42170 --tokenList https://www.gemini.com/uniswap/manifest.json
 yarn arbify --l2NetworkID 42170 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json
+
+# goerli rollup testnet
+yarn arbify --l2NetworkID 421613 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json
