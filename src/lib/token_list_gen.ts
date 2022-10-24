@@ -21,20 +21,23 @@ import {
   validateTokenListWithErrorThrowing,
   sanitizeNameString,
   sanitizeSymbolString,
-  removeInvalidTokensFromList,
   isNova,
   listNameToArbifiedListName,
+  isArbTokenList,
+  removeInvalidTokensFromList,
+  isValidHttpUrl,
+  getFormattedSourceURL,
   getL1TokenAndL2Gateway,
   getChunks,
   promiseErrorMultiplier,
   getL1GatewayAddress
-} from "./utils";
+} from './utils';
 import {
   constants as arbConstants,
 } from '@arbitrum/sdk';
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
-import { getPrevList } from './store'
+import { getPrevList, listNameToFileName } from './store'
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -52,10 +55,11 @@ export const generateTokenList = async (
     /**
      * Append all unbridged tokens from original l1TokenList to the output list.
      */
-    includeUnbridgedL1Tokens?: boolean;
-    getAllTokensInNetwork?: boolean;
-    includeOldDataFields?: boolean;
-    skipValidation?: boolean;
+    includeUnbridgedL1Tokens?: boolean,
+    getAllTokensInNetwork?: boolean,
+    includeOldDataFields?: boolean,
+    sourceListURL?: string,
+    skipValidation?: boolean
   }
 ) => {
   if (options?.includeAllL1Tokens && options.includeUnbridgedL1Tokens) {
@@ -321,15 +325,24 @@ export const generateTokenList = async (
       major: 1,
       minor: 0,
       patch: 0,
-    };
-  })();
-
+    }
+  })()
+  const sourceListURL = getFormattedSourceURL(options?.sourceListURL)
   const arbTokenList: ArbTokenList = {
     name: listNameToArbifiedListName(name),
     timestamp: new Date().toISOString(),
     version,
     tokens: arbifiedTokenList,
     logoURI: mainLogoUri,
+    ...sourceListURL && {
+      tags:  {
+        "sourceList":{
+          name: "Source list url",
+          description: `${sourceListURL} replace _ with forwardslash`
+        }
+      }
+    }
+   
   };
 
   const validationTokenList: ArbTokenList = {
@@ -361,24 +374,32 @@ export const arbifyL1List = async (
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
     includeAllL1Tokens: true,
     includeOldDataFields,
+    sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl: undefined
   });
 
   return newList
 };
 
-export const updateArbifiedList = async (
-  pathOrUrl: string,
-): Promise<ArbTokenList> => {
-  const arbTokenList = await promiseErrorMultiplier(
-    getTokenListObj(pathOrUrl),
-    (error) => getTokenListObj(pathOrUrl)
-  );
-  removeInvalidTokensFromList(arbTokenList);
+export const updateArbifiedList = async (pathOrUrl: string) => {
+  const arbTokenList = await getTokenListObj(pathOrUrl);
+  removeInvalidTokensFromList(arbTokenList)
+  const path = process.env.PWD +
+  '/src/ArbTokenLists/' +
+  listNameToFileName(arbTokenList.name);
+  let prevArbTokenList: ArbTokenList | undefined; 
 
-  let prevArbTokenList = getPrevList(arbTokenList.name);
+  if(existsSync(path)){
+    const data = readFileSync(path)
+    console.log('Prev version of Arb List found');
+    
+    prevArbTokenList =  JSON.parse(data.toString()) as ArbTokenList
+    isArbTokenList(prevArbTokenList)
+  } 
 
-  const newList = await generateTokenList(arbTokenList, prevArbTokenList, {
+  const newList = await generateTokenList(arbTokenList, prevArbTokenList, { 
     includeAllL1Tokens: true,
+    sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl: undefined
+
   });
 
   return newList

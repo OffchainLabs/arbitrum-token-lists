@@ -10,10 +10,11 @@ import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L
 
 import { ArbTokenList, GraphTokenResult } from './types';
 import yargs from './getClargs';
-import { TOKENLIST_DIR_PATH } from './constants';
 import { providers } from "ethers"
 import path from 'path';
-import { l2ToL1GatewayAddresses, l2ToL1GatewayAddressesNova } from './constants';
+
+import { l2ToL1GatewayAddresses, l2ToL1GatewayAddressesNova, TOKENLIST_DIR_PATH } from './constants';
+
 import { TokenGateway__factory } from '@arbitrum/sdk/dist/lib/abi/factories/TokenGateway__factory';
 
 export const isNova = yargs.l2NetworkID === 42170;
@@ -298,7 +299,7 @@ export const getTokenListObj = async (pathOrUrl: string) => {
 
 // https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url
 
-function isValidHttpUrl(urlString: string) {
+export function isValidHttpUrl(urlString: string) {
   let url;
 
   try {
@@ -310,6 +311,13 @@ function isValidHttpUrl(urlString: string) {
   return url.protocol === 'http:' || url.protocol === 'https:';
 }
 
+export const getFormattedSourceURL = (sourceUrl?: string) => {
+  if (!sourceUrl) return null;
+  const urlReplaceForwardSlashes = sourceUrl.replace(/\//g, '_')
+  return /^[ \w\.,:]+$/.test(urlReplaceForwardSlashes)
+    ? urlReplaceForwardSlashes
+    : null;
+};
 // typeguard:
 export const isArbTokenList = (obj: any) => {
   const expectedListKeys = ['name', 'timestamp', 'version', 'tokens'];
