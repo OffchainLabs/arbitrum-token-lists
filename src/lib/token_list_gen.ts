@@ -58,7 +58,8 @@ export const generateTokenList = async (
     includeUnbridgedL1Tokens?: boolean,
     getAllTokensInNetwork?: boolean,
     includeOldDataFields?: boolean,
-    sourceListURL?: string
+    sourceListURL?: string,
+    skipValidation?: boolean
   }
 ) => {
   if (options?.includeAllL1Tokens && options.includeUnbridgedL1Tokens) {
@@ -348,7 +349,9 @@ export const generateTokenList = async (
     ...arbTokenList,
     tokens: arbTokenList.tokens,
   };
-  validateTokenListWithErrorThrowing(validationTokenList);
+  if(!options?.skipValidation){
+    validateTokenListWithErrorThrowing(validationTokenList);
+  }
 
   console.log(`Generated list with total ${arbTokenList.tokens.length} tokens`);
   console.log('version:', version);
@@ -416,6 +419,7 @@ export const generateFullList = async () => {
   };
   const tokenData = await generateTokenList(mockList, undefined, {
     getAllTokensInNetwork: true,
+    skipValidation: true
   });
 
   const etherscanData = arbListtoEtherscanList(tokenData);

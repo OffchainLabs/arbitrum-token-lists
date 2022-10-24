@@ -18,6 +18,8 @@ import { l2ToL1GatewayAddresses, l2ToL1GatewayAddressesNova, TOKENLIST_DIR_PATH 
 import { TokenGateway__factory } from '@arbitrum/sdk/dist/lib/abi/factories/TokenGateway__factory';
 
 export const isNova = yargs.l2NetworkID === 42170;
+export const isGoerliRollup = yargs.l2NetworkID === 421613;
+
 
 const coinGeckoBuff = readFileSync(
   path.resolve(__dirname, '../Assets/coingecko_uris.json')
