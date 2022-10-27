@@ -17,6 +17,7 @@ import { l2ToL1GatewayAddresses, l2ToL1GatewayAddressesNova, TOKENLIST_DIR_PATH 
 
 import { TokenGateway__factory } from '@arbitrum/sdk/dist/lib/abi/factories/TokenGateway__factory';
 
+export const isArbOne = yargs.l2NetworkID === 42161;
 export const isNova = yargs.l2NetworkID === 42170;
 export const isGoerliRollup = yargs.l2NetworkID === 421613;
 
@@ -126,7 +127,7 @@ export const getL2GatewayAddressesFromL1Token = async (
   let gateways:(string | undefined)[] =[];
 
   while (index < l1TokenAddresses.length){
-    console.log('Getting tokens', index, 'through', index + INC);
+    console.log('Getting tokens', index, 'through', Math.min(index + INC,l1TokenAddresses.length));
     
     const l1TokenAddressesSlice = l1TokenAddresses.slice(index, index + INC)
     const result = await l2Multicaller.multiCall( l1TokenAddressesSlice.map((addr) => ({
