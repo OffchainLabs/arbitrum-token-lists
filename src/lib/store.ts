@@ -1,7 +1,7 @@
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from "fs";
-import { ETHERSCAN_LIST_NAME, ETHERSCAN_PATH, FULLLIST_DIR_PATH, TOKENLIST_DIR_PATH } from "./constants";
+import { ETHERSCAN_LIST_NAME, ETHERSCAN_PATH, FULLLIST_DIR_PATH, TOKENLIST_DIR_PATH, ALL_TOKENS_GOERLI_ROLLUP_PATH } from "./constants";
 import { ArbTokenList, EtherscanList } from "./types";
-import { isArbTokenList, isGoerliRollup, isNova } from "./utils";
+import { isArbTokenList, isGoerliRollup, isNova, isArbOne } from "./utils";
 
 export const listNameToFileName = (name: string) => {
     const prefix = 'arbed_';
@@ -13,7 +13,11 @@ export const listNameToFileName = (name: string) => {
 };
 
 const getPath = (l1ListName: string) => {
-  if (l1ListName === ETHERSCAN_LIST_NAME) return ETHERSCAN_PATH;
+  if (l1ListName === ETHERSCAN_LIST_NAME) { 
+    if (isArbOne) return ETHERSCAN_PATH
+    if (isGoerliRollup) return ALL_TOKENS_GOERLI_ROLLUP_PATH
+    throw new Error("Unsupported full list")
+  }
   let path = "";
   if (isNova) {
     path = TOKENLIST_DIR_PATH + "/42170_" + listNameToFileName(l1ListName);
