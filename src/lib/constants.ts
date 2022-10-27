@@ -41,7 +41,19 @@ export const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses = objKeyAndValToLowe
   '0x6142f1C8bBF02E6A6bd074E8d564c9A5420a0676',
 // Lido gateway Arb1
   '0x07d4692291b9e30e326fd31706f686f83f331b82':
-  '0x0f25c1dc2a9922304f2eac71dca9b07e310e8e5a'
+  '0x0f25c1dc2a9922304f2eac71dca9b07e310e8e5a',
+
+  // 421613: arbstandard gateway:
+  '0x2ec7bc552ce8e51f098325d2fcf0d3b9d3d2a9a2': 
+  '0x715D99480b77A8d9D603638e593a539E21345FdF',
+
+  // 421613: custom gateway:
+  '0x8b6990830cF135318f75182487A4D7698549C717':
+  '0x9fDD1C4E4AA24EEc1d913FABea925594a20d43C7',
+
+    // 421613: WETH gateway:
+  '0xf9F2e89c8347BD96742Cc07095dee490e64301d6':
+  '0x6e244cD02BBB8a6dbd7F626f05B2ef82151Ab502'
 });
 
 // nova
