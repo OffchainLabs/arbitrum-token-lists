@@ -10,7 +10,7 @@ import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L
 
 import { ArbTokenList, GraphTokenResult } from './types';
 import yargs from './getClargs';
-import { providers } from "ethers"
+import { providers, ethers } from "ethers"
 import path from 'path';
 
 import { l2ToL1GatewayAddresses, l2ToL1GatewayAddressesNova, TOKENLIST_DIR_PATH } from './constants';
@@ -20,6 +20,7 @@ import { TokenGateway__factory } from '@arbitrum/sdk/dist/lib/abi/factories/Toke
 export const isArbOne = yargs.l2NetworkID === 42161;
 export const isNova = yargs.l2NetworkID === 42170;
 export const isGoerliRollup = yargs.l2NetworkID === 421613;
+export const EtherscanKey = process.env.Etherscan_KEY
 
 
 const coinGeckoBuff = readFileSync(
@@ -84,6 +85,28 @@ export const promiseErrorMultiplier = <T, Q extends Error>(
     throw err;
   });
 };
+
+export const generateGatewayMap = async (
+  //l1TokenAddress: string
+)  => {
+  let fromBlock = 0
+  let toBlock = 15881183
+  const topic0 = "0x812ca95fe4492a9e2d1f2723c2c40c03a60a27b059581ae20ac4e4d73bfba354"
+  //l1TokenAddress = ethers.utils.hexZeroPad(l1TokenAddress, 32) 
+  let currentResult
+  let results: any[] = []
+  let page = 0
+  do {
+    page++
+    const requestPara = `https://api.etherscan.io/api?module=logs&action=getLogs&` +
+      `fromBlock=${fromBlock}&toBlock=${toBlock}&topic0=${topic0}&page=${page}&` +
+      `offset=1000&apikey=BMVWB33ZWUS3CJYFDPIIZERVEXZJ4Y8WH9`
+    currentResult = (await axios.get(requestPara)).data.result;
+    console.log(currentResult.length)
+  } while(currentResult.length > 0)
+  
+  // console.log(page)
+}
 
 export const getL1GatewayAddress = async (
   l2GatewayAddress: string,
