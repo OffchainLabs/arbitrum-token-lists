@@ -13,7 +13,8 @@ export const getNetworkConfig = async () => {
     if (networkID === 42161) return 'https://arb1.arbitrum.io/rpc';
     else if (networkID === 421611) return 'https://rinkeby.arbitrum.io/rpc';
     else if (networkID === 42170) return 'https://nova.arbitrum.io/rpc';
-    else if (networkID === 421613) return 'https://goerli-rollup.arbitrum.io/rpc'
+    else if (networkID === 421613)
+      return 'https://goerli-rollup.arbitrum.io/rpc';
     throw new Error('No L2 RPC detected');
   })();
   const arbProvider = new providers.JsonRpcProvider(l2Rpc);

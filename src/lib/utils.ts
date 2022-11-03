@@ -4,24 +4,30 @@ import addFormats from 'ajv-formats';
 import { schema, TokenList } from '@uniswap/token-lists';
 import { readFileSync, existsSync, writeFileSync } from 'fs';
 import axios from 'axios';
+import dotenv from 'dotenv';
 import { L2Network, MultiCaller } from '@arbitrum/sdk';
 import { L1GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory';
 import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory';
 
 import { ArbTokenList, GraphTokenResult } from './types';
 import yargs from './getClargs';
-import { providers, ethers } from "ethers"
+import { providers, ethers } from 'ethers';
 import path from 'path';
 
-import { l2ToL1GatewayAddresses, l2ToL1GatewayAddressesNova, TOKENLIST_DIR_PATH } from './constants';
+import {
+  l2ToL1GatewayAddresses,
+  l2ToL1GatewayAddressesNova,
+  TOKENLIST_DIR_PATH,
+} from './constants';
 
 import { TokenGateway__factory } from '@arbitrum/sdk/dist/lib/abi/factories/TokenGateway__factory';
+import { util } from 'prettier';
 
+dotenv.config();
 export const isArbOne = yargs.l2NetworkID === 42161;
 export const isNova = yargs.l2NetworkID === 42170;
 export const isGoerliRollup = yargs.l2NetworkID === 421613;
-export const EtherscanKey = process.env.Etherscan_KEY
-
+export const EtherscanKey = process.env.Etherscan_KEY;
 
 const coinGeckoBuff = readFileSync(
   path.resolve(__dirname, '../Assets/coingecko_uris.json')
@@ -46,7 +52,6 @@ export const listNameToArbifiedListName = (name: string) => {
   return fileName.split(' ').slice(0, 2).join(' ').slice(0, 20);
 };
 
-
 export const getL1TokenAndL2Gateway = async (
   tokenList: { addr: string; logo: string | undefined }[],
   l2Multicaller: MultiCaller,
@@ -57,18 +62,18 @@ export const getL1TokenAndL2Gateway = async (
     l2Multicaller,
     l2Network
   );
-  
+
   return tokenList.map((curr, i) => ({
     joinTableEntry: [
       {
         gateway: {
-          gatewayAddr: routerData[i]
+          gatewayAddr: routerData[i],
         },
-      }
+      },
     ],
     l1TokenAddr: curr.addr,
-  }))
-}
+  }));
+};
 export const promiseErrorMultiplier = <T, Q extends Error>(
   prom: Promise<T>,
   handler: (err: Q) => Promise<T>,
@@ -87,26 +92,54 @@ export const promiseErrorMultiplier = <T, Q extends Error>(
 };
 
 export const generateGatewayMap = async (
-  //l1TokenAddress: string
-)  => {
-  let fromBlock = 0
-  let toBlock = 15881183
-  const topic0 = "0x812ca95fe4492a9e2d1f2723c2c40c03a60a27b059581ae20ac4e4d73bfba354"
-  //l1TokenAddress = ethers.utils.hexZeroPad(l1TokenAddress, 32) 
-  let currentResult
-  let results: any[] = []
-  let page = 0
+  l2Multicaller: MultiCaller,
+  l2Network: L2Network
+) => {
+  const fromBlock = 0;
+  const toBlock = 15881183;
+  const topic0 = ethers.utils.id('GatewaySet(address,address)');
+  const l1GatewayResults: Map<string, string> = new Map();
+  const l1Token: any[] = [];
+  let page = 0;
+  let currentResult: string | any[];
   do {
-    page++
-    const requestPara = `https://api.etherscan.io/api?module=logs&action=getLogs&` +
+    page++;
+    const requestPara =
+      `https://api.etherscan.io/api?module=logs&action=getLogs&` +
+      `address=${l2Network.tokenBridge.l1GatewayRouter}&` +
       `fromBlock=${fromBlock}&toBlock=${toBlock}&topic0=${topic0}&page=${page}&` +
-      `offset=1000&apikey=BMVWB33ZWUS3CJYFDPIIZERVEXZJ4Y8WH9`
+      `offset=1000&apikey=${EtherscanKey}`;
     currentResult = (await axios.get(requestPara)).data.result;
-    console.log(currentResult.length)
-  } while(currentResult.length > 0)
-  
-  // console.log(page)
-}
+    for (let i = 0; i < currentResult.length; i++) {
+      const tokenAddress = ethers.utils.hexDataSlice(
+        currentResult[i].topics[1],
+        12
+      );
+      let l1GatewayAddress = ethers.utils.hexDataSlice(
+        currentResult[i].topics[2],
+        12
+      );
+      //if gateway set to zero, which means will set back to standard erc20 gateway
+      if (l1GatewayAddress === ethers.constants.AddressZero) {
+        l1GatewayAddress = l2Network.tokenBridge.l1ERC20Gateway;
+      }
+
+      l1GatewayResults.set(tokenAddress, l1GatewayAddress);
+      l1Token.push(tokenAddress);
+    }
+  } while (currentResult.length > 0);
+  const l2GatewayMaps = await getL2GatewayAddressesFromL1Token(
+    l1Token,
+    l2Multicaller,
+    l2Network
+  );
+  const gatewayMap: Map<string, string> = new Map();
+  for (let i = 0; i < l1Token.length; i++) {
+    if (l2GatewayMaps[i] === ethers.constants.AddressZero) continue;
+    gatewayMap.set(l2GatewayMaps[i], l1GatewayResults.get(l1Token[i])!);
+  }
+  return gatewayMap;
+};
 
 export const getL1GatewayAddress = async (
   l2GatewayAddress: string,
@@ -118,7 +151,7 @@ export const getL1GatewayAddress = async (
 
   if (l2Gateway) return l2Gateway;
 
-  return undefined
+  return undefined;
 
   // TODO: discuss:
   // try {
@@ -143,26 +176,36 @@ export const getL2GatewayAddressesFromL1Token = async (
 ): Promise<string[]> => {
   const iFace = L1GatewayRouter__factory.createInterface();
 
-  const INC = 500
-  let index = 0   
-  console.info('getL2GatewayAddressesFromL1Token for', l1TokenAddresses.length, 'tokens');
-  
-  let gateways:(string | undefined)[] =[];
+  const INC = 500;
+  let index = 0;
+  console.info(
+    'getL2GatewayAddressesFromL1Token for',
+    l1TokenAddresses.length,
+    'tokens'
+  );
 
-  while (index < l1TokenAddresses.length){
-    console.log('Getting tokens', index, 'through', Math.min(index + INC,l1TokenAddresses.length));
-    
-    const l1TokenAddressesSlice = l1TokenAddresses.slice(index, index + INC)
-    const result = await l2Multicaller.multiCall( l1TokenAddressesSlice.map((addr) => ({
-      encoder: () => iFace.encodeFunctionData('getGateway', [addr]),
-      decoder: (returnData: string) =>
-        iFace.decodeFunctionResult('getGateway', returnData)[0] as string,
-      targetAddr: l2Network.tokenBridge.l2GatewayRouter,
+  let gateways: (string | undefined)[] = [];
+
+  while (index < l1TokenAddresses.length) {
+    console.log(
+      'Getting tokens',
+      index,
+      'through',
+      Math.min(index + INC, l1TokenAddresses.length)
+    );
+
+    const l1TokenAddressesSlice = l1TokenAddresses.slice(index, index + INC);
+    const result = await l2Multicaller.multiCall(
+      l1TokenAddressesSlice.map((addr) => ({
+        encoder: () => iFace.encodeFunctionData('getGateway', [addr]),
+        decoder: (returnData: string) =>
+          iFace.decodeFunctionResult('getGateway', returnData)[0] as string,
+        targetAddr: l2Network.tokenBridge.l2GatewayRouter,
       }))
-    )
-    gateways = gateways.concat(result)
-    index += INC
-  };
+    );
+    gateways = gateways.concat(result);
+    index += INC;
+  }
 
   for (const curr of gateways) {
     if (typeof curr === 'undefined') throw new Error('undefined gateway!');
@@ -337,7 +380,7 @@ export function isValidHttpUrl(urlString: string) {
 
 export const getFormattedSourceURL = (sourceUrl?: string) => {
   if (!sourceUrl) return null;
-  const urlReplaceForwardSlashes = sourceUrl.replace(/\//g, '_')
+  const urlReplaceForwardSlashes = sourceUrl.replace(/\//g, '_');
   return /^[ \w\.,:]+$/.test(urlReplaceForwardSlashes)
     ? urlReplaceForwardSlashes
     : null;
@@ -450,11 +493,11 @@ export function* getChunks<T>(arr: Array<T>, chunkSize = 500) {
 //     if (verbose) console.error('Failed ' + tries + ' times. Giving up');
 //     // throw err;
 //     console.log("reason" in err ? err.reason : "failed")
-    
+
 //     writeFileSync(TOKENLIST_DIR_PATH+"/error.json", JSON.stringify(err));
 //     throw new Error("promise retrier failed")
 //   });
 // };
 
 export const promiseRetrier = <T>(createProm: () => Promise<T>): Promise<T> =>
-  promiseErrorMultiplier(createProm(), (err) => createProm())
+  promiseErrorMultiplier(createProm(), (err) => createProm());

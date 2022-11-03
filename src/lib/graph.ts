@@ -8,7 +8,8 @@ const apolloL2GatewaysRinkebyClient =
 const apolloL2GatewaysClient =
   'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway';
 
-const appoloL2GatewaysGoerliRollupClient = 'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-nitro-goerli'
+const appoloL2GatewaysGoerliRollupClient =
+  'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-nitro-goerli';
 
 const chaidIdToGraphClientUrl = (chainID: string) => {
   switch (chainID) {
@@ -17,7 +18,7 @@ const chaidIdToGraphClientUrl = (chainID: string) => {
     case '421611':
       return apolloL2GatewaysRinkebyClient;
     case '421613':
-        return appoloL2GatewaysGoerliRollupClient
+      return appoloL2GatewaysGoerliRollupClient;
     default:
       throw new Error('Unsupported chain');
   }
@@ -43,9 +44,9 @@ const isGraphTokenResult = (obj: any) => {
 };
 
 /**  421613 subgraph uses a different field name */
-const graphGatewayBlockNumField = (networkID: string | number)=>{
-  return +networkID === 421613 ? 'l2BlockNum' : 'blockNum'
-}
+const graphGatewayBlockNumField = (networkID: string | number) => {
+  return +networkID === 421613 ? 'l2BlockNum' : 'blockNum';
+};
 
 export const getTokens = async (
   tokenList: { addr: string; logo: string | undefined }[],
@@ -73,7 +74,7 @@ export const getTokens = async (
   const formattedAddresses = tokenList
     .map((token) => `"${token.addr}"`.toLowerCase())
     .join(',');
-  const blockNumber = graphGatewayBlockNumField(_networkID)
+  const blockNumber = graphGatewayBlockNumField(_networkID);
   const query = gql`
   {
     tokens(first: 500, skip: 0, where:{
@@ -112,7 +113,7 @@ export const getAllTokens = async (
   const networkID =
     typeof _networkID === 'number' ? _networkID.toString() : _networkID;
   const clientUrl = chaidIdToGraphClientUrl(networkID);
-  const blockNumber = graphGatewayBlockNumField(_networkID)
+  const blockNumber = graphGatewayBlockNumField(_networkID);
   const query = gql`
     {
       tokens(first: 500, skip: 0) {
@@ -135,7 +136,7 @@ export const getAllTokens = async (
     }
   `;
 
-  const { tokens } = (await request(clientUrl, query)) as GraphTokensResult;  
+  const { tokens } = (await request(clientUrl, query)) as GraphTokensResult;
   const res = tokens.map((token) => {
     isGraphTokenResult(token);
     return { ...token };
