@@ -14,21 +14,24 @@ import yargs from './getClargs';
 import { providers, ethers } from 'ethers';
 import path from 'path';
 
-import {
-  l2ToL1GatewayAddresses,
-  l2ToL1GatewayAddressesNova,
-  TOKENLIST_DIR_PATH,
-} from './constants';
+// import {
+//   l2ToL1GatewayAddresses,
+//   l2ToL1GatewayAddressesNova,
+//   TOKENLIST_DIR_PATH,
+// } from './constants';
 
 import { TokenGateway__factory } from '@arbitrum/sdk/dist/lib/abi/factories/TokenGateway__factory';
 import { util } from 'prettier';
+import { getNetworkConfig } from './instantiate_bridge';
 
 dotenv.config();
 export const isArbOne = yargs.l2NetworkID === 42161;
 export const isNova = yargs.l2NetworkID === 42170;
 export const isGoerliRollup = yargs.l2NetworkID === 421613;
 export const EtherscanKey = process.env.Etherscan_KEY;
+let l2ToL1GatewayAddresses: { [x: string]: any; }
 
+const isDefined = <T>(val: T | null | undefined): val is T => typeof val !== 'undefined' && val !== null;
 const coinGeckoBuff = readFileSync(
   path.resolve(__dirname, '../Assets/coingecko_uris.json')
 );
@@ -109,6 +112,7 @@ export const generateGatewayMap = async (
       `address=${l2Network.tokenBridge.l1GatewayRouter}&` +
       `fromBlock=${fromBlock}&toBlock=${toBlock}&topic0=${topic0}&page=${page}&` +
       `offset=1000&apikey=${EtherscanKey}`;
+      //console.log(requestPara)
     currentResult = (await axios.get(requestPara)).data.result;
     for (let i = 0; i < currentResult.length; i++) {
       const tokenAddress = ethers.utils.hexDataSlice(
@@ -136,18 +140,17 @@ export const generateGatewayMap = async (
   const gatewayMap: Map<string, string> = new Map();
   for (let i = 0; i < l1Token.length; i++) {
     if (l2GatewayMaps[i] === ethers.constants.AddressZero) continue;
-    gatewayMap.set(l2GatewayMaps[i], l1GatewayResults.get(l1Token[i])!);
+    gatewayMap.set(l2GatewayMaps[i].toLowerCase(), l1GatewayResults.get(l1Token[i])!);
   }
+  console.log(gatewayMap)
   return gatewayMap;
 };
 
 export const getL1GatewayAddress = async (
   l2GatewayAddress: string,
-  l2Provider: providers.Provider
+  l2ToL1GatewayAddresses: { [x: string]: any; }
 ) => {
-  const l2Gateway = isNova
-    ? l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()]
-    : l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()];
+  const l2Gateway = l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()];
 
   if (l2Gateway) return l2Gateway;
 
