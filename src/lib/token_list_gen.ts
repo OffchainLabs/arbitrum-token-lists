@@ -145,8 +145,8 @@ export const generateTokenList = async (
     );
     intermediatel2AddressesFromL2.push(l2AddressesFromL2Temp);
   }
-  const l2AddressesFromL1 = intermediatel2AddressesFromL1.flat(1);
-  const l2AddressesFromL2 = intermediatel2AddressesFromL2.flat(1);
+  let l2AddressesFromL1 = intermediatel2AddressesFromL1.flat(1);
+  let l2AddressesFromL2 = intermediatel2AddressesFromL2.flat(1);
 
   const logos = l1TokenList.tokens.reduce(
     (acc, curr) => ((acc[curr.address.toLowerCase()] = curr.logoURI), acc),
@@ -154,9 +154,25 @@ export const generateTokenList = async (
   );
 
   // if the l2 route hasn't been updated yet we remove the token from the bridged tokens
-  tokens = tokens.filter(
-    (t, i) => l2AddressesFromL1[i] === l2AddressesFromL2[i]
+  let filteredTokens:GraphTokenResult[] = [];
+  let filteredL2AddressesFromL1: string[] = []
+  let filteredL2AddressesFromL2: string[] = [];
+  tokens.forEach(
+    (t, i) => {
+      const l2AddressFromL1 = l2AddressesFromL1[i];
+       if(l2AddressFromL1 && l2AddressesFromL1[i] === l2AddressesFromL2[i]){
+        filteredTokens.push(t)
+        filteredL2AddressesFromL1.push(l2AddressFromL1)
+        filteredL2AddressesFromL2.push(l2AddressFromL1 )
+
+       }
+    }
   );
+  tokens = filteredTokens
+  l2AddressesFromL1 = filteredL2AddressesFromL1
+  l2AddressesFromL2 = filteredL2AddressesFromL1
+
+    
 
   const intermediateTokenData = [];
   for (const addrs of getChunks(l2AddressesFromL1)) {
