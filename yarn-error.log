@@ -1,8 +1,8 @@
 Arguments: 
-  /opt/homebrew/Cellar/node@16/16.16.0/bin/node /opt/homebrew/bin/yarn novaify --l2NetworkID 42161 --tokenList https://www.gemini.com/uniswap/manifest.json
+  /usr/local/bin/node /usr/local/bin/yarn add @eslint/config
 
 PATH: 
-  /opt/homebrew/opt/node@16/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/shreyabhakta/.nvm/versions/node/v16.0.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/shreyabhakta/.foundry/bin:/Users/shreyabhakta/.foundry/bin
+  /usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin
 
 Yarn version: 
   1.22.19
@@ -14,12 +14,17 @@ Platform:
   darwin arm64
 
 Trace: 
-  SyntaxError: /Users/shreyabhakta/Desktop/token lists (new)/arb-token-lists/package.json: Unexpected token < in JSON at position 391
-      at JSON.parse (<anonymous>)
-      at /opt/homebrew/lib/node_modules/yarn/lib/cli.js:1629:59
-      at Generator.next (<anonymous>)
-      at step (/opt/homebrew/lib/node_modules/yarn/lib/cli.js:310:30)
-      at /opt/homebrew/lib/node_modules/yarn/lib/cli.js:321:13
+  Error: https://registry.yarnpkg.com/@eslint%2fconfig: Not found
+      at Request.params.callback [as _callback] (/usr/local/lib/node_modules/yarn/lib/cli.js:66145:18)
+      at Request.self.callback (/usr/local/lib/node_modules/yarn/lib/cli.js:140890:22)
+      at Request.emit (node:events:527:28)
+      at Request.<anonymous> (/usr/local/lib/node_modules/yarn/lib/cli.js:141862:10)
+      at Request.emit (node:events:527:28)
+      at IncomingMessage.<anonymous> (/usr/local/lib/node_modules/yarn/lib/cli.js:141784:12)
+      at Object.onceWrapper (node:events:641:28)
+      at IncomingMessage.emit (node:events:539:35)
+      at endReadableNT (node:internal/streams/readable:1345:12)
+      at processTicksAndRejections (node:internal/process/task_queues:83:21)
 
 npm manifest: 
   {
@@ -34,15 +39,11 @@ npm manifest:
       "format": "prettier './**/*.{js,json,md,ts,yml}' --write && yarn run lint --fix",
       "update": "yarn ts-node src/main.ts --action update",
       "arbify": "yarn ts-node src/main.ts --action arbify",
-  <<<<<<< HEAD
-      "fullList": "yarn ts-node src/main.ts --action full",
       "permit": "yarn ts-node src/main.ts --action permit",
-  =======
       "fullList": "yarn ts-node src/main.ts --action full --tokenList full",
       "updateNova": "yarn ts-node src/main.ts --action update --l2NetworkID 42170",
       "novaify": "yarn ts-node src/main.ts --action arbify --l2NetworkID 42170",
       "fullNova": "yarn ts-node src/main.ts --action full --tokenList full --l2NetworkID 42170",
-  >>>>>>> master
       "start_server": "yarn ts-node server/app.ts"
     },
     "dependencies": {

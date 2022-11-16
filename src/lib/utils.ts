@@ -10,17 +10,20 @@ import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L
 
 import { ArbTokenList, GraphTokenResult } from './types';
 import yargs from './getClargs';
-import { providers } from "ethers"
+import { providers } from 'ethers';
 import path from 'path';
 
-import { l2ToL1GatewayAddresses, l2ToL1GatewayAddressesNova, TOKENLIST_DIR_PATH } from './constants';
+import {
+  l2ToL1GatewayAddresses,
+  l2ToL1GatewayAddressesNova,
+  TOKENLIST_DIR_PATH,
+} from './constants';
 
 import { TokenGateway__factory } from '@arbitrum/sdk/dist/lib/abi/factories/TokenGateway__factory';
 
 export const isArbOne = yargs.l2NetworkID === 42161;
 export const isNova = yargs.l2NetworkID === 42170;
 export const isGoerliRollup = yargs.l2NetworkID === 421613;
-
 
 const coinGeckoBuff = readFileSync(
   path.resolve(__dirname, '../Assets/coingecko_uris.json')
@@ -45,7 +48,6 @@ export const listNameToArbifiedListName = (name: string) => {
   return fileName.split(' ').slice(0, 2).join(' ').slice(0, 20);
 };
 
-
 export const getL1TokenAndL2Gateway = async (
   tokenList: { addr: string; logo: string | undefined }[],
   l2Multicaller: MultiCaller,
@@ -56,18 +58,18 @@ export const getL1TokenAndL2Gateway = async (
     l2Multicaller,
     l2Network
   );
-  
+
   return tokenList.map((curr, i) => ({
     joinTableEntry: [
       {
         gateway: {
-          gatewayAddr: routerData[i]
+          gatewayAddr: routerData[i],
         },
-      }
+      },
     ],
     l1TokenAddr: curr.addr,
-  }))
-}
+  }));
+};
 export const promiseErrorMultiplier = <T, Q extends Error>(
   prom: Promise<T>,
   handler: (err: Q) => Promise<T>,
@@ -95,7 +97,7 @@ export const getL1GatewayAddress = async (
 
   if (l2Gateway) return l2Gateway;
 
-  return undefined
+  return undefined;
 
   // TODO: discuss:
   // try {
@@ -120,26 +122,36 @@ export const getL2GatewayAddressesFromL1Token = async (
 ): Promise<string[]> => {
   const iFace = L1GatewayRouter__factory.createInterface();
 
-  const INC = 500
-  let index = 0   
-  console.info('getL2GatewayAddressesFromL1Token for', l1TokenAddresses.length, 'tokens');
-  
-  let gateways:(string | undefined)[] =[];
+  const INC = 500;
+  let index = 0;
+  console.info(
+    'getL2GatewayAddressesFromL1Token for',
+    l1TokenAddresses.length,
+    'tokens'
+  );
 
-  while (index < l1TokenAddresses.length){
-    console.log('Getting tokens', index, 'through', Math.min(index + INC,l1TokenAddresses.length));
-    
-    const l1TokenAddressesSlice = l1TokenAddresses.slice(index, index + INC)
-    const result = await l2Multicaller.multiCall( l1TokenAddressesSlice.map((addr) => ({
-      encoder: () => iFace.encodeFunctionData('getGateway', [addr]),
-      decoder: (returnData: string) =>
-        iFace.decodeFunctionResult('getGateway', returnData)[0] as string,
-      targetAddr: l2Network.tokenBridge.l2GatewayRouter,
+  let gateways: (string | undefined)[] = [];
+
+  while (index < l1TokenAddresses.length) {
+    console.log(
+      'Getting tokens',
+      index,
+      'through',
+      Math.min(index + INC, l1TokenAddresses.length)
+    );
+
+    const l1TokenAddressesSlice = l1TokenAddresses.slice(index, index + INC);
+    const result = await l2Multicaller.multiCall(
+      l1TokenAddressesSlice.map((addr) => ({
+        encoder: () => iFace.encodeFunctionData('getGateway', [addr]),
+        decoder: (returnData: string) =>
+          iFace.decodeFunctionResult('getGateway', returnData)[0] as string,
+        targetAddr: l2Network.tokenBridge.l2GatewayRouter,
       }))
-    )
-    gateways = gateways.concat(result)
-    index += INC
-  };
+    );
+    gateways = gateways.concat(result);
+    index += INC;
+  }
 
   for (const curr of gateways) {
     if (typeof curr === 'undefined') throw new Error('undefined gateway!');
@@ -205,7 +217,9 @@ export const getLogoUri = async (l1TokenAddress: string) => {
       if (res.status === 200) {
         return uri;
       }
-    } catch (e) {}
+    } catch (e) {
+      console.log(e);
+    }
   }
   return;
 };
@@ -314,7 +328,7 @@ export function isValidHttpUrl(urlString: string) {
 
 export const getFormattedSourceURL = (sourceUrl?: string) => {
   if (!sourceUrl) return null;
-  const urlReplaceForwardSlashes = sourceUrl.replace(/\//g, '_')
+  const urlReplaceForwardSlashes = sourceUrl.replace(/\//g, '_');
   return /^[ \w\.,:]+$/.test(urlReplaceForwardSlashes)
     ? urlReplaceForwardSlashes
     : null;
@@ -427,11 +441,11 @@ export function* getChunks<T>(arr: Array<T>, chunkSize = 500) {
 //     if (verbose) console.error('Failed ' + tries + ' times. Giving up');
 //     // throw err;
 //     console.log("reason" in err ? err.reason : "failed")
-    
+
 //     writeFileSync(TOKENLIST_DIR_PATH+"/error.json", JSON.stringify(err));
 //     throw new Error("promise retrier failed")
 //   });
 // };
 
 export const promiseRetrier = <T>(createProm: () => Promise<T>): Promise<T> =>
-  promiseErrorMultiplier(createProm(), (err) => createProm())
+  promiseErrorMultiplier(createProm(), (err) => createProm());

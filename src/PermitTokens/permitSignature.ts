@@ -7,7 +7,6 @@ import multicallAbi from '../PermitTokens/multicallAbi.json';
 import { getNetworkConfig } from '../lib/instantiate_bridge';
 import { getChunks, promiseRetrier } from '../lib/utils';
 
-
 async function getPermitSig(
   wallet: Wallet,
   token: Contract,
@@ -24,7 +23,7 @@ async function getPermitSig(
   // TODO: check that error is that function instead available (differentiate network fails)
   const [nonce, name, version, chainId] = await Promise.all([
     optional?.nonce ?? token.nonces(wallet.address).catch((err: Error) => 0),
-    optional?.name ?? token.name().catch((err: Error) => ""),
+    optional?.name ?? token.name().catch((err: Error) => ''),
     optional?.version ?? '1',
     optional?.chainId ?? wallet.getChainId(),
   ]);
@@ -68,8 +67,8 @@ async function getPermitSigNoVersion(
 ) {
   // TODO: check that error is that function instead available (differentiate network fails)
   const [nonce, name, chainId] = await Promise.all([
-    optional?.nonce ?? token.nonces(wallet.address).catch((err: Error)=> 0),
-    optional?.name ?? token.name().catch((err: Error) => ""),
+    optional?.nonce ?? token.nonces(wallet.address).catch((err: Error) => 0),
+    optional?.name ?? token.name().catch((err: Error) => ''),
     optional?.chainId ?? wallet.getChainId(),
   ]);
 
@@ -111,7 +110,7 @@ async function getDaiLikePermitSignature(
   // TODO: check that error is that function instead available (differentiate network fails)
   const [nonce, name, chainId] = await Promise.all([
     optional?.nonce ?? token.nonces(wallet.address).catch((err: Error) => 0),
-    optional?.name ?? token.name().catch((err: Error) => ""),
+    optional?.name ?? token.name().catch((err: Error) => ''),
     optional?.chainId ?? wallet.getChainId(),
   ]);
 
@@ -154,37 +153,35 @@ enum PermitTypes {
 export const addPermitTags = async (
   tokenList: ArbTokenList
 ): Promise<ArbTokenList> => {
-  console.log("Adding permit tags")
+  console.log('Adding permit tags');
   const { l1, l2 } = await getNetworkConfig();
 
-  const value = utils.parseUnits("1.0", 18);
+  const value = utils.parseUnits('1.0', 18);
   const deadline = constants.MaxUint256;
 
   type Call = {
-    tokenIndex: number,
-    target: string,
-    callData: string,
-  }
+    tokenIndex: number;
+    target: string;
+    callData: string;
+  };
   const l1Calls: Array<Call> = [];
   const l2Calls: Array<Call> = [];
 
-  const permitTokenInfo: ArbTokenInfo[] = [
-    ...tokenList.tokens
-  ];
+  const permitTokenInfo: ArbTokenInfo[] = [...tokenList.tokens];
 
-  for (let i=0; i<permitTokenInfo.length; i++) {
-    const curr = permitTokenInfo[i]
-    const isL1Token = curr.chainId === l2.network.partnerChainID
-    const isL2Token = curr.chainId === l2.network.chainID
-    if(!isL1Token && !isL2Token) continue;
+  for (let i = 0; i < permitTokenInfo.length; i++) {
+    const curr = permitTokenInfo[i];
+    const isL1Token = curr.chainId === l2.network.partnerChainID;
+    const isL2Token = curr.chainId === l2.network.chainID;
+    if (!isL1Token && !isL2Token) continue;
 
-    const provider = isL1Token ? l1.provider : l2.provider
+    const provider = isL1Token ? l1.provider : l2.provider;
     const wallet = Wallet.createRandom().connect(provider);
     const spender = Wallet.createRandom().connect(provider);
 
     const tokenContract = new Contract(
       curr.address,
-      permitTokenAbi["abi"],
+      permitTokenAbi['abi'],
       wallet
     );
 
@@ -196,8 +193,8 @@ export const addPermitTags = async (
       deadline
     );
     const { v, r, s } = utils.splitSignature(signature);
-    const iface = new utils.Interface(permitTokenAbi["abi"]);
-    const callData = iface.encodeFunctionData("permit", [
+    const iface = new utils.Interface(permitTokenAbi['abi']);
+    const callData = iface.encodeFunctionData('permit', [
       wallet.address,
       spender.address,
       value,
@@ -215,12 +212,8 @@ export const addPermitTags = async (
       value,
       deadline
     );
-    const {
-      v: vNo,
-      r: rNo,
-      s: sNo,
-    } = utils.splitSignature(signatureNoVersion);
-    const callDataNoVersion = iface.encodeFunctionData("permit", [
+    const { v: vNo, r: rNo, s: sNo } = utils.splitSignature(signatureNoVersion);
+    const callDataNoVersion = iface.encodeFunctionData('permit', [
       wallet.address,
       spender.address,
       value,
@@ -242,13 +235,9 @@ export const addPermitTags = async (
       spender.address,
       deadline
     );
-    const {
-      v: vDAI,
-      r: rDAI,
-      s: sDAI,
-    } = utils.splitSignature(signatureDAI[0]);
+    const { v: vDAI, r: rDAI, s: sDAI } = utils.splitSignature(signatureDAI[0]);
     const ifaceDAI = new utils.Interface(daiPermitTokenAbi);
-    const callDataDAI = ifaceDAI.encodeFunctionData("permit", [
+    const callDataDAI = ifaceDAI.encodeFunctionData('permit', [
       wallet.address,
       spender.address,
       signatureDAI[1],
@@ -280,18 +269,22 @@ export const addPermitTags = async (
 
   const handleCalls = async (calls: Array<Call>, layer: 1 | 2) => {
     // TODO: use SDKs multicaller
-    let multiCallAddr = l2.network.tokenBridge[layer === 2 ? "l2Multicall" : "l1MultiCall"]
-    const isL1Mainnet = layer === 1 && l2.network.partnerChainID === 1
-    if(isL1Mainnet) multiCallAddr = "0x1b193bedb0b0a29c5759355d4193cb2838d2e170"
-    
-    const provider = (layer === 1 ? l1 : l2).provider
-    const multicall = new Contract(multiCallAddr, multicallAbi, provider)
+    let multiCallAddr =
+      l2.network.tokenBridge[layer === 2 ? 'l2Multicall' : 'l1MultiCall'];
+    const isL1Mainnet = layer === 1 && l2.network.partnerChainID === 1;
+    if (isL1Mainnet)
+      multiCallAddr = '0x1b193bedb0b0a29c5759355d4193cb2838d2e170';
+
+    const provider = (layer === 1 ? l1 : l2).provider;
+    const multicall = new Contract(multiCallAddr, multicallAbi, provider);
     // get array of results from tryAggregate
-    let tryPermit = [];
+    const tryPermit = [];
     for (const chunk of getChunks(calls, 10)) {
-      console.log("handling chunk of size", chunk.length);
+      console.log('handling chunk of size', chunk.length);
       const curr = promiseRetrier(() =>
-        multicall.callStatic[isL1Mainnet ? "tryAggregateGasRation" : "tryAggregate"](
+        multicall.callStatic[
+          isL1Mainnet ? 'tryAggregateGasRation' : 'tryAggregate'
+        ](
           false,
           chunk.map((curr) => ({
             target: curr.target,
@@ -299,7 +292,7 @@ export const addPermitTags = async (
           }))
         )
       );
-      tryPermit.push(...await curr);
+      tryPermit.push(...(await curr));
     }
     tryPermit.flat(1);
 
@@ -314,16 +307,16 @@ export const addPermitTags = async (
       } else {
         tag = PermitTypes.NoPermit;
       }
-      const originalIndex = calls[i].tokenIndex
+      const originalIndex = calls[i].tokenIndex;
       // add to existing token lists w tags for all tokens (permit or no permit)
       if (!permitTokenInfo[originalIndex].tags)
         (permitTokenInfo[originalIndex].tags as any) = [];
-      permitTokenInfo[originalIndex].tags!.push(tag)
+      permitTokenInfo[originalIndex].tags!.push(tag);
     }
-  }
+  };
 
-  await handleCalls(l1Calls, 1)
-  await handleCalls(l2Calls, 2)
+  await handleCalls(l1Calls, 1);
+  await handleCalls(l2Calls, 2);
 
   return {
     ...tokenList,

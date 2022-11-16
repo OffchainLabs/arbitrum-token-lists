@@ -31,6 +31,7 @@ module.exports = {
       plugins: ["@typescript-eslint", "prettier"],
       rules: {
         "no-empty-pattern": "warn",
+        "no-useless-escape": "warn",
         "prettier/prettier": ["error", { singleQuote: true }],
         "@typescript-eslint/member-delimiter-style": ["off"],
         "@typescript-eslint/no-explicit-any": ["warn"],
