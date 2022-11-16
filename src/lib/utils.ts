@@ -14,6 +14,7 @@ import yargs from "./getClargs";
 import { providers, ethers } from "ethers";
 import path from "path";
 import { TokenGateway__factory } from "@arbitrum/sdk/dist/lib/abi/factories/TokenGateway__factory";
+import { exit } from "process";
 
 dotenv.config();
 export const EtherscanKey = process.env.Etherscan_KEY;
@@ -98,6 +99,7 @@ export const generateGatewayMap = async (
   const l1Token: any[] = [];
   let page = 0;
   let currentResult: string | any[];
+  console.log(l2Network.tokenBridge.l1GatewayRouter)
   do {
     page++;
     const requestPara =
@@ -105,14 +107,15 @@ export const generateGatewayMap = async (
       `address=${l2Network.tokenBridge.l1GatewayRouter}&` +
       `fromBlock=${fromBlock}&toBlock=${toBlock}&topic0=${topic0}&page=${page}&` +
       `offset=1000&apikey=${EtherscanKey}`;
-      //console.log(requestPara)
+      console.log(requestPara)
     
     try{
       const scanResult = await axios.get(requestPara)
       currentResult = scanResult.data.result;
     } catch(e){
       console.log(e)
-      return null
+      console.log("Bridge gateway list generate failed")
+      exit(1);
     }
     
     for (let i = 0; i < currentResult.length; i++) {
@@ -141,9 +144,10 @@ export const generateGatewayMap = async (
   const gatewayMap: Map<string, string> = new Map();
   for (let i = 0; i < l1Token.length; i++) {
     if (l2GatewayMaps[i] === ethers.constants.AddressZero) continue;
-    gatewayMap.set(l2GatewayMaps[i].toLowerCase(), l1GatewayResults.get(l1Token[i])!);
+    gatewayMap.set(l2GatewayMaps[i].toLowerCase(), (l1GatewayResults.get(l1Token[i])!).toLowerCase());
   }
   console.log(gatewayMap)
+  console.log("Successfully generate gateway map")
   return gatewayMap;
 };
 

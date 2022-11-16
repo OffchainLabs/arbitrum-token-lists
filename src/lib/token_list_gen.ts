@@ -37,6 +37,7 @@ import { constants as arbConstants } from '@arbitrum/sdk';
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
 import { getPrevList, listNameToFileName } from './store';
+import { exit } from 'process';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -187,7 +188,7 @@ export const generateTokenList = async (
   const l2ToL1GatewayAddresses = await generateGatewayMap(l2.multiCaller, l2.network)
   if(l2ToL1GatewayAddresses === null) {
     console.log("Bridge gateway list generate failed")
-    return
+    exit(1);
   }
   const _arbifiedTokenList = tokens
     .map((t, i) => ({
