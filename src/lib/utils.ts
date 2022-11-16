@@ -106,7 +106,15 @@ export const generateGatewayMap = async (
       `fromBlock=${fromBlock}&toBlock=${toBlock}&topic0=${topic0}&page=${page}&` +
       `offset=1000&apikey=${EtherscanKey}`;
       //console.log(requestPara)
-    currentResult = (await axios.get(requestPara)).data.result;
+    
+    try{
+      const scanResult = await axios.get(requestPara)
+      currentResult = scanResult.data.result;
+    } catch(e){
+      console.log(e)
+      return null
+    }
+    
     for (let i = 0; i < currentResult.length; i++) {
       const tokenAddress = ethers.utils.hexDataSlice(
         currentResult[i].topics[1],
