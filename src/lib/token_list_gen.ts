@@ -31,6 +31,7 @@ import {
   getChunks,
   promiseErrorMultiplier,
   getL1GatewayAddress,
+  generateGatewayMap,
 } from './utils';
 import { constants as arbConstants } from '@arbitrum/sdk';
 import { writeFileSync, readFileSync, existsSync } from 'fs';
@@ -183,7 +184,7 @@ export const generateTokenList = async (
   }
 
   const tokenData = intermediateTokenData.flat(1);
-
+  const l2ToL1GatewayAddresses = await generateGatewayMap(l2.multiCaller, l2.network)
   const _arbifiedTokenList = tokens
     .map((t, i) => ({
       token: t,
@@ -200,7 +201,7 @@ export const generateTokenList = async (
       const l2GatewayAddress =
         token.token.joinTableEntry[0].gateway.gatewayAddr;
       const l1GatewayAddress =
-        (await getL1GatewayAddress(l2GatewayAddress, l2.provider)) ?? 'N/A';
+        (await getL1GatewayAddress(l2GatewayAddress, l2ToL1GatewayAddresses)) ?? 'N/A';
 
       let { name: _name, decimals, symbol: _symbol } = token.tokenDatum;
 
