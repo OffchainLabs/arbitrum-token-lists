@@ -185,6 +185,10 @@ export const generateTokenList = async (
 
   const tokenData = intermediateTokenData.flat(1);
   const l2ToL1GatewayAddresses = await generateGatewayMap(l2.multiCaller, l2.network)
+  if(l2ToL1GatewayAddresses === null) {
+    console.log("Bridge gateway list generate failed")
+    return
+  }
   const _arbifiedTokenList = tokens
     .map((t, i) => ({
       token: t,

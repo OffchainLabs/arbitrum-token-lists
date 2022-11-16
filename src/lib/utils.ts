@@ -149,9 +149,9 @@ export const generateGatewayMap = async (
 
 export const getL1GatewayAddress = async (
   l2GatewayAddress: string,
-  l2ToL1GatewayAddresses: { [x: string]: any; }
+  l2ToL1GatewayAddresses: Map<string,string>
 ) => {
-  const l2Gateway = l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()];
+  const l2Gateway = l2ToL1GatewayAddresses.get(l2GatewayAddress.toLowerCase());
 
   if (l2Gateway) return l2Gateway;
 
