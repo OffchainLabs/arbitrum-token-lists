@@ -90,13 +90,14 @@ export const generateGatewayMap = async (
   l1Provider: Provider
 ) => {
   const fromBlock = 0;
-  const toBlock = 15881183;
+  const toBlock = await l1Provider.getBlockNumber();
   const topic0 = ethers.utils.id('GatewaySet(address,address)');
   const l1GatewayResults: Map<string, string> = new Map();
   const l1Token: any[] = [];
   let page = 0;
   let currentResult: string | any[];
   const gatewayMap: Map<string, string> = new Map();
+
   //default gateway can be set during initialize call, it does not emit GatewaySet, so we should
   //manully set it
   {
@@ -117,6 +118,7 @@ export const generateGatewayMap = async (
     );
   }
 
+  //search events (GatewaySet) to get all gateways address and related token address
   do {
     page++;
     const requestPara =
@@ -156,7 +158,8 @@ export const generateGatewayMap = async (
     l2Multicaller,
     l2Network
   );
-
+  
+  //set gateway map
   for (let i = 0; i < l1Token.length; i++) {
     if (l2GatewayMaps[i] === ethers.constants.AddressZero) continue;
     gatewayMap.set(
@@ -164,7 +167,6 @@ export const generateGatewayMap = async (
       l1GatewayResults.get(l1Token[i])!.toLowerCase()
     );
   }
-  console.log(gatewayMap);
   console.log('Successfully generate gateway map');
   return gatewayMap;
 };
