@@ -18,7 +18,7 @@
     "start_server": "yarn ts-node server/app.ts"
   },
   "dependencies": {
-    "@arbitrum/sdk": "^2.0.15",
+    "@arbitrum/sdk": "^2.0.18",
     "@uniswap/token-lists": "^1.0.0-beta.30",
     "ajv": "^8.6.3",
     "ajv-formats": "^2.1.1",

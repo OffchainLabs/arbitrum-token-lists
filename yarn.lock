@@ -34,7 +34,7 @@
     ts-node "^10.2.1"
     typechain "7.0.0"
 
-"@arbitrum/sdk@^2.0.15":
+"@arbitrum/sdk@^2.0.18":
   version "2.0.19"
   resolved "https://registry.yarnpkg.com/@arbitrum/sdk/-/sdk-2.0.19.tgz#a1b56dfc35b2098a93ff3ad0defa2b81eb72d535"
   integrity sha512-MbFUIf5sn61VTJY2iIGwGqR1uLTqTCMSjYZf8prjA4zIyhFOjarbki/q8iGKK7hvX/Kdh45sv2xV+czRi9DQUA==
