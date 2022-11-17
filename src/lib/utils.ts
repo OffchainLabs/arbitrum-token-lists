@@ -1,36 +1,32 @@
-import Ajv from "ajv";
-import betterAjvErrors from "better-ajv-errors";
-import addFormats from "ajv-formats";
-import { schema, TokenList } from "@uniswap/token-lists";
-import { readFileSync, existsSync, writeFileSync } from "fs";
-import axios from "axios";
+import Ajv from 'ajv';
+import betterAjvErrors from 'better-ajv-errors';
+import addFormats from 'ajv-formats';
+import { schema, TokenList } from '@uniswap/token-lists';
+import { readFileSync, existsSync, writeFileSync } from 'fs';
+import axios from 'axios';
 import dotenv from 'dotenv';
-import { L2Network, MultiCaller } from "@arbitrum/sdk";
-import { L1GatewayRouter__factory } from "@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory";
-import { L2GatewayRouter__factory } from "@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory";
+import { L2Network, MultiCaller } from '@arbitrum/sdk';
+import { L1GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory';
+import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory';
 
-import { ArbTokenList, GraphTokenResult } from "./types";
-import yargs from "./getClargs";
-import { providers, ethers } from "ethers";
-import path from "path";
-import { TokenGateway__factory } from "@arbitrum/sdk/dist/lib/abi/factories/TokenGateway__factory";
-import { exit } from "process";
-
+import { ArbTokenList, GraphTokenResult } from './types';
+import yargs from './getClargs';
+import { ethers } from 'ethers';
+import path from 'path';
+import { TokenGateway__factory } from '@arbitrum/sdk/dist/lib/abi/factories/TokenGateway__factory';
+import { exit } from 'process';
+import { Provider } from '@ethersproject/providers';
 dotenv.config();
 export const EtherscanKey = process.env.Etherscan_KEY;
-let l2ToL1GatewayAddresses: { [x: string]: any; }
-
-
-
 export const isArbOne = yargs.l2NetworkID === 42161;
 export const isNova = yargs.l2NetworkID === 42170;
 export const isGoerliRollup = yargs.l2NetworkID === 421613;
 
 const coinGeckoBuff = readFileSync(
-  path.resolve(__dirname, "../Assets/coingecko_uris.json")
+  path.resolve(__dirname, '../Assets/coingecko_uris.json')
 );
 const logoURIsBuff = readFileSync(
-  path.resolve(__dirname, "../Assets/logo_uris.json")
+  path.resolve(__dirname, '../Assets/logo_uris.json')
 );
 
 const coingeckoURIs = JSON.parse(coinGeckoBuff.toString());
@@ -40,13 +36,13 @@ for (const address of Object.keys(logoUris)) {
 }
 
 export const listNameToArbifiedListName = (name: string) => {
-  const prefix = "Arbed ";
+  const prefix = 'Arbed ';
 
   let fileName = sanitizeNameString(name);
   if (!fileName.startsWith(prefix)) {
     fileName = prefix + fileName;
   }
-  return fileName.split(" ").slice(0, 2).join(" ").slice(0, 20);
+  return fileName.split(' ').slice(0, 2).join(' ').slice(0, 20);
 };
 
 export const getL1TokenAndL2Gateway = async (
@@ -83,14 +79,15 @@ export const promiseErrorMultiplier = <T, Q extends Error>(
     counter++;
   }
   return prom.catch((err) => {
-    if (verbose) console.error("Failed " + tries + " times. Giving up");
+    if (verbose) console.error('Failed ' + tries + ' times. Giving up');
     throw err;
   });
 };
 
 export const generateGatewayMap = async (
   l2Multicaller: MultiCaller,
-  l2Network: L2Network
+  l2Network: L2Network,
+  l1Provider: Provider
 ) => {
   const fromBlock = 0;
   const toBlock = 15881183;
@@ -99,7 +96,27 @@ export const generateGatewayMap = async (
   const l1Token: any[] = [];
   let page = 0;
   let currentResult: string | any[];
-  console.log(l2Network.tokenBridge.l1GatewayRouter)
+  const gatewayMap: Map<string, string> = new Map();
+  //default gateway can be set during initialize call, it does not emit GatewaySet, so we should
+  //manully set it
+  {
+    const l1GatewayRouter = L1GatewayRouter__factory.connect(
+      l2Network.tokenBridge.l1GatewayRouter,
+      l1Provider
+    );
+    const defaultGateway = await l1GatewayRouter.defaultGateway();
+    const defaultGatewayContract = await new ethers.Contract(
+      defaultGateway,
+      TokenGateway__factory.abi
+    ).connect(l1Provider);
+    const defaultCounterPartGateway =
+      await defaultGatewayContract.counterpartGateway();
+    gatewayMap.set(
+      defaultCounterPartGateway.toLowerCase(),
+      defaultGateway.toLowerCase()
+    );
+  }
+
   do {
     page++;
     const requestPara =
@@ -107,17 +124,15 @@ export const generateGatewayMap = async (
       `address=${l2Network.tokenBridge.l1GatewayRouter}&` +
       `fromBlock=${fromBlock}&toBlock=${toBlock}&topic0=${topic0}&page=${page}&` +
       `offset=1000&apikey=${EtherscanKey}`;
-      console.log(requestPara)
-    
-    try{
-      const scanResult = await axios.get(requestPara)
+    try {
+      const scanResult = await axios.get(requestPara);
       currentResult = scanResult.data.result;
-    } catch(e){
-      console.log(e)
-      console.log("Bridge gateway list generate failed")
+    } catch (e) {
+      console.log(e);
+      console.log('Bridge gateway list generate failed');
       exit(1);
     }
-    
+
     for (let i = 0; i < currentResult.length; i++) {
       const tokenAddress = ethers.utils.hexDataSlice(
         currentResult[i].topics[1],
@@ -141,19 +156,22 @@ export const generateGatewayMap = async (
     l2Multicaller,
     l2Network
   );
-  const gatewayMap: Map<string, string> = new Map();
+
   for (let i = 0; i < l1Token.length; i++) {
     if (l2GatewayMaps[i] === ethers.constants.AddressZero) continue;
-    gatewayMap.set(l2GatewayMaps[i].toLowerCase(), (l1GatewayResults.get(l1Token[i])!).toLowerCase());
+    gatewayMap.set(
+      l2GatewayMaps[i].toLowerCase(),
+      l1GatewayResults.get(l1Token[i])!.toLowerCase()
+    );
   }
-  console.log(gatewayMap)
-  console.log("Successfully generate gateway map")
+  console.log(gatewayMap);
+  console.log('Successfully generate gateway map');
   return gatewayMap;
 };
 
 export const getL1GatewayAddress = async (
   l2GatewayAddress: string,
-  l2ToL1GatewayAddresses: Map<string,string>
+  l2ToL1GatewayAddresses: Map<string, string>
 ) => {
   const l2Gateway = l2ToL1GatewayAddresses.get(l2GatewayAddress.toLowerCase());
 
@@ -172,27 +190,27 @@ export const getL2GatewayAddressesFromL1Token = async (
   const INC = 500;
   let index = 0;
   console.info(
-    "getL2GatewayAddressesFromL1Token for",
+    'getL2GatewayAddressesFromL1Token for',
     l1TokenAddresses.length,
-    "tokens"
+    'tokens'
   );
 
   let gateways: (string | undefined)[] = [];
 
   while (index < l1TokenAddresses.length) {
     console.log(
-      "Getting tokens",
+      'Getting tokens',
       index,
-      "through",
+      'through',
       Math.min(index + INC, l1TokenAddresses.length)
     );
 
     const l1TokenAddressesSlice = l1TokenAddresses.slice(index, index + INC);
     const result = await l2Multicaller.multiCall(
       l1TokenAddressesSlice.map((addr) => ({
-        encoder: () => iFace.encodeFunctionData("getGateway", [addr]),
+        encoder: () => iFace.encodeFunctionData('getGateway', [addr]),
         decoder: (returnData: string) =>
-          iFace.decodeFunctionResult("getGateway", returnData)[0] as string,
+          iFace.decodeFunctionResult('getGateway', returnData)[0] as string,
         targetAddr: l2Network.tokenBridge.l2GatewayRouter,
       }))
     );
@@ -201,7 +219,7 @@ export const getL2GatewayAddressesFromL1Token = async (
   }
 
   for (const curr of gateways) {
-    if (typeof curr === "undefined") throw new Error("undefined gateway!");
+    if (typeof curr === 'undefined') throw new Error('undefined gateway!');
   }
 
   return gateways as string[];
@@ -217,10 +235,10 @@ export const getL2TokenAddressesFromL1 = async (
   return await multiCaller.multiCall(
     l1TokenAddresses.map((addr) => ({
       encoder: () =>
-        iFace.encodeFunctionData("calculateL2TokenAddress", [addr]),
+        iFace.encodeFunctionData('calculateL2TokenAddress', [addr]),
       decoder: (returnData: string) =>
         iFace.decodeFunctionResult(
-          "calculateL2TokenAddress",
+          'calculateL2TokenAddress',
           returnData
         )[0] as string,
       targetAddr: l1GatewayRouterAddress,
@@ -238,10 +256,10 @@ export const getL2TokenAddressesFromL2 = async (
   return await multiCaller.multiCall(
     l1TokenAddresses.map((addr) => ({
       encoder: () =>
-        iFace.encodeFunctionData("calculateL2TokenAddress", [addr]),
+        iFace.encodeFunctionData('calculateL2TokenAddress', [addr]),
       decoder: (returnData: string) =>
         iFace.decodeFunctionResult(
-          "calculateL2TokenAddress",
+          'calculateL2TokenAddress',
           returnData
         )[0] as string,
       targetAddr: l2GatewayRouterAddress,
@@ -301,10 +319,10 @@ export const validateTokenListWithErrorThrowing = (
     if (valid) return true;
     else
       throw new Error(
-        "Data does not conform to token list schema; not sure why"
+        'Data does not conform to token list schema; not sure why'
       );
   } catch (e) {
-    console.log("Invalid token list:");
+    console.log('Invalid token list:');
     throw e;
   }
 };
@@ -321,25 +339,25 @@ export const removeInvalidTokensFromList = (
     const tokenListCopy = JSON.parse(
       JSON.stringify(tokenList)
     ) as typeof tokenList;
-    console.log("Invalid token list:");
+    console.log('Invalid token list:');
     while (!valid && tokenListCopy.tokens.length > 0) {
       const targetToken = tokenListCopy.tokens.pop();
       const tokenTokenIndex = tokenListCopy.tokens.length;
       valid = tokenListIsValid(tokenListCopy);
       if (valid) {
-        console.log("Invalid token token, removing from list", targetToken);
+        console.log('Invalid token token, removing from list', targetToken);
 
         tokenList.tokens.splice(tokenTokenIndex, 1);
         // pre-recursion sanity check:
         if (tokenList.tokens.length >= startingTokenListLen) {
           throw new Error(
-            "666: removeInvalidTokensFromList failed basic sanity check"
+            '666: removeInvalidTokensFromList failed basic sanity check'
           );
         }
         return removeInvalidTokensFromList(tokenList);
       }
     }
-    throw new Error("Data does not confirm to token list schema; not sure why");
+    throw new Error('Data does not confirm to token list schema; not sure why');
   }
 };
 
@@ -352,7 +370,7 @@ export const getTokenListObj = async (pathOrUrl: string) => {
     } else if (looksLikeUrl) {
       return await getTokenListObjFromUrl(pathOrUrl);
     } else {
-      throw new Error("Could not find token list");
+      throw new Error('Could not find token list');
     }
   })(pathOrUrl);
   isTokenList(tokenList);
@@ -370,44 +388,44 @@ export function isValidHttpUrl(urlString: string) {
     return false;
   }
 
-  return url.protocol === "http:" || url.protocol === "https:";
+  return url.protocol === 'http:' || url.protocol === 'https:';
 }
 
 export const getFormattedSourceURL = (sourceUrl?: string) => {
   if (!sourceUrl) return null;
-  const urlReplaceForwardSlashes = sourceUrl.replace(/\//g, "_");
+  const urlReplaceForwardSlashes = sourceUrl.replace(/\//g, '_');
   return /^[ \w\.,:]+$/.test(urlReplaceForwardSlashes)
     ? urlReplaceForwardSlashes
     : null;
 };
 // typeguard:
 export const isArbTokenList = (obj: any) => {
-  const expectedListKeys = ["name", "timestamp", "version", "tokens"];
+  const expectedListKeys = ['name', 'timestamp', 'version', 'tokens'];
   const actualListKeys = new Set(Object.keys(obj));
   if (!expectedListKeys.every((key) => actualListKeys.has(key))) {
     throw new Error(
-      "ArbTokenList typeguard error: requried list key not included"
+      'ArbTokenList typeguard error: requried list key not included'
     );
   }
   const { version, tokens } = obj;
   if (
-    !["major", "minor", "patch"].every((key) => {
-      return typeof version[key] === "number";
+    !['major', 'minor', 'patch'].every((key) => {
+      return typeof version[key] === 'number';
     })
   ) {
-    throw new Error("ArbTokenList typeguard error: invalid version");
+    throw new Error('ArbTokenList typeguard error: invalid version');
   }
   if (
     !tokens.every((token: any) => {
       const tokenKeys = new Set(Object.keys(token));
-      return ["chainId", "address", "name", "decimals", "symbol"].every(
+      return ['chainId', 'address', 'name', 'decimals', 'symbol'].every(
         (key) => {
           return tokenKeys.has(key);
         }
       );
     })
   ) {
-    throw new Error("ArbTokenList typeguard error: token missing required key");
+    throw new Error('ArbTokenList typeguard error: token missing required key');
   }
   tokens.forEach((token: any) => {
     if (token.extensions && token.extensions.bridgeInfo) {
@@ -416,7 +434,7 @@ export const isArbTokenList = (obj: any) => {
       } = token;
       const bridges = Object.keys(bridgeInfo);
       if (!bridges.length) {
-        throw new Error("ArbTokenList typeguard error: no bridge info found");
+        throw new Error('ArbTokenList typeguard error: no bridge info found');
       }
       const someDestinationChain = bridges[0];
       const { tokenAddress, originBridgeAddress, destBridgeAddress } =
@@ -425,7 +443,7 @@ export const isArbTokenList = (obj: any) => {
       if (
         ![tokenAddress, originBridgeAddress, destBridgeAddress].every((k) => k)
       ) {
-        throw new Error("ArbTokenList typeguard error: missing extension");
+        throw new Error('ArbTokenList typeguard error: missing extension');
       }
     }
   });
@@ -433,40 +451,40 @@ export const isArbTokenList = (obj: any) => {
 
 // typeguard:
 export const isTokenList = (obj: any) => {
-  const expectedListKeys = ["name", "timestamp", "version", "tokens"];
+  const expectedListKeys = ['name', 'timestamp', 'version', 'tokens'];
   const actualListKeys = new Set(Object.keys(obj));
   if (!expectedListKeys.every((key) => actualListKeys.has(key))) {
     throw new Error(
-      "tokenlist typeguard error: requried list key not included"
+      'tokenlist typeguard error: requried list key not included'
     );
   }
   const { version, tokens } = obj;
   if (
-    !["major", "minor", "patch"].every((key) => {
-      return typeof version[key] === "number";
+    !['major', 'minor', 'patch'].every((key) => {
+      return typeof version[key] === 'number';
     })
   ) {
-    throw new Error("tokenlist typeguard error: invalid version");
+    throw new Error('tokenlist typeguard error: invalid version');
   }
   if (
     !tokens.every((token: any) => {
       const tokenKeys = new Set(Object.keys(token));
-      return ["chainId", "address", "name", "decimals", "symbol"].every(
+      return ['chainId', 'address', 'name', 'decimals', 'symbol'].every(
         (key) => {
           return tokenKeys.has(key);
         }
       );
     })
   ) {
-    throw new Error("tokenlist typeguard error: token missing required key");
+    throw new Error('tokenlist typeguard error: token missing required key');
   }
 };
 
 export const sanitizeNameString = (str: string) =>
-  str.replace(/[^ \w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)]/gi, "");
+  str.replace(/[^ \w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)]/gi, '');
 
 export const sanitizeSymbolString = (str: string) =>
-  str.replace(/[^\w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)]/gi, "");
+  str.replace(/[^\w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)]/gi, '');
 
 export function* getChunks<T>(arr: Array<T>, chunkSize = 500) {
   for (let i = 0; i < arr.length; i += chunkSize) {
