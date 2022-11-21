@@ -175,11 +175,7 @@ export const getL1GatewayAddress = async (
   l2GatewayAddress: string,
   l2ToL1GatewayAddresses: Map<string, string>
 ) => {
-  const l2Gateway = l2ToL1GatewayAddresses.get(l2GatewayAddress.toLowerCase());
-
-  if (l2Gateway) return l2Gateway;
-
-  return undefined;
+  return l2ToL1GatewayAddresses.get(l2GatewayAddress.toLowerCase());
 };
 
 export const getL2GatewayAddressesFromL1Token = async (
