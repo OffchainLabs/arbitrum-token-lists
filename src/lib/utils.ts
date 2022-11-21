@@ -99,7 +99,7 @@ export const generateGatewayMap = async (
   const gatewayMap: Map<string, string> = new Map();
 
   //default gateway can be set during initialize call, it does not emit GatewaySet, so we should
-  //manully set it
+  //manually set it
   {
     const l1GatewayRouter = L1GatewayRouter__factory.connect(
       l2Network.tokenBridge.l1GatewayRouter,
