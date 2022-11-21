@@ -55,8 +55,8 @@ export const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses =
       '0x6e244cD02BBB8a6dbd7F626f05B2ef82151Ab502',
 
       // 421613 graph gateway:
-      '0xc82fF7b51c3e593D709BA3dE1b3a0d233D1DEca1':
-      '0xef2757855d2802bA53733901F90C91645973f743'
+      '0xef2757855d2802bA53733901F90C91645973f743':
+      '0xc82fF7b51c3e593D709BA3dE1b3a0d233D1DEca1',
   });
 
 // nova
