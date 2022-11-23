@@ -167,6 +167,12 @@ export const generateGatewayMap = async (
       l1GatewayResults.get(l1Token[i])!.toLowerCase()
     );
   }
+
+  //Avoid edge case: gateway registered on l1 while not on l2
+  if(!(await checkMapResultByL2Gateway(gatewayMap, l2Multicaller))) {
+    exit(1)
+  }
+
   console.log('Successfully generate gateway map');
   return gatewayMap;
 };
@@ -177,6 +183,66 @@ export const getL1GatewayAddress = async (
 ) => {
   return l2ToL1GatewayAddresses.get(l2GatewayAddress.toLowerCase());
 };
+
+export const checkMapResultByL2Gateway = async (
+  l2ToL1GatewayAddresses: Map<string, string>,
+  l2Multicaller: MultiCaller
+) => {
+  const keys = l2ToL1GatewayAddresses.keys()
+  const l2Gateways: string[] = [...keys]
+  const l1Gateways = await getL1GatewayFromL2Gateway(l2Gateways, l2Multicaller)
+  for(let i = 0; i < l2Gateways.length; i++) {
+    if(l2ToL1GatewayAddresses.get(l2Gateways[i]) !== l1Gateways[i].toLowerCase()) {
+      console.log(`Gateway map check invalid, invalid l2 gateway address is` +
+       `${l2Gateways[i]}, invalid l1 gateway address is ${l1Gateways[i]}`)
+       return false
+    }
+  }
+  return true
+}
+
+export const getL1GatewayFromL2Gateway = async (
+  l2Gateways: string[],
+  l2Multicaller: MultiCaller
+): Promise<string[]> => {
+  const iFace = L2GatewayRouter__factory.createInterface();
+  const INC = 500;
+  let index = 0;
+  console.info(
+    'getL1GatewayFromL2Gateway for',
+    l2Gateways.length,
+    'l2 Gateways'
+  );
+
+  let l1Gateways: (string | undefined)[] = [];
+
+  while (index < l2Gateways.length) {
+    console.log(
+      'Getting tokens',
+      index,
+      'through',
+      Math.min(index + INC, l2Gateways.length)
+    );
+
+    const l2GatewaySlice = l2Gateways.slice(index, index + INC);
+    const result = await l2Multicaller.multiCall(
+      l2GatewaySlice.map((addr) => ({
+        encoder: () => iFace.encodeFunctionData('counterpartGateway'),
+        decoder: (returnData: string) =>
+          iFace.decodeFunctionResult('counterpartGateway', returnData)[0] as string,
+        targetAddr: addr,
+      }))
+    );
+    l1Gateways = l1Gateways.concat(result);
+    index += INC;
+  }
+
+  for (const curr of l1Gateways) {
+    if (typeof curr === 'undefined') throw new Error('undefined l1 gateway!');
+  }
+
+  return l1Gateways as string[];
+}
 
 export const getL2GatewayAddressesFromL1Token = async (
   l1TokenAddresses: string[],
