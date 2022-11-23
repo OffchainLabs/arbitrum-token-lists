@@ -158,7 +158,7 @@ export const generateGatewayMap = async (
     l2Multicaller,
     l2Network
   );
-  
+
   //set gateway map
   for (let i = 0; i < l1Token.length; i++) {
     if (l2GatewayMaps[i] === ethers.constants.AddressZero) continue;
@@ -169,8 +169,8 @@ export const generateGatewayMap = async (
   }
 
   //Avoid edge case: gateway registered on l1 while not on l2
-  if(!(await checkMapResultByL2Gateway(gatewayMap, l2Multicaller))) {
-    exit(1)
+  if (!(await checkMapResultByL2Gateway(gatewayMap, l2Multicaller))) {
+    exit(1);
   }
 
   console.log('Successfully generate gateway map');
@@ -188,18 +188,22 @@ export const checkMapResultByL2Gateway = async (
   l2ToL1GatewayAddresses: Map<string, string>,
   l2Multicaller: MultiCaller
 ) => {
-  const keys = l2ToL1GatewayAddresses.keys()
-  const l2Gateways: string[] = [...keys]
-  const l1Gateways = await getL1GatewayFromL2Gateway(l2Gateways, l2Multicaller)
-  for(let i = 0; i < l2Gateways.length; i++) {
-    if(l2ToL1GatewayAddresses.get(l2Gateways[i]) !== l1Gateways[i].toLowerCase()) {
-      console.log(`Gateway map check invalid, invalid l2 gateway address is` +
-       `${l2Gateways[i]}, invalid l1 gateway address is ${l1Gateways[i]}`)
-       return false
+  const keys = l2ToL1GatewayAddresses.keys();
+  const l2Gateways: string[] = [...keys];
+  const l1Gateways = await getL1GatewayFromL2Gateway(l2Gateways, l2Multicaller);
+  for (let i = 0; i < l2Gateways.length; i++) {
+    if (
+      l2ToL1GatewayAddresses.get(l2Gateways[i]) !== l1Gateways[i].toLowerCase()
+    ) {
+      console.log(
+        `Gateway map check invalid, invalid l2 gateway address is` +
+          `${l2Gateways[i]}, invalid l1 gateway address is ${l1Gateways[i]}`
+      );
+      return false;
     }
   }
-  return true
-}
+  return true;
+};
 
 export const getL1GatewayFromL2Gateway = async (
   l2Gateways: string[],
@@ -229,7 +233,10 @@ export const getL1GatewayFromL2Gateway = async (
       l2GatewaySlice.map((addr) => ({
         encoder: () => iFace.encodeFunctionData('counterpartGateway'),
         decoder: (returnData: string) =>
-          iFace.decodeFunctionResult('counterpartGateway', returnData)[0] as string,
+          iFace.decodeFunctionResult(
+            'counterpartGateway',
+            returnData
+          )[0] as string,
         targetAddr: addr,
       }))
     );
@@ -242,7 +249,7 @@ export const getL1GatewayFromL2Gateway = async (
   }
 
   return l1Gateways as string[];
-}
+};
 
 export const getL2GatewayAddressesFromL1Token = async (
   l1TokenAddresses: string[],
