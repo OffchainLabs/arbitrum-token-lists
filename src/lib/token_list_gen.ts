@@ -432,6 +432,29 @@ export const generateFullList = async () => {
   const etherscanData = arbListtoEtherscanList(tokenData);
   return etherscanData;
 };
+export const generateFullListFormatted = async () => {
+  const mockList: TokenList = {
+    name: 'Full',
+    logoURI: 'ipfs://QmTvWJ4kmzq9koK74WJQ594ov8Es1HHurHZmMmhU8VY68y',
+    timestamp: new Date().toISOString(),
+    version: {
+      major: 1,
+      minor: 0,
+      patch: 0,
+    },
+    tokens: [],
+  };
+  const allTokenList =   await generateTokenList(mockList, undefined, {
+    getAllTokensInNetwork: true,
+    skipValidation: true,
+  });
+  // log for human-readable check
+  allTokenList.tokens.forEach((token)=>{
+    console.log(token.name, token.symbol, token.address);
+    
+  })
+  return allTokenList
+};
 
 // export const updateLogoURIs = async (path: string)=> {
 //   const data = readFileSync(path)

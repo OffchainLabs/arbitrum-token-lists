@@ -2,6 +2,7 @@ import {
   arbifyL1List,
   updateArbifiedList,
   generateFullList,
+  generateFullListFormatted
 } from './lib/token_list_gen';
 import { addPermitTags } from './PermitTokens/permitSignature';
 import args from './lib/getClargs';
@@ -24,7 +25,11 @@ const main = async () => {
     tokenList = await arbifyL1List(args.tokenList, !!args.includeOldDataFields);
   } else if (args.action === 'update') {
     tokenList = await updateArbifiedList(args.tokenList);
-  } else {
+  }  else  if(args.action === 'alltokenslist') {
+    tokenList = await generateFullListFormatted()
+  }
+  
+  else {
     throw new Error(`action ${args.action} not recognised`);
   }
 
