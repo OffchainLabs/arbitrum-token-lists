@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [ -z "$PATH_TO" ]
+then
+      echo "NO_PATH_SET"
+else
+      cd $PATH_TO
+fi
+
 # arb1
 yarn fullList --l2NetworkID 42161
 yarn arbify --l2NetworkID 42161 --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org
