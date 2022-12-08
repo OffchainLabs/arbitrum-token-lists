@@ -5,9 +5,10 @@ import {
 } from './lib/token_list_gen';
 import { addPermitTags } from './PermitTokens/permitSignature';
 import args from './lib/getClargs';
-import { ArbTokenList, EtherscanList } from './lib/types';
+import { ArbTokenList } from './lib/types';
 import { writeToFile } from './lib/store';
 
+console.log('OOOOOOOO');
 const main = async () => {
   if (args.action === 'full') {
     if (args.tokenList !== 'full')
@@ -35,7 +36,7 @@ const main = async () => {
 
 main()
   .then(() => console.log('Done.'))
-  .catch((err) => {
+  .catch(err => {
     console.error(err);
     throw err;
   });
