@@ -18,7 +18,7 @@ export const listNameToFileName = (name: string) => {
   return fileName;
 };
 
-const getPath = (l1ListName: string) => {
+export const getPath = (l1ListName: string) => {
   if (l1ListName === ETHERSCAN_LIST_NAME) {
     if (isArbOne) return ETHERSCAN_PATH;
     if (isGoerliRollup) return ALL_TOKENS_GOERLI_ROLLUP_PATH;
@@ -48,7 +48,10 @@ export const getPrevList = (l1ListName: string): ArbTokenList | undefined => {
   return undefined;
 };
 
-export const writeToFile = (list: ArbTokenList | EtherscanList) => {
+export const writeToFile = (
+  list: ArbTokenList | EtherscanList,
+  path: string
+) => {
   if (!existsSync(TOKENLIST_DIR_PATH)) {
     console.log(`Setting up token list dir at ${TOKENLIST_DIR_PATH}`);
     mkdirSync(TOKENLIST_DIR_PATH);
@@ -59,7 +62,6 @@ export const writeToFile = (list: ArbTokenList | EtherscanList) => {
     mkdirSync(FULLLIST_DIR_PATH);
   }
 
-  const path = getPath('name' in list ? list.name : ETHERSCAN_LIST_NAME);
   writeFileSync(path, JSON.stringify(list));
   console.log('Token list generated at', path);
 };

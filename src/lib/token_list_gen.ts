@@ -369,7 +369,10 @@ export const generateTokenList = async (
 export const arbifyL1List = async (
   pathOrUrl: string,
   includeOldDataFields?: boolean
-): Promise<ArbTokenList> => {
+): Promise<{
+  newList: ArbTokenList;
+  l1ListName: string;
+}> => {
   const l1TokenList = await promiseErrorMultiplier(
     getTokenListObj(pathOrUrl),
     (error) => getTokenListObj(pathOrUrl)
@@ -384,7 +387,10 @@ export const arbifyL1List = async (
     sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl : undefined,
   });
 
-  return newList;
+  return {
+    newList,
+    l1ListName: l1TokenList.name,
+  };
 };
 
 export const updateArbifiedList = async (pathOrUrl: string) => {
@@ -409,7 +415,10 @@ export const updateArbifiedList = async (pathOrUrl: string) => {
     sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl : undefined,
   });
 
-  return newList;
+  return {
+    newList,
+    path,
+  };
 };
 
 export const generateFullList = async () => {
@@ -444,16 +453,15 @@ export const generateFullListFormatted = async () => {
     },
     tokens: [],
   };
-  const allTokenList =   await generateTokenList(mockList, undefined, {
+  const allTokenList = await generateTokenList(mockList, undefined, {
     getAllTokensInNetwork: true,
     skipValidation: true,
   });
   // log for human-readable check
-  allTokenList.tokens.forEach((token)=>{
+  allTokenList.tokens.forEach((token) => {
     console.log(token.name, token.symbol, token.address);
-    
-  })
-  return allTokenList
+  });
+  return allTokenList;
 };
 
 // export const updateLogoURIs = async (path: string)=> {
