@@ -37,7 +37,6 @@ import { constants as arbConstants } from '@arbitrum/sdk';
 import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
 import { getPrevList, listNameToFileName } from './store';
-import { exit } from 'process';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
