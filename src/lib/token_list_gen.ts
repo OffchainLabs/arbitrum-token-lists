@@ -57,6 +57,7 @@ export const generateTokenList = async (
     includeOldDataFields?: boolean;
     sourceListURL?: string;
     skipValidation?: boolean;
+    preserveListName?: boolean
   }
 ) => {
   if (options?.includeAllL1Tokens && options.includeUnbridgedL1Tokens) {
@@ -337,7 +338,7 @@ export const generateTokenList = async (
   })();
   const sourceListURL = getFormattedSourceURL(options?.sourceListURL);
   const arbTokenList: ArbTokenList = {
-    name: listNameToArbifiedListName(name),
+    name: (options && options.preserveListName) ? name :  listNameToArbifiedListName(name),
     timestamp: new Date().toISOString(),
     version,
     tokens: arbifiedTokenList,
@@ -368,7 +369,7 @@ export const generateTokenList = async (
 
 export const arbifyL1List = async (
   pathOrUrl: string,
-  includeOldDataFields?: boolean
+  includeOldDataFields: boolean
 ): Promise<{
   newList: ArbTokenList;
   l1ListName: string;
@@ -393,7 +394,7 @@ export const arbifyL1List = async (
   };
 };
 
-export const updateArbifiedList = async (pathOrUrl: string) => {
+export const updateArbifiedList = async (pathOrUrl: string, includeOldDataFields: boolean) => {
   const arbTokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(arbTokenList);
   const path =
@@ -413,6 +414,8 @@ export const updateArbifiedList = async (pathOrUrl: string) => {
   const newList = await generateTokenList(arbTokenList, prevArbTokenList, {
     includeAllL1Tokens: true,
     sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl : undefined,
+    includeOldDataFields,
+    preserveListName: true
   });
 
   return {

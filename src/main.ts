@@ -22,16 +22,17 @@ const main = async () => {
 
   let tokenList: ArbTokenList;
   let path: string;
+  const includeOldDataFields:boolean =  !!args.includeOldDataFields
 
   if (args.action === 'arbify') {
     const { newList, l1ListName } = await arbifyL1List(
       args.tokenList,
-      !!args.includeOldDataFields
+      includeOldDataFields
     );
     tokenList = newList;
     path = getPath(l1ListName);
   } else if (args.action === 'update') {
-    const { newList, path: _path } = await updateArbifiedList(args.tokenList);
+    const { newList, path: _path } = await updateArbifiedList(args.tokenList, includeOldDataFields);
     tokenList = newList;
     path = _path;
   } else if (args.action === 'alltokenslist') {
