@@ -18,16 +18,16 @@ export const listNameToFileName = (name: string) => {
   return fileName;
 };
 
-const getPath = (l1ListName: string) => {
+const getPath = (l1ListName: string, l2NetworkID: number) => {
   if (l1ListName === ETHERSCAN_LIST_NAME) {
-    if (isArbOne) return ETHERSCAN_PATH;
-    if (isGoerliRollup) return ALL_TOKENS_GOERLI_ROLLUP_PATH;
+    if (isArbOne(l2NetworkID)) return ETHERSCAN_PATH;
+    if (isGoerliRollup(l2NetworkID)) return ALL_TOKENS_GOERLI_ROLLUP_PATH;
     throw new Error('Unsupported full list');
   }
   let path = '';
-  if (isNova) {
+  if (isNova(l2NetworkID)) {
     path = TOKENLIST_DIR_PATH + '/42170_' + listNameToFileName(l1ListName);
-  } else if (isGoerliRollup) {
+  } else if (isGoerliRollup(l2NetworkID)) {
     path = TOKENLIST_DIR_PATH + '/421613_' + listNameToFileName(l1ListName);
   } else {
     path = TOKENLIST_DIR_PATH + '/' + listNameToFileName(l1ListName);
@@ -35,8 +35,11 @@ const getPath = (l1ListName: string) => {
   return path;
 };
 
-export const getPrevList = (l1ListName: string): ArbTokenList | undefined => {
-  const path = getPath(l1ListName);
+export const getPrevList = (
+  l1ListName: string,
+  l2NetworkID: number
+): ArbTokenList | undefined => {
+  const path = getPath(l1ListName, l2NetworkID);
   if (existsSync(path)) {
     const data = readFileSync(path);
     console.log('Prev version of Arb List found');
@@ -48,7 +51,10 @@ export const getPrevList = (l1ListName: string): ArbTokenList | undefined => {
   return undefined;
 };
 
-export const writeToFile = (list: ArbTokenList | EtherscanList) => {
+export const writeToFile = (
+  list: ArbTokenList | EtherscanList,
+  l2NetworkID: number
+) => {
   if (!existsSync(TOKENLIST_DIR_PATH)) {
     console.log(`Setting up token list dir at ${TOKENLIST_DIR_PATH}`);
     mkdirSync(TOKENLIST_DIR_PATH);
@@ -59,7 +65,10 @@ export const writeToFile = (list: ArbTokenList | EtherscanList) => {
     mkdirSync(FULLLIST_DIR_PATH);
   }
 
-  const path = getPath('name' in list ? list.name : ETHERSCAN_LIST_NAME);
+  const path = getPath(
+    'name' in list ? list.name : ETHERSCAN_LIST_NAME,
+    l2NetworkID
+  );
   writeFileSync(path, JSON.stringify(list));
   console.log('Token list generated at', path);
 };

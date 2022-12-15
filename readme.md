@@ -2,9 +2,9 @@
 
 From root:
 
-1. `cp .env.sample .env`
-2. In `.env`, set `MAINNET_RPC` var (i.e., set infura key or use different endpoint)
-3. `yarn install`
+1. `yarn install`
+2. `cd packages/cli; cp .env.sample .env`
+3. In `.env`, set `MAINNET_RPC` var (i.e., set infura key or use different endpoint)
 
 ### Arbify an L1 Token List
 

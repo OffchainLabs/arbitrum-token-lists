@@ -1,0 +1,38 @@
+{
+  "name": "cli",
+  "version": "1.0.0",
+  "main": "main.js",
+  "author": "Offchain Labs, Inc.",
+  "license": "MIT",
+  "scripts": {
+    "arbify": "yarn ts-node src/main.ts --action arbify",
+    "arbify:nova": "yarn ts-node src/main.ts --action arbify --l2NetworkID 42170",
+    "build": "rm -rf ./dist && tsc",
+    "format": "prettier --config-precedence file-override --write \"src/**/*.{tsx,ts,md}\" && yarn run lint",
+    "fullList": "yarn ts-node src/main.ts --action full --tokenList full",
+    "fullList:nova": "yarn ts-node src/main.ts --action full --tokenList full --l2NetworkID 42170",
+    "lint": "tsc --noEmit && eslint src/**/*.ts --fix",
+    "lint:fix": "tsc --noEmit && eslint 'src/**/*.{js,ts,tsx}' --quiet --fix",
+    "main": "ts-node src/main.ts",
+    "permit": "yarn ts-node src/main.ts --action permit",
+    "update": "yarn ts-node src/main.ts --action update",
+    "update:all": "./scripts/update_all",
+    "update:nova": "yarn ts-node src/main.ts --action update --l2NetworkID 42170",
+    "update:src_lists": "./scripts/update_src_lists",
+    "watch": "tsc --watch"
+  },
+  "dependencies": {
+    "yargs": "^17.2.1",
+    "dotenv": "^16.0.3",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "^2.4.1",
+    "sdk": "1.0.0"
+  },
+  "devDependencies": {
+    "@types/yargs": "^17.0.4",
+    "@typescript-eslint/eslint-plugin": "^5.1.0",
+    "@typescript-eslint/parser": "^5.1.0",
+    "eslint": "^8.0.1"
+  }
+}

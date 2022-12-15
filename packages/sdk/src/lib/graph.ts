@@ -1,5 +1,4 @@
 import { request, gql } from 'graphql-request';
-import { isNova } from './utils';
 import { GraphTokenResult, GraphTokensResult } from './types';
 import { excludeList } from './constants';
 
@@ -46,65 +45,6 @@ const isGraphTokenResult = (obj: any) => {
 /**  421613 subgraph uses a different field name */
 const graphGatewayBlockNumField = (networkID: string | number) => {
   return +networkID === 421613 ? 'l2BlockNum' : 'blockNum';
-};
-
-export const getTokens = async (
-  tokenList: { addr: string; logo: string | undefined }[],
-  _networkID: string | number
-): Promise<Array<GraphTokenResult>> => {
-  if (isNova) {
-    console.warn('empty subgraph for nova');
-    return [];
-  }
-  const networkID =
-    typeof _networkID === 'number' ? _networkID.toString() : _networkID;
-  const clientUrl = chaidIdToGraphClientUrl(networkID);
-  // lazy solution for big lists for now; we'll have to paginate once we have > 500 tokens registed
-  if (tokenList.length > 500) {
-    const allTokens = await getAllTokens(networkID);
-    const allTokenAddresses = new Set(
-      allTokens.map(token => token.l1TokenAddr.toLowerCase())
-    );
-    tokenList = tokenList.filter(token =>
-      allTokenAddresses.has(token.addr.toLowerCase())
-    );
-    if (tokenList.length > 500)
-      throw new Error('Too many tokens for graph query');
-  }
-  const formattedAddresses = tokenList
-    .map(token => `"${token.addr}"`.toLowerCase())
-    .join(',');
-  const blockNumber = graphGatewayBlockNumField(_networkID);
-  const query = gql`
-  {
-    tokens(first: 500, skip: 0, where:{
-      id_in:[${formattedAddresses}]
-    }) {
-      l1TokenAddr: id
-      joinTableEntry: gateway(
-        first: 1
-        orderBy: ${blockNumber}
-        orderDirection: desc
-      ) {
-        id
-        ${blockNumber}
-        token {
-          tokenAddr: id
-        }
-        gateway {
-          gatewayAddr: id
-        }
-      }
-    }
-  }
-`;
-
-  const { tokens } = (await request(clientUrl, query)) as GraphTokensResult;
-  tokens.map(token => isGraphTokenResult(token));
-
-  return tokens.filter(
-    token => !excludeList.includes(token.l1TokenAddr.toLowerCase())
-  );
 };
 
 export const getAllTokens = async (

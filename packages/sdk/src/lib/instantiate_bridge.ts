@@ -1,14 +1,14 @@
 import { providers } from 'ethers';
-import args from './getClargs';
 import dotenv from 'dotenv';
 import { getL2Network, MultiCaller } from '@arbitrum/sdk';
+
 dotenv.config();
 
-const networkID = args.l2NetworkID || 42161;
+export const getNetworkConfig = async (l2NetworkID: number) => {
+  const networkID = l2NetworkID ?? 42161;
 
-console.log('Using L2 networkID:', networkID);
+  console.log('Using L2 networkID:', networkID);
 
-export const getNetworkConfig = async () => {
   const l2Rpc = (() => {
     if (networkID === 42161) return 'https://arb1.arbitrum.io/rpc';
     else if (networkID === 421611) return 'https://rinkeby.arbitrum.io/rpc';
