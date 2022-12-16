@@ -276,8 +276,8 @@ export const removeInvalidTokensFromList = (
   }
 };
 
-export const getTokenListObj = async (pathOrUrl: string | undefined) => {
-  const tokenList: TokenList = await (async (pathOrUrl: string | undefined) => {
+export const getTokenListObj = async (pathOrUrl: string) => {
+  const tokenList: TokenList = await (async (pathOrUrl: string) => {
     const localFileExists = existsSync(pathOrUrl);
     const looksLikeUrl = isValidHttpUrl(pathOrUrl);
     if (localFileExists) {
