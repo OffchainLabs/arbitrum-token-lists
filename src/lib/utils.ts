@@ -2,7 +2,7 @@ import Ajv from 'ajv';
 import betterAjvErrors from 'better-ajv-errors';
 import addFormats from 'ajv-formats';
 import { schema, TokenList } from '@uniswap/token-lists';
-import { readFileSync, existsSync, writeFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import axios from 'axios';
 import { L2Network, MultiCaller } from '@arbitrum/sdk';
 import { L1GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory';
@@ -10,16 +10,12 @@ import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L
 
 import { ArbTokenList, GraphTokenResult } from './types';
 import yargs from './getClargs';
-import { providers } from 'ethers';
 import path from 'path';
 
 import {
   l2ToL1GatewayAddresses,
   l2ToL1GatewayAddressesNova,
-  TOKENLIST_DIR_PATH,
 } from './constants';
-
-import { TokenGateway__factory } from '@arbitrum/sdk/dist/lib/abi/factories/TokenGateway__factory';
 
 export const isArbOne = yargs.l2NetworkID === 42161;
 export const isNova = yargs.l2NetworkID === 42170;
@@ -54,7 +50,7 @@ export const getL1TokenAndL2Gateway = async (
   l2Network: L2Network
 ): Promise<Array<GraphTokenResult>> => {
   const routerData = await getL2GatewayAddressesFromL1Token(
-    tokenList.map((curr) => curr.addr),
+    tokenList.map(curr => curr.addr),
     l2Multicaller,
     l2Network
   );
@@ -70,27 +66,24 @@ export const getL1TokenAndL2Gateway = async (
     l1TokenAddr: curr.addr,
   }));
 };
-export const promiseErrorMultiplier = <T, Q extends Error>(
+export const promiseErrorMultiplier = <T>(
   prom: Promise<T>,
-  handler: (err: Q) => Promise<T>,
+  handler: (err: Error) => Promise<T>,
   tries = 3,
   verbose = false
 ) => {
   let counter = 0;
   while (counter < tries) {
-    prom = prom.catch((err) => handler(err));
+    prom = prom.catch(err => handler(err));
     counter++;
   }
-  return prom.catch((err) => {
+  return prom.catch(err => {
     if (verbose) console.error('Failed ' + tries + ' times. Giving up');
     throw err;
   });
 };
 
-export const getL1GatewayAddress = async (
-  l2GatewayAddress: string,
-  l2Provider: providers.Provider
-) => {
+export const getL1GatewayAddress = async (l2GatewayAddress: string) => {
   const l2Gateway = isNova
     ? l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()]
     : l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()];
@@ -142,7 +135,7 @@ export const getL2GatewayAddressesFromL1Token = async (
 
     const l1TokenAddressesSlice = l1TokenAddresses.slice(index, index + INC);
     const result = await l2Multicaller.multiCall(
-      l1TokenAddressesSlice.map((addr) => ({
+      l1TokenAddressesSlice.map(addr => ({
         encoder: () => iFace.encodeFunctionData('getGateway', [addr]),
         decoder: (returnData: string) =>
           iFace.decodeFunctionResult('getGateway', returnData)[0] as string,
@@ -168,7 +161,7 @@ export const getL2TokenAddressesFromL1 = async (
   const iFace = L1GatewayRouter__factory.createInterface();
 
   return await multiCaller.multiCall(
-    l1TokenAddresses.map((addr) => ({
+    l1TokenAddresses.map(addr => ({
       encoder: () =>
         iFace.encodeFunctionData('calculateL2TokenAddress', [addr]),
       decoder: (returnData: string) =>
@@ -189,7 +182,7 @@ export const getL2TokenAddressesFromL2 = async (
   const iFace = L2GatewayRouter__factory.createInterface();
 
   return await multiCaller.multiCall(
-    l1TokenAddresses.map((addr) => ({
+    l1TokenAddresses.map(addr => ({
       encoder: () =>
         iFace.encodeFunctionData('calculateL2TokenAddress', [addr]),
       decoder: (returnData: string) =>
@@ -337,14 +330,14 @@ export const getFormattedSourceURL = (sourceUrl?: string) => {
 export const isArbTokenList = (obj: any) => {
   const expectedListKeys = ['name', 'timestamp', 'version', 'tokens'];
   const actualListKeys = new Set(Object.keys(obj));
-  if (!expectedListKeys.every((key) => actualListKeys.has(key))) {
+  if (!expectedListKeys.every(key => actualListKeys.has(key))) {
     throw new Error(
-      'ArbTokenList typeguard error: requried list key not included'
+      'ArbTokenList typeguard error: required list key not included'
     );
   }
   const { version, tokens } = obj;
   if (
-    !['major', 'minor', 'patch'].every((key) => {
+    !['major', 'minor', 'patch'].every(key => {
       return typeof version[key] === 'number';
     })
   ) {
@@ -353,11 +346,9 @@ export const isArbTokenList = (obj: any) => {
   if (
     !tokens.every((token: any) => {
       const tokenKeys = new Set(Object.keys(token));
-      return ['chainId', 'address', 'name', 'decimals', 'symbol'].every(
-        (key) => {
-          return tokenKeys.has(key);
-        }
-      );
+      return ['chainId', 'address', 'name', 'decimals', 'symbol'].every(key => {
+        return tokenKeys.has(key);
+      });
     })
   ) {
     throw new Error('ArbTokenList typeguard error: token missing required key');
@@ -376,7 +367,7 @@ export const isArbTokenList = (obj: any) => {
         bridgeInfo[someDestinationChain];
 
       if (
-        ![tokenAddress, originBridgeAddress, destBridgeAddress].every((k) => k)
+        ![tokenAddress, originBridgeAddress, destBridgeAddress].every(k => k)
       ) {
         throw new Error('ArbTokenList typeguard error: missing extension');
       }
@@ -388,14 +379,14 @@ export const isArbTokenList = (obj: any) => {
 export const isTokenList = (obj: any) => {
   const expectedListKeys = ['name', 'timestamp', 'version', 'tokens'];
   const actualListKeys = new Set(Object.keys(obj));
-  if (!expectedListKeys.every((key) => actualListKeys.has(key))) {
+  if (!expectedListKeys.every(key => actualListKeys.has(key))) {
     throw new Error(
-      'tokenlist typeguard error: requried list key not included'
+      'tokenlist typeguard error: required list key not included'
     );
   }
   const { version, tokens } = obj;
   if (
-    !['major', 'minor', 'patch'].every((key) => {
+    !['major', 'minor', 'patch'].every(key => {
       return typeof version[key] === 'number';
     })
   ) {
@@ -404,11 +395,9 @@ export const isTokenList = (obj: any) => {
   if (
     !tokens.every((token: any) => {
       const tokenKeys = new Set(Object.keys(token));
-      return ['chainId', 'address', 'name', 'decimals', 'symbol'].every(
-        (key) => {
-          return tokenKeys.has(key);
-        }
-      );
+      return ['chainId', 'address', 'name', 'decimals', 'symbol'].every(key => {
+        return tokenKeys.has(key);
+      });
     })
   ) {
     throw new Error('tokenlist typeguard error: token missing required key');
@@ -448,4 +437,4 @@ export function* getChunks<T>(arr: Array<T>, chunkSize = 500) {
 // };
 
 export const promiseRetrier = <T>(createProm: () => Promise<T>): Promise<T> =>
-  promiseErrorMultiplier(createProm(), (err) => createProm());
+  promiseErrorMultiplier(createProm(), () => createProm());

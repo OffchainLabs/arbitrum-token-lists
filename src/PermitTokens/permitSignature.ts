@@ -22,8 +22,8 @@ async function getPermitSig(
 ) {
   // TODO: check that error is that function instead available (differentiate network fails)
   const [nonce, name, version, chainId] = await Promise.all([
-    optional?.nonce ?? token.nonces(wallet.address).catch((err: Error) => 0),
-    optional?.name ?? token.name().catch((err: Error) => ''),
+    optional?.nonce ?? token.nonces(wallet.address).catch(() => 0),
+    optional?.name ?? token.name().catch(() => ''),
     optional?.version ?? '1',
     optional?.chainId ?? wallet.getChainId(),
   ]);
@@ -67,8 +67,8 @@ async function getPermitSigNoVersion(
 ) {
   // TODO: check that error is that function instead available (differentiate network fails)
   const [nonce, name, chainId] = await Promise.all([
-    optional?.nonce ?? token.nonces(wallet.address).catch((err: Error) => 0),
-    optional?.name ?? token.name().catch((err: Error) => ''),
+    optional?.nonce ?? token.nonces(wallet.address).catch(() => 0),
+    optional?.name ?? token.name().catch(() => ''),
     optional?.chainId ?? wallet.getChainId(),
   ]);
 
@@ -109,8 +109,8 @@ async function getDaiLikePermitSignature(
 ): Promise<[string, number]> {
   // TODO: check that error is that function instead available (differentiate network fails)
   const [nonce, name, chainId] = await Promise.all([
-    optional?.nonce ?? token.nonces(wallet.address).catch((err: Error) => 0),
-    optional?.name ?? token.name().catch((err: Error) => ''),
+    optional?.nonce ?? token.nonces(wallet.address).catch(() => 0),
+    optional?.name ?? token.name().catch(() => ''),
     optional?.chainId ?? wallet.getChainId(),
   ]);
 
@@ -286,7 +286,7 @@ export const addPermitTags = async (
           isL1Mainnet ? 'tryAggregateGasRation' : 'tryAggregate'
         ](
           false,
-          chunk.map((curr) => ({
+          chunk.map(curr => ({
             target: curr.target,
             callData: curr.callData,
           }))
@@ -310,7 +310,7 @@ export const addPermitTags = async (
       const originalIndex = calls[i].tokenIndex;
       // add to existing token lists w tags for all tokens (permit or no permit)
       if (!permitTokenInfo[originalIndex].tags)
-        (permitTokenInfo[originalIndex].tags as any) = [];
+        (permitTokenInfo[originalIndex].tags as string[]) = [];
       permitTokenInfo[originalIndex].tags!.push(tag);
     }
   };

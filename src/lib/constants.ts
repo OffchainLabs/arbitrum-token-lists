@@ -58,8 +58,8 @@ export const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses =
     '0xf9F2e89c8347BD96742Cc07095dee490e64301d6':
       '0x6e244cD02BBB8a6dbd7F626f05B2ef82151Ab502',
 
-      // 421613 graph gateway:
-      '0xef2757855d2802bA53733901F90C91645973f743':
+    // 421613 graph gateway:
+    '0xef2757855d2802bA53733901F90C91645973f743':
       '0xc82fF7b51c3e593D709BA3dE1b3a0d233D1DEca1',
   });
 
@@ -91,7 +91,7 @@ export const excludeList = [
   '0x106538cc16f938776c7c180186975bca23875287', // remove once bridged (basv2)
   '0xB4A3B0Faf0Ab53df58001804DdA5Bfc6a3D59008', // spera
   // "0x960b236a07cf122663c4303350609a66a7b288c0", //aragon old
-].map((s) => s.toLowerCase());
+].map(s => s.toLowerCase());
 
 export const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60;
 

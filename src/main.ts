@@ -47,7 +47,7 @@ const main = async () => {
 
 main()
   .then(() => console.log('Done.'))
-  .catch((err) => {
+  .catch(err => {
     console.error(err);
     throw err;
   });
