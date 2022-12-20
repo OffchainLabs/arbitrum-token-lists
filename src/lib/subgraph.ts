@@ -3,7 +3,7 @@ import yargs from './getClargs';
 import { graphEndpoints } from './constants'
 
 
-const sortById = (a: any,b: any): number => {
+const sortByTime = (a: any,b: any): number => {
     if(a.blockNumber === b.blockNumber) {
         return a.logIndex - b.logIndex
     }
@@ -34,7 +34,7 @@ export async function getGatewaysets(): Promise<any[]> {
         eventResult.push(...currentResult)
         skip += 100
     }while(currentResult.length == 100)
-    eventResult.sort(sortById)
+    eventResult.sort(sortByTime)
     
     return eventResult
 }
