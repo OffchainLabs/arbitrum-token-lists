@@ -2,11 +2,21 @@ export interface L2ToL1GatewayAddresses {
   [contractAddress: string]: string;
 }
 
+export interface GraphEndpoints {
+  [networkId: number]: string;
+}
+
 const objKeyAndValToLowerCase = (obj: { [key: string]: string }) =>
   Object.keys(obj).reduce((acc: { [key: string]: string }, key) => {
     acc[key.toLowerCase()] = obj[key].toLowerCase();
     return acc;
   }, {});
+
+export const graphEndpoints: GraphEndpoints = {
+  42161: 'https://api.thegraph.com/subgraphs/name/gvladika/arb-bridge-eth-nitro',
+  42170: 'https://api.thegraph.com/subgraphs/name/gvladika/arb-bridge-eth-nova',
+  421613: 'https://api.thegraph.com/subgraphs/name/gvladika/arb-bridge-eth-goerli'
+}
 
 // TODO: read these values from the gateway or a subgraph
 export const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses =

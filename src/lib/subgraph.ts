@@ -1,4 +1,6 @@
 import axios from 'axios';
+import yargs from './getClargs';
+import { graphEndpoints } from './constants'
 
 
 const sortById = (a: any,b: any): number => {
@@ -21,7 +23,7 @@ export async function getGatewaysets(): Promise<any[]> {
                     blockNumber
                     }   
                 }`
-        const scanResult = await axios.post(`https://api.thegraph.com/subgraphs/name/gvladika/arb-bridge-eth-nitro`, {query: requestPara});
+        const scanResult = await axios.post(graphEndpoints[yargs.l2NetworkID], {query: requestPara});
         currentResult = scanResult.data.data.gatewaySets;
         //get logIndex only
         for(let i = 0; i < currentResult.length; i++) {
@@ -33,6 +35,6 @@ export async function getGatewaysets(): Promise<any[]> {
         skip += 100
     }while(currentResult.length == 100)
     eventResult.sort(sortById)
-    console.log(eventResult)
+    
     return eventResult
 }
