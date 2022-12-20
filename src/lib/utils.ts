@@ -5,7 +5,7 @@ import { schema, TokenList } from '@uniswap/token-lists';
 import { readFileSync, existsSync, writeFileSync } from 'fs';
 import axios from 'axios';
 import dotenv from 'dotenv';
-import { L2Network, MultiCaller } from '@arbitrum/sdk';
+import { CallInput, L2Network, MultiCaller } from '@arbitrum/sdk';
 import { L1GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory';
 import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory';
 import { getGatewaysets } from './subgraph'
@@ -89,13 +89,8 @@ export const generateGatewayMap = async (
   l2Network: L2Network,
   l1Provider: Provider
 ) => {
-  const fromBlock = 0;
-  const toBlock = await l1Provider.getBlockNumber();
-  const topic0 = ethers.utils.id('GatewaySet(address,address)');
   const l1GatewayResults: Map<string, string> = new Map();
   const l1Token: any[] = [];
-  let page = 0;
-  let currentResult: string | any[];
   const gatewayMap: Map<string, string> = new Map();
 
   //default gateway can be set during initialize call, it does not emit GatewaySet, so we should
@@ -117,13 +112,14 @@ export const generateGatewayMap = async (
       defaultGateway.toLowerCase()
     );
   }
+
   const gatewaySetsList = await getGatewaysets()
   
   for(let i = 0; i < gatewaySetsList.length; i++) {
     const tokenAddress = gatewaySetsList[i].l1Token
     let l1GatewayAddress = gatewaySetsList[i].gateway
 
-    //if gateway set to zero, which means will set back to standard erc20 gateway
+    //if gateway set to zero, which means it sets back to standard erc20 gateway
     if (l1GatewayAddress === ethers.constants.AddressZero) {
       l1GatewayAddress = l2Network.tokenBridge.l1ERC20Gateway;
     }
@@ -146,7 +142,7 @@ export const generateGatewayMap = async (
     );
   }
 
-  //Avoid edge case: gateway registered on l1 while not on l2
+  //edge case: gateway registered on l1 while not on l2
   if (!(await checkMapResultByL2Gateway(gatewayMap, l2Multicaller))) {
     exit(1);
   }
@@ -168,7 +164,6 @@ export const checkMapResultByL2Gateway = async (
 ) => {
   const keys = l2ToL1GatewayAddresses.keys();
   const l2Gateways: string[] = [...keys];
-  console.log(l2Gateways)
   const l1Gateways = await getL1GatewayFromL2Gateway(l2Gateways, l2Multicaller);
   for (let i = 0; i < l2Gateways.length; i++) {
     if (
@@ -184,11 +179,39 @@ export const checkMapResultByL2Gateway = async (
   return true;
 };
 
+// Since l2 grt gateway has different interface, we should change the call id
+const getCallInput = (addr: string, standardiFace: ethers.utils.Interface): CallInput<string> => {
+  if(addr === "0x65e1a5e8946e7e87d9774f5288f41c30a99fd302") {
+    const iFace = new ethers.utils.Interface([
+      "function l1Counterpart() view returns (address)"
+    ])
+    return {
+      encoder: () => iFace.encodeFunctionData('l1Counterpart'),
+      decoder: (returnData: string) =>
+      iFace.decodeFunctionResult(
+          'l1Counterpart',
+          returnData
+        )[0] as string,
+      targetAddr: addr
+    }
+  }
+  return {
+    encoder: () => standardiFace.encodeFunctionData('counterpartGateway'),
+    decoder: (returnData: string) =>
+      standardiFace.decodeFunctionResult(
+        'counterpartGateway',
+        returnData
+      )[0] as string,
+    targetAddr: addr
+  }
+}
+
 export const getL1GatewayFromL2Gateway = async (
   l2Gateways: string[],
   l2Multicaller: MultiCaller
 ): Promise<string[]> => {
   const iFace = L2GatewayRouter__factory.createInterface();
+  
   const INC = 500;
   let index = 0;
   console.info(
@@ -209,15 +232,7 @@ export const getL1GatewayFromL2Gateway = async (
 
     const l2GatewaySlice = l2Gateways.slice(index, index + INC);
     const result = await l2Multicaller.multiCall(
-      l2GatewaySlice.map((addr) => ({
-        encoder: () => iFace.encodeFunctionData('counterpartGateway'),
-        decoder: (returnData: string) =>
-          iFace.decodeFunctionResult(
-            'counterpartGateway',
-            returnData
-          )[0] as string,
-        targetAddr: addr,
-      }))
+      l2GatewaySlice.map(addr => getCallInput(addr, iFace))
     );
     l1Gateways = l1Gateways.concat(result);
     index += INC;
