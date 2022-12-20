@@ -8,7 +8,7 @@ import dotenv from 'dotenv';
 import { L2Network, MultiCaller } from '@arbitrum/sdk';
 import { L1GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory';
 import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory';
-
+import { getGatewaysets } from './subgraph'
 import { ArbTokenList, GraphTokenResult } from './types';
 import yargs from './getClargs';
 import { ethers } from 'ethers';
@@ -117,42 +117,20 @@ export const generateGatewayMap = async (
       defaultGateway.toLowerCase()
     );
   }
+  const gatewaySetsList = await getGatewaysets()
+  
+  for(let i = 0; i < gatewaySetsList.length; i++) {
+    const tokenAddress = gatewaySetsList[i].l1Token
+    let l1GatewayAddress = gatewaySetsList[i].gateway
 
-  //search events (GatewaySet) to get all gateways address and related token address
-  do {
-    page++;
-    const requestPara =
-      `https://api.etherscan.io/api?module=logs&action=getLogs&` +
-      `address=${l2Network.tokenBridge.l1GatewayRouter}&` +
-      `fromBlock=${fromBlock}&toBlock=${toBlock}&topic0=${topic0}&page=${page}&` +
-      `offset=1000&apikey=${EtherscanKey}`;
-    try {
-      const scanResult = await axios.get(requestPara);
-      currentResult = scanResult.data.result;
-    } catch (e) {
-      console.log(e);
-      console.log('Bridge gateway list generate failed');
-      exit(1);
+    //if gateway set to zero, which means will set back to standard erc20 gateway
+    if (l1GatewayAddress === ethers.constants.AddressZero) {
+      l1GatewayAddress = l2Network.tokenBridge.l1ERC20Gateway;
     }
-
-    for (let i = 0; i < currentResult.length; i++) {
-      const tokenAddress = ethers.utils.hexDataSlice(
-        currentResult[i].topics[1],
-        12
-      );
-      let l1GatewayAddress = ethers.utils.hexDataSlice(
-        currentResult[i].topics[2],
-        12
-      );
-      //if gateway set to zero, which means will set back to standard erc20 gateway
-      if (l1GatewayAddress === ethers.constants.AddressZero) {
-        l1GatewayAddress = l2Network.tokenBridge.l1ERC20Gateway;
-      }
-
-      l1GatewayResults.set(tokenAddress, l1GatewayAddress);
-      l1Token.push(tokenAddress);
-    }
-  } while (currentResult.length > 0);
+    l1GatewayResults.set(tokenAddress, l1GatewayAddress);
+    l1Token.push(tokenAddress);
+  }
+  
   const l2GatewayMaps = await getL2GatewayAddressesFromL1Token(
     l1Token,
     l2Multicaller,
@@ -190,6 +168,7 @@ export const checkMapResultByL2Gateway = async (
 ) => {
   const keys = l2ToL1GatewayAddresses.keys();
   const l2Gateways: string[] = [...keys];
+  console.log(l2Gateways)
   const l1Gateways = await getL1GatewayFromL2Gateway(l2Gateways, l2Multicaller);
   for (let i = 0; i < l2Gateways.length; i++) {
     if (
