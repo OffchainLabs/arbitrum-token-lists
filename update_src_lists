@@ -1,2 +1,11 @@
+#!/bin/bash
+
+if [[ $FORCE_USE_NVM == 'true' ]]; then
+    echo "(running script using node via nvm)"
+
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+fi
+
 yarn arbify --tokenList ./src/SourceLists/whitelist_era_src.json --l2NetworkID 42161 --includeOldDataFields true
-yarn arbify --tokenList ./src/SourceLists/rinkeby_src.json --l2NetworkID 421611  
+yarn arbify --tokenList ./src/SourceLists/rinkeby_src.json --l2NetworkID 421611
