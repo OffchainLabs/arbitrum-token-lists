@@ -17,13 +17,8 @@ import { TokenGateway__factory } from '@arbitrum/sdk/dist/lib/abi/factories/Toke
 import { exit } from 'process';
 import { Provider } from '@ethersproject/providers';
 dotenv.config();
+
 export const EtherscanKey = process.env.Etherscan_KEY;
-
-import {
-  l2ToL1GatewayAddresses,
-  l2ToL1GatewayAddressesNova,
-} from './constants';
-
 export const isArbOne = yargs.l2NetworkID === 42161;
 export const isNova = yargs.l2NetworkID === 42170;
 export const isGoerliRollup = yargs.l2NetworkID === 421613;
