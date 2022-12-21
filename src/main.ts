@@ -5,7 +5,7 @@ import {
 } from './lib/token_list_gen';
 import { addPermitTags } from './PermitTokens/permitSignature';
 import args from './lib/getClargs';
-import { ArbTokenList, EtherscanList } from './lib/types';
+import { ArbTokenList } from './lib/types';
 import { writeToFile } from './lib/store';
 
 const main = async () => {
@@ -35,7 +35,7 @@ const main = async () => {
 
 main()
   .then(() => console.log('Done.'))
-  .catch((err) => {
+  .catch(err => {
     console.error(err);
     throw err;
   });

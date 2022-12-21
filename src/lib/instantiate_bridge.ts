@@ -1,4 +1,4 @@
-import { providers, Wallet, VoidSigner } from 'ethers';
+import { providers } from 'ethers';
 import args from './getClargs';
 import dotenv from 'dotenv';
 import { getL2Network, MultiCaller } from '@arbitrum/sdk';
@@ -36,7 +36,6 @@ export const getNetworkConfig = async () => {
 
   return {
     l1: {
-      // network: l1Network,
       provider: ethProvider,
       multiCaller: l1MultiCaller,
     },

@@ -16,7 +16,6 @@ import {
 import {
   getL2TokenAddressesFromL1,
   getL2TokenAddressesFromL2,
-  getLogoUri,
   getTokenListObj,
   validateTokenListWithErrorThrowing,
   sanitizeNameString,
@@ -34,7 +33,7 @@ import {
   generateGatewayMap,
 } from './utils';
 import { constants as arbConstants } from '@arbitrum/sdk';
-import { writeFileSync, readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
 import { getPrevList, listNameToFileName } from './store';
 
@@ -69,7 +68,7 @@ export const generateTokenList = async (
   const name = l1TokenList.name;
   const mainLogoUri = l1TokenList.logoURI;
 
-  const { l1, l2 } = await promiseErrorMultiplier(getNetworkConfig(), (error) =>
+  const { l1, l2 } = await promiseErrorMultiplier(getNetworkConfig(), () =>
     getNetworkConfig()
   );
 
@@ -78,22 +77,21 @@ export const generateTokenList = async (
 
   let tokens: GraphTokenResult[] =
     options && options.getAllTokensInNetwork
-      ? await promiseErrorMultiplier(
-          getAllTokens(l2.network.chainID),
-          (error) => getAllTokens(l2.network.chainID)
+      ? await promiseErrorMultiplier(getAllTokens(l2.network.chainID), () =>
+          getAllTokens(l2.network.chainID)
         )
       : await promiseErrorMultiplier(
           getL1TokenAndL2Gateway(
-            l1TokenList.tokens.map((token) => ({
+            l1TokenList.tokens.map(token => ({
               addr: token.address.toLowerCase(),
               logo: token.logoURI,
             })),
             l2.multiCaller,
             l2.network
           ),
-          (error) =>
+          () =>
             getL1TokenAndL2Gateway(
-              l1TokenList.tokens.map((token) => ({
+              l1TokenList.tokens.map(token => ({
                 addr: token.address.toLowerCase(),
                 logo: token.logoURI,
               })),
@@ -104,8 +102,8 @@ export const generateTokenList = async (
 
   const l1TokenAddresses =
     options && options.getAllTokensInNetwork && !isNova
-      ? tokens.map((curr) => curr.l1TokenAddr)
-      : l1TokenList.tokens.map((token) => token.address);
+      ? tokens.map(curr => curr.l1TokenAddr)
+      : l1TokenList.tokens.map(token => token.address);
 
   // const l1TokenAddresses = tokens.map(
   //   (token: GraphTokenResult) => token.l1TokenAddr
@@ -120,7 +118,7 @@ export const generateTokenList = async (
         l1.multiCaller,
         l2.network.tokenBridge.l1GatewayRouter
       ),
-      (error) =>
+      () =>
         getL2TokenAddressesFromL1(
           addrs,
           l1.multiCaller,
@@ -134,7 +132,7 @@ export const generateTokenList = async (
         l2.multiCaller,
         l2.network.tokenBridge.l2GatewayRouter
       ),
-      (error) =>
+      () =>
         getL2TokenAddressesFromL2(
           addrs,
           l2.multiCaller,
@@ -171,12 +169,12 @@ export const generateTokenList = async (
   for (const addrs of getChunks(l2AddressesFromL1)) {
     const tokenDataTemp = await promiseErrorMultiplier(
       l2.multiCaller.getTokenData(
-        addrs.map((t) => t || constants.AddressZero),
+        addrs.map(t => t || constants.AddressZero),
         { name: true, decimals: true, symbol: true }
       ),
-      (error) =>
+      () =>
         l2.multiCaller.getTokenData(
-          addrs.map((t) => t || constants.AddressZero),
+          addrs.map(t => t || constants.AddressZero),
           { name: true, decimals: true, symbol: true }
         )
     );
@@ -201,7 +199,7 @@ export const generateTokenList = async (
       (t): t is typeof t & { l2Address: string } =>
         t.l2Address != undefined && t.l2Address !== constants.AddressZero
     )
-    .map(async (token, i: number) => {
+    .map(async token => {
       const l2GatewayAddress =
         token.token.joinTableEntry[0].gateway.gatewayAddr;
       const l1GatewayAddress =
@@ -290,8 +288,8 @@ export const generateTokenList = async (
   console.log(`List has ${arbifiedTokenList.length} bridged tokens`);
 
   const allOtherTokens = l1TokenList.tokens
-    .filter((l1TokenInfo) => l1TokenInfo.chainId !== l2.network.chainID)
-    .map((l1TokenInfo) => {
+    .filter(l1TokenInfo => l1TokenInfo.chainId !== l2.network.chainID)
+    .map(l1TokenInfo => {
       return {
         chainId: +l1TokenInfo.chainId,
         name: l1TokenInfo.name,
@@ -306,10 +304,10 @@ export const generateTokenList = async (
     arbifiedTokenList = arbifiedTokenList.concat(allOtherTokens);
   } else if (options?.includeUnbridgedL1Tokens) {
     const l1AddressesOfBridgedTokens = new Set(
-      tokens.map((token) => token.l1TokenAddr.toLowerCase())
+      tokens.map(token => token.l1TokenAddr.toLowerCase())
     );
     const unbridgedTokens = allOtherTokens
-      .filter((l1TokenInfo) => {
+      .filter(l1TokenInfo => {
         return (
           !l1AddressesOfBridgedTokens.has(l1TokenInfo.address.toLowerCase()) &&
           l1TokenInfo.chainId === +l2.network.partnerChainID
@@ -323,7 +321,6 @@ export const generateTokenList = async (
 
   const version = (() => {
     if (prevArbTokenList) {
-      // @ts-ignore
       let versionBump = minVersionBump(
         prevArbTokenList.tokens,
         arbifiedTokenList
@@ -378,7 +375,7 @@ export const arbifyL1List = async (
 ): Promise<ArbTokenList> => {
   const l1TokenList = await promiseErrorMultiplier(
     getTokenListObj(pathOrUrl),
-    (error) => getTokenListObj(pathOrUrl)
+    () => getTokenListObj(pathOrUrl)
   );
   removeInvalidTokensFromList(l1TokenList);
 
@@ -466,7 +463,7 @@ export const arbListtoEtherscanList = (
   arbList: ArbTokenList
 ): EtherscanList => {
   const list: EtherscanList = [];
-  arbList.tokens.forEach((tokenInfo) => {
+  arbList.tokens.forEach(tokenInfo => {
     const { address: l2Address } = tokenInfo;
     if (tokenInfo.extensions) {
       // This assumes one origin chain; should be chill
