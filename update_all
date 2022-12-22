@@ -1,10 +1,19 @@
 #!/bin/bash
 
+if [[ $FORCE_USE_NVM == 'true' ]]; then
+    echo "(running script using node via nvm)"
+
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+fi
+
 # arb1
 yarn fullList --l2NetworkID 42161
 yarn arbify --l2NetworkID 42161 --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org
 yarn arbify --l2NetworkID 42161 --tokenList https://www.gemini.com/uniswap/manifest.json
 yarn arbify --l2NetworkID 42161 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json
+# update whitelist era list (for e.g. changed gateways)
+yarn update --l2NetworkID 42161 --tokenList ./src/ArbTokenLists/arbed_arb_whitelist_era.json --includeOldDataFields true
 
 # nova
 # yarn fullList --l2NetworkID 42170

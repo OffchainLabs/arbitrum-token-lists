@@ -56,6 +56,7 @@ export const generateTokenList = async (
     includeOldDataFields?: boolean;
     sourceListURL?: string;
     skipValidation?: boolean;
+    preserveListName?: boolean
   }
 ) => {
   if (options?.includeAllL1Tokens && options.includeUnbridgedL1Tokens) {
@@ -334,7 +335,7 @@ export const generateTokenList = async (
   })();
   const sourceListURL = getFormattedSourceURL(options?.sourceListURL);
   const arbTokenList: ArbTokenList = {
-    name: listNameToArbifiedListName(name),
+    name: (options && options.preserveListName) ? name :  listNameToArbifiedListName(name),
     timestamp: new Date().toISOString(),
     version,
     tokens: arbifiedTokenList,
@@ -365,8 +366,11 @@ export const generateTokenList = async (
 
 export const arbifyL1List = async (
   pathOrUrl: string,
-  includeOldDataFields?: boolean
-): Promise<ArbTokenList> => {
+  includeOldDataFields: boolean
+): Promise<{
+  newList: ArbTokenList;
+  l1ListName: string;
+}> => {
   const l1TokenList = await promiseErrorMultiplier(
     getTokenListObj(pathOrUrl),
     () => getTokenListObj(pathOrUrl)
@@ -381,10 +385,13 @@ export const arbifyL1List = async (
     sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl : undefined,
   });
 
-  return newList;
+  return {
+    newList,
+    l1ListName: l1TokenList.name,
+  };
 };
 
-export const updateArbifiedList = async (pathOrUrl: string) => {
+export const updateArbifiedList = async (pathOrUrl: string, includeOldDataFields: boolean) => {
   const arbTokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(arbTokenList);
   const path =
@@ -404,9 +411,14 @@ export const updateArbifiedList = async (pathOrUrl: string) => {
   const newList = await generateTokenList(arbTokenList, prevArbTokenList, {
     includeAllL1Tokens: true,
     sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl : undefined,
+    includeOldDataFields,
+    preserveListName: true
   });
 
-  return newList;
+  return {
+    newList,
+    path,
+  };
 };
 
 export const generateFullList = async () => {
@@ -428,6 +440,28 @@ export const generateFullList = async () => {
 
   const etherscanData = arbListtoEtherscanList(tokenData);
   return etherscanData;
+};
+export const generateFullListFormatted = async () => {
+  const mockList: TokenList = {
+    name: 'Full',
+    logoURI: 'ipfs://QmTvWJ4kmzq9koK74WJQ594ov8Es1HHurHZmMmhU8VY68y',
+    timestamp: new Date().toISOString(),
+    version: {
+      major: 1,
+      minor: 0,
+      patch: 0,
+    },
+    tokens: [],
+  };
+  const allTokenList = await generateTokenList(mockList, undefined, {
+    getAllTokensInNetwork: true,
+    skipValidation: true,
+  });
+  // log for human-readable check
+  allTokenList.tokens.forEach((token) => {
+    console.log(token.name, token.symbol, token.address);
+  });
+  return allTokenList;
 };
 
 // export const updateLogoURIs = async (path: string)=> {

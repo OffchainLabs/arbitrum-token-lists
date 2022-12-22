@@ -23,6 +23,10 @@ export const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses =
     // L2 dai gateway mainnet
     '0x467194771dae2967aef3ecbedd3bf9a310c76c65':
       '0xd3b5b60020504bc3489d6949d545893982ba3011',
+    // graph gateway arb1
+    '0x65E1a5e8946e7E87d9774f5288f41c30a99fD302':
+    '0x01cDC91B0A9bA741903aA3699BF4CE31d6C5cC06',
+
     // L2 ERC20 Gateway	rinkeby
     '0x195c107f3f75c4c93eba7d9a1312f19305d6375f':
       '0x91169Dbb45e6804743F94609De50D511C437572E',
