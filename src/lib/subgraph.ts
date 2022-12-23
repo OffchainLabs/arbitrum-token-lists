@@ -2,8 +2,11 @@ import axios from 'axios';
 import yargs from './getClargs';
 import { graphEndpoints } from './constants'
 
-
-const sortByTime = (a: any,b: any): number => {
+interface timeComparableEvent {
+    logIndex:number
+    blockNumber:number
+}
+const sortByTime = (a: timeComparableEvent,b: timeComparableEvent): number => {
     if(a.blockNumber === b.blockNumber) {
         return a.logIndex - b.logIndex
     }
@@ -35,6 +38,6 @@ export async function getGatewaysets(): Promise<any[]> {
         skip += 100
     }while(currentResult.length == 100)
     eventResult.sort(sortByTime)
-    
+    console.log(eventResult)
     return eventResult
 }
