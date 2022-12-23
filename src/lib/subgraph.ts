@@ -38,6 +38,5 @@ export async function getGatewaysets(): Promise<any[]> {
         skip += 100
     }while(currentResult.length == 100)
     eventResult.sort(sortByTime)
-    console.log(eventResult)
     return eventResult
 }
