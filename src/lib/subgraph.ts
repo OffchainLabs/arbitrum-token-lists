@@ -32,7 +32,7 @@ export async function getGatewaysets(): Promise<any[]> {
         for(let i = 0; i < currentResult.length; i++) {
             currentResult[i].tx = currentResult[i].id.substring(0,66)
             currentResult[i].logIndex = Number(currentResult[i].id.substring(67))
-            
+            currentResult[i].blockNumber = Number(currentResult[i].blockNumber)
         }
         eventResult.push(...currentResult)
         skip += 100
