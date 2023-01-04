@@ -1,7 +1,4 @@
-import Ajv from 'ajv';
-import betterAjvErrors from 'better-ajv-errors';
-import addFormats from 'ajv-formats';
-import { schema, TokenList } from '@uniswap/token-lists';
+import { TokenList } from '@uniswap/token-lists';
 import { readFileSync, existsSync } from 'fs';
 import axios from 'axios';
 import { L2Network, MultiCaller } from '@arbitrum/sdk';
@@ -11,7 +8,7 @@ import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L
 import { ArbTokenList, GraphTokenResult } from './types';
 import yargs from './getClargs';
 import path from 'path';
-
+import { tokenListIsValid } from './validateTokenList';
 import {
   l2ToL1GatewayAddresses,
   l2ToL1GatewayAddressesNova,
@@ -91,21 +88,6 @@ export const getL1GatewayAddress = async (l2GatewayAddress: string) => {
   if (l2Gateway) return l2Gateway;
 
   return undefined;
-
-  // TODO: discuss:
-  // try {
-  //   const tokenGateway = TokenGateway__factory.connect(
-  //     l2GatewayAddress,
-  //     l2Provider
-  //   );
-  //   const l1Gateway = await promiseErrorMultiplier(
-  //     tokenGateway.counterpartGateway(),
-  //     (error) => tokenGateway.counterpartGateway()
-  //   );
-  //   return l1Gateway;
-  // } catch (e) {
-  //   return undefined;
-  // }
 };
 
 export const getL2GatewayAddressesFromL1Token = async (
@@ -221,38 +203,6 @@ export const getTokenListObjFromUrl = async (url: string) => {
 };
 export const getTokenListObjFromLocalPath = async (path: string) => {
   return JSON.parse(readFileSync(path).toString()) as TokenList;
-};
-
-export const tokenListIsValid = (tokenList: ArbTokenList | TokenList) => {
-  const ajv = new Ajv();
-  addFormats(ajv);
-  const validate = ajv.compile(schema);
-
-  const res = validate(tokenList);
-  if (validate.errors) {
-    const output = betterAjvErrors(schema, tokenList, validate.errors, {
-      indent: 2,
-    });
-    console.log(output);
-  }
-
-  return res;
-};
-
-export const validateTokenListWithErrorThrowing = (
-  tokenList: ArbTokenList | TokenList
-) => {
-  try {
-    const valid = tokenListIsValid(tokenList);
-    if (valid) return true;
-    else
-      throw new Error(
-        'Data does not conform to token list schema; not sure why'
-      );
-  } catch (e) {
-    console.log('Invalid token list:');
-    throw e;
-  }
 };
 
 export const removeInvalidTokensFromList = (

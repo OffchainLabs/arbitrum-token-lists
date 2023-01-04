@@ -17,7 +17,6 @@ import {
   getL2TokenAddressesFromL1,
   getL2TokenAddressesFromL2,
   getTokenListObj,
-  validateTokenListWithErrorThrowing,
   sanitizeNameString,
   sanitizeSymbolString,
   isNova,
@@ -31,6 +30,7 @@ import {
   promiseErrorMultiplier,
   getL1GatewayAddress,
 } from './utils';
+import { validateTokenListWithErrorThrowing } from './validateTokenList';
 import { constants as arbConstants } from '@arbitrum/sdk';
 import { readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
@@ -56,7 +56,7 @@ export const generateTokenList = async (
     includeOldDataFields?: boolean;
     sourceListURL?: string;
     skipValidation?: boolean;
-    preserveListName?: boolean
+    preserveListName?: boolean;
   }
 ) => {
   if (options?.includeAllL1Tokens && options.includeUnbridgedL1Tokens) {
@@ -103,11 +103,9 @@ export const generateTokenList = async (
   const l1TokenAddresses =
     options && options.getAllTokensInNetwork && !isNova
       ? tokens.map(curr => curr.l1TokenAddr)
-      : l1TokenList.tokens.filter(token => token.chainId === l1.provider.network.chainId).map(token => token.address);
-
-  // const l1TokenAddresses = tokens.map(
-  //   (token: GraphTokenResult) => token.l1TokenAddr
-  // );
+      : l1TokenList.tokens
+          .filter(token => token.chainId === l1.provider.network.chainId)
+          .map(token => token.address);
 
   const intermediatel2AddressesFromL1 = [];
   const intermediatel2AddressesFromL2 = [];
@@ -335,7 +333,10 @@ export const generateTokenList = async (
   })();
   const sourceListURL = getFormattedSourceURL(options?.sourceListURL);
   const arbTokenList: ArbTokenList = {
-    name: (options && options.preserveListName) ? name :  listNameToArbifiedListName(name),
+    name:
+      options && options.preserveListName
+        ? name
+        : listNameToArbifiedListName(name),
     timestamp: new Date().toISOString(),
     version,
     tokens: arbifiedTokenList,
@@ -366,7 +367,8 @@ export const generateTokenList = async (
 
 export const arbifyL1List = async (
   pathOrUrl: string,
-  includeOldDataFields: boolean
+  includeOldDataFields: boolean,
+  skipValidation: boolean
 ): Promise<{
   newList: ArbTokenList;
   l1ListName: string;
@@ -383,6 +385,7 @@ export const arbifyL1List = async (
     includeAllL1Tokens: true,
     includeOldDataFields,
     sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl : undefined,
+    skipValidation,
   });
 
   return {
@@ -391,7 +394,11 @@ export const arbifyL1List = async (
   };
 };
 
-export const updateArbifiedList = async (pathOrUrl: string, includeOldDataFields: boolean) => {
+export const updateArbifiedList = async (
+  pathOrUrl: string,
+  includeOldDataFields: boolean,
+  skipValidation: boolean
+) => {
   const arbTokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(arbTokenList);
   const path =
@@ -412,7 +419,8 @@ export const updateArbifiedList = async (pathOrUrl: string, includeOldDataFields
     includeAllL1Tokens: true,
     sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl : undefined,
     includeOldDataFields,
-    preserveListName: true
+    preserveListName: true,
+    skipValidation,
   });
 
   return {
@@ -421,7 +429,7 @@ export const updateArbifiedList = async (pathOrUrl: string, includeOldDataFields
   };
 };
 
-export const generateFullList = async () => {
+export const generateFullList = async (skipValidation: boolean) => {
   const mockList: TokenList = {
     name: 'Full',
     logoURI: 'ipfs://QmTvWJ4kmzq9koK74WJQ594ov8Es1HHurHZmMmhU8VY68y',
@@ -435,13 +443,13 @@ export const generateFullList = async () => {
   };
   const tokenData = await generateTokenList(mockList, undefined, {
     getAllTokensInNetwork: true,
-    skipValidation: true,
+    skipValidation,
   });
 
   const etherscanData = arbListtoEtherscanList(tokenData);
   return etherscanData;
 };
-export const generateFullListFormatted = async () => {
+export const generateFullListFormatted = async (skipValidation: boolean) => {
   const mockList: TokenList = {
     name: 'Full',
     logoURI: 'ipfs://QmTvWJ4kmzq9koK74WJQ594ov8Es1HHurHZmMmhU8VY68y',
@@ -455,37 +463,14 @@ export const generateFullListFormatted = async () => {
   };
   const allTokenList = await generateTokenList(mockList, undefined, {
     getAllTokensInNetwork: true,
-    skipValidation: true,
+    skipValidation,
   });
   // log for human-readable check
-  allTokenList.tokens.forEach((token) => {
+  allTokenList.tokens.forEach(token => {
     console.log(token.name, token.symbol, token.address);
   });
   return allTokenList;
 };
-
-// export const updateLogoURIs = async (path: string)=> {
-//   const data = readFileSync(path)
-//   const prevArbTokenList =  JSON.parse(data.toString()) as ArbTokenList
-//   const tokens:any = []
-//   for (let i = 0; i < prevArbTokenList.tokens.length; i++) {
-//     const tokenInfo = {...prevArbTokenList.tokens[i]}
-
-//     // @ts-ignore
-//     const logoURI = await getLogoUri(tokenInfo.extensions.l1Address)
-//     if(logoURI){
-//       tokenInfo.logoURI = logoURI
-//     } else {
-//       console.log('not found:', tokenInfo);
-//       delete  tokenInfo.logoURI
-//     }
-//     tokens.push(tokenInfo)
-//   }
-
-//   const newArbList = {...prevArbTokenList, ...{tokens: tokens}}
-//   writeFileSync(path, JSON.stringify(newArbList));
-
-// }
 
 export const arbListtoEtherscanList = (
   arbList: ArbTokenList

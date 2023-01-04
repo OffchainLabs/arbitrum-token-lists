@@ -6,7 +6,7 @@ import {
 } from './lib/token_list_gen';
 import { addPermitTags } from './PermitTokens/permitSignature';
 import args from './lib/getClargs';
-import { ArbTokenList, EtherscanList } from './lib/types';
+import { ArbTokenList } from './lib/types';
 import { writeToFile, getPath } from './lib/store';
 import { ETHERSCAN_LIST_NAME } from './lib/constants';
 
@@ -17,26 +17,34 @@ const main = async () => {
     if (args.includePermitTags)
       throw new Error('full list mode does not support permit tagging');
 
-    return writeToFile(await generateFullList(), getPath(ETHERSCAN_LIST_NAME));
+    return writeToFile(
+      await generateFullList(args.skipValidation ?? true),
+      getPath(ETHERSCAN_LIST_NAME)
+    );
   }
 
   let tokenList: ArbTokenList;
   let path: string;
-  const includeOldDataFields:boolean =  !!args.includeOldDataFields
+  const includeOldDataFields: boolean = !!args.includeOldDataFields;
 
   if (args.action === 'arbify') {
     const { newList, l1ListName } = await arbifyL1List(
       args.tokenList,
-      includeOldDataFields
+      includeOldDataFields,
+      args.skipValidation ?? true
     );
     tokenList = newList;
     path = getPath(l1ListName);
   } else if (args.action === 'update') {
-    const { newList, path: _path } = await updateArbifiedList(args.tokenList, includeOldDataFields);
+    const { newList, path: _path } = await updateArbifiedList(
+      args.tokenList,
+      includeOldDataFields,
+      args.skipValidation ?? true
+    );
     tokenList = newList;
     path = _path;
   } else if (args.action === 'alltokenslist') {
-    tokenList = await generateFullListFormatted();
+    tokenList = await generateFullListFormatted(args.skipValidation ?? true);
     path = getPath('full');
   } else {
     throw new Error(`action ${args.action} not recognised`);

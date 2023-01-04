@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-// import yargs from 'yargs/yargs';
 'use strict';
 import yargs from 'yargs/yargs';
+import { hideBin } from 'yargs/helpers';
 
-const argv = yargs(process.argv.slice(2))
+const argv = yargs(hideBin(process.argv))
   .options({
     l2NetworkID: {
       type: 'number',
@@ -33,6 +33,9 @@ const argv = yargs(process.argv.slice(2))
       type: 'string',
     },
     includePermitTags: {
+      type: 'boolean',
+    },
+    skipValidation: {
       type: 'boolean',
     },
   })
