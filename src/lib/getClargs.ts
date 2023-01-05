@@ -39,9 +39,18 @@ const argv = yargs(hideBin(process.argv))
       type: 'boolean',
     },
   })
-  .demandOption('action')
-  .demandOption('l2NetworkID')
-  .demandOption('tokenList')
+  // .demandOption('action')
+  // .demandOption('l2NetworkID')
+  // .demandOption('tokenList')
   .parseSync();
+
+export interface ArgvLike {
+  l2NetworkID: number,
+  tokenList: string,
+  action: string,
+  includeOldDataFields?: boolean,
+  includePermitTags?: boolean,
+  skipValidation?: boolean
+}
 
 export default argv;
