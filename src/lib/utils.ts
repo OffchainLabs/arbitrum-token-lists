@@ -6,17 +6,17 @@ import { L1GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L
 import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory';
 
 import { ArbTokenList, GraphTokenResult } from './types';
-import yargs from './getClargs';
 import path from 'path';
 import { tokenListIsValid } from './validateTokenList';
 import {
   l2ToL1GatewayAddresses,
   l2ToL1GatewayAddressesNova,
 } from './constants';
+import { argv } from './getClargs';
 
-export const isArbOne = yargs.l2NetworkID === 42161;
-export const isNova = yargs.l2NetworkID === 42170;
-export const isGoerliRollup = yargs.l2NetworkID === 421613;
+export const isArbOne = argv.l2NetworkID === 42161;
+export const isNova = argv.l2NetworkID === 42170;
+export const isGoerliRollup = argv.l2NetworkID === 421613;
 
 const coinGeckoBuff = readFileSync(
   path.resolve(__dirname, '../Assets/coingecko_uris.json')

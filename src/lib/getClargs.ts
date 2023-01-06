@@ -13,35 +13,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-'use strict';
-import yargs from 'yargs/yargs';
+import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-const argv = yargs(hideBin(process.argv))
-  .options({
-    l2NetworkID: {
-      type: 'number',
-    },
-    tokenList: {
-      type: 'string',
-    },
-    includeOldDataFields: {
-      type: 'boolean',
-    },
-    action: {
-      type: 'string',
-    },
-    includePermitTags: {
-      type: 'boolean',
-    },
-    skipValidation: {
-      type: 'boolean',
-    },
-  })
-  .demandOption('action')
-  .demandOption('l2NetworkID')
-  .demandOption('tokenList')
-  .parseSync();
+enum Action {
+  Alltokenslist = 'alltokenslist',
+  Arbify = 'arbify',
+  Full = 'full',
+  Permit = 'permit',
+  Update = 'update',
+}
 
-export default argv;
+const options = yargs(hideBin(process.argv)).options({
+  l2NetworkID: {
+    type: 'number',
+    demandOption: true,
+  },
+  tokenList: {
+    type: 'string',
+    demandOption: true,
+  },
+  includeOldDataFields: {
+    type: 'boolean',
+  },
+  action: {
+    choices: [
+      Action.Alltokenslist,
+      Action.Arbify,
+      Action.Full,
+      Action.Permit,
+      Action.Update,
+    ],
+    demandOption: true,
+  },
+  includePermitTags: {
+    type: 'boolean',
+  },
+  skipValidation: {
+    type: 'boolean',
+    default: false,
+  },
+});
+
+const argv = options.parseSync();
+type Argv = typeof argv;
+
+export { Action, argv, Argv, options };
