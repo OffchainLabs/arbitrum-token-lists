@@ -31,10 +31,11 @@ const compareLists = (
 };
 
 describe('Token Lists', () => {
-  describe('Arbify token lists', () => {
-    jest.setTimeout(100_000);
+  jest.setTimeout(200_000);
 
+  describe('Arbify token lists', () => {
     it('Arb1 Uniswap', async () => {
+      expect.assertions(1);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [
           '--l2NetworkID=42161',
@@ -46,10 +47,11 @@ describe('Token Lists', () => {
         ).then(response => response.json()),
       ]);
 
-      expect(compareLists(localList, onlineList)).toBeTruthy();
+      compareLists(localList, onlineList);
     });
 
     it('Arb1 Gemini', async () => {
+      expect.assertions(1);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [
           '--l2NetworkID=42161',
@@ -61,10 +63,11 @@ describe('Token Lists', () => {
         ).then(response => response.json()),
       ]);
 
-      expect(compareLists(localList, onlineList)).toBeTruthy();
+      compareLists(localList, onlineList);
     });
 
     it('Arb1 CMC', async () => {
+      expect.assertions(1);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [
           '--l2NetworkID=42161',
@@ -76,10 +79,11 @@ describe('Token Lists', () => {
         ).then(response => response.json()),
       ]);
 
-      expect(compareLists(localList, onlineList)).toBeTruthy();
+      compareLists(localList, onlineList);
     });
 
     it('Arb Nova Uniswap', async () => {
+      expect.assertions(1);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [
           '--l2NetworkID=42170',
@@ -91,10 +95,11 @@ describe('Token Lists', () => {
         ).then(response => response.json()),
       ]);
 
-      expect(compareLists(localList, onlineList)).toBeTruthy();
+      compareLists(localList, onlineList);
     });
 
     it('Arb Nova Gemini', async () => {
+      expect.assertions(1);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [
           '--l2NetworkID=42170',
@@ -106,10 +111,11 @@ describe('Token Lists', () => {
         ).then(response => response.json()),
       ]);
 
-      expect(compareLists(localList, onlineList)).toBeTruthy();
+      compareLists(localList, onlineList);
     });
 
     it('Arb Nova CMC', async () => {
+      expect.assertions(1);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [
           '--l2NetworkID=42170',
@@ -121,10 +127,11 @@ describe('Token Lists', () => {
         ).then(response => response.json()),
       ]);
 
-      expect(compareLists(localList, onlineList)).toBeTruthy();
+      compareLists(localList, onlineList);
     });
 
     it('Arb Goerli CMC', async () => {
+      expect.assertions(1);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [
           '--l2NetworkID=421613',
@@ -132,17 +139,17 @@ describe('Token Lists', () => {
           '--ignorePreviousList=true',
         ]),
         fetch(
-          'https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coinmarketcap.jso'
+          'https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coinmarketcap.json'
         ).then(response => response.json()),
       ]);
 
-      expect(compareLists(localList, onlineList)).toBeTruthy();
+      compareLists(localList, onlineList);
     });
   });
 
   describe('Update token lists', () => {
-    jest.setTimeout(100_000);
     it('should return the same list as the online version', async () => {
+      expect.assertions(1);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Update, [
           '--l2NetworkID=42161',
@@ -154,14 +161,13 @@ describe('Token Lists', () => {
         ).then(response => response.json()),
       ]);
 
-      expect(compareLists(localList, onlineList)).toBeTruthy();
+      compareLists(localList, onlineList);
     });
   });
 
   describe('fullList', () => {
-    jest.setTimeout(40_000);
-
     it('should generate fullList for a given network', async () => {
+      expect.assertions(1);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Full, [
           '--l2NetworkID=42161',
@@ -173,7 +179,7 @@ describe('Token Lists', () => {
         ),
       ]);
 
-      expect(compareLists(localList, onlineList)).toBeTruthy();
+      compareLists(localList, onlineList);
     });
   });
 });
