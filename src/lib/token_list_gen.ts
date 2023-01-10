@@ -56,6 +56,7 @@ export const generateTokenList = async (
     getAllTokensInNetwork?: boolean;
     includeOldDataFields?: boolean;
     sourceListURL?: string;
+    skipValidation?: boolean;
     preserveListName?: boolean;
   }
 ) => {

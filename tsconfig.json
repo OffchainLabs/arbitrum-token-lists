@@ -1,20 +1,19 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "module": "commonjs",
     "declaration": true,
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "strict": true,
-    // "allowJs": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "module": "commonjs",
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "strictNullChecks": true,
     "noImplicitThis": true,
+    "outDir": "./dist",
     "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "experimentalDecorators": true
+    "strict": true,
+    "strictNullChecks": true,
+    "target": "ES2017"
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.js"]
 }
