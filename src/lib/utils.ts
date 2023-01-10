@@ -12,11 +12,16 @@ import {
   l2ToL1GatewayAddresses,
   l2ToL1GatewayAddressesNova,
 } from './constants';
-import { argv } from './getClargs';
+import { getArgvs } from './options';
 
-export const isArbOne = argv.l2NetworkID === 42161;
-export const isNova = argv.l2NetworkID === 42170;
-export const isGoerliRollup = argv.l2NetworkID === 421613;
+export const isNetwork = () => {
+  const argv = getArgvs();
+  return {
+    isArbOne: argv.l2NetworkID === 42161,
+    isNova: argv.l2NetworkID === 42170,
+    isGoerliRollup: argv.l2NetworkID === 421613,
+  };
+};
 
 const coinGeckoBuff = readFileSync(
   path.resolve(__dirname, '../Assets/coingecko_uris.json')
@@ -81,6 +86,7 @@ export const promiseErrorMultiplier = <T>(
 };
 
 export const getL1GatewayAddress = async (l2GatewayAddress: string) => {
+  const { isNova } = isNetwork();
   const l2Gateway = isNova
     ? l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()]
     : l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()];
@@ -365,26 +371,6 @@ export function* getChunks<T>(arr: Array<T>, chunkSize = 500) {
     yield arr.slice(i, i + chunkSize);
   }
 }
-// export const promiseErrorMultiplier = <T, Q extends Error>(
-//   prom: Promise<T>,
-//   handler: (err: Q) => Promise<T>,
-//   tries = 3,
-//   verbose = false
-// ) => {
-//   let counter = 0;
-//   while (counter < tries) {
-//     prom = prom.catch((err) => handler(err));
-//     counter++;
-//   }
-//   return prom.catch((err) => {
-//     if (verbose) console.error('Failed ' + tries + ' times. Giving up');
-//     // throw err;
-//     console.log("reason" in err ? err.reason : "failed")
-
-//     writeFileSync(TOKENLIST_DIR_PATH+"/error.json", JSON.stringify(err));
-//     throw new Error("promise retrier failed")
-//   });
-// };
 
 export const promiseRetrier = <T>(createProm: () => Promise<T>): Promise<T> =>
   promiseErrorMultiplier(createProm(), () => createProm());

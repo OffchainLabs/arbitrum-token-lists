@@ -7,7 +7,7 @@ import {
   ALL_TOKENS_GOERLI_ROLLUP_PATH,
 } from './constants';
 import { ArbTokenList, EtherscanList } from './types';
-import { isArbTokenList, isGoerliRollup, isNova, isArbOne } from './utils';
+import { isArbTokenList, isNetwork } from './utils';
 
 export const listNameToFileName = (name: string) => {
   const prefix = 'arbed_';
@@ -19,6 +19,8 @@ export const listNameToFileName = (name: string) => {
 };
 
 export const getPath = (l1ListName: string) => {
+  const { isArbOne, isGoerliRollup, isNova } = isNetwork();
+
   if (l1ListName === ETHERSCAN_LIST_NAME) {
     if (isArbOne) return ETHERSCAN_PATH;
     if (isGoerliRollup) return ALL_TOKENS_GOERLI_ROLLUP_PATH;
@@ -37,15 +39,16 @@ export const getPath = (l1ListName: string) => {
 
 export const getPrevList = (l1ListName: string): ArbTokenList | undefined => {
   const path = getPath(l1ListName);
-  if (existsSync(path)) {
-    const data = readFileSync(path);
-    console.log('Prev version of Arb List found');
-
-    const prevArbTokenList = JSON.parse(data.toString());
-    isArbTokenList(prevArbTokenList);
-    return prevArbTokenList as ArbTokenList;
+  if (!existsSync(path)) {
+    return undefined;
   }
-  return undefined;
+
+  const data = readFileSync(path);
+  console.log('Prev version of Arb List found');
+
+  const prevArbTokenList = JSON.parse(data.toString());
+  isArbTokenList(prevArbTokenList);
+  return prevArbTokenList as ArbTokenList;
 };
 
 export const writeToFile = (

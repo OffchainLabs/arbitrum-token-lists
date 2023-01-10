@@ -1,10 +1,12 @@
 import { providers } from 'ethers';
 import dotenv from 'dotenv';
 import { getL2Network, MultiCaller } from '@arbitrum/sdk';
-import { argv } from './getClargs';
+import { getArgvs } from './options';
+
 dotenv.config();
 
 export const getNetworkConfig = async () => {
+  const argv = getArgvs();
   const networkID = argv.l2NetworkID;
   console.log('Using L2 networkID:', networkID);
 

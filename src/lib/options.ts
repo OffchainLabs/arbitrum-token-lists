@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+import { Arguments, InferredOptionTypes } from 'yargs';
 
 enum Action {
-  Alltokenslist = 'alltokenslist',
+  AllTokensList = 'alltokenslist',
   Arbify = 'arbify',
   Full = 'full',
   Permit = 'permit',
   Update = 'update',
 }
-
-const options = yargs(hideBin(process.argv)).options({
+const options = {
   l2NetworkID: {
     type: 'number',
     demandOption: true,
@@ -36,16 +37,6 @@ const options = yargs(hideBin(process.argv)).options({
   includeOldDataFields: {
     type: 'boolean',
   },
-  action: {
-    choices: [
-      Action.Alltokenslist,
-      Action.Arbify,
-      Action.Full,
-      Action.Permit,
-      Action.Update,
-    ],
-    demandOption: true,
-  },
   includePermitTags: {
     type: 'boolean',
   },
@@ -53,9 +44,16 @@ const options = yargs(hideBin(process.argv)).options({
     type: 'boolean',
     default: false,
   },
-});
+  ignorePreviousList: {
+    type: 'boolean',
+    default: false,
+  },
+} as const;
 
-const argv = options.parseSync();
-type Argv = typeof argv;
+const yargsInstance = yargs(hideBin(process.argv)).options(options);
 
-export { Action, argv, Argv, options };
+type Args = Arguments<InferredOptionTypes<typeof options>>;
+
+const getArgvs = () => yargsInstance.parseSync();
+
+export { Action, options, Args, getArgvs, yargsInstance };
