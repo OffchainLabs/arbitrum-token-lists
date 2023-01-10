@@ -1,16 +1,18 @@
 import { yargsInstance } from '../src/main';
-import { handler as handlerUpdate } from '../src/commands/update';
+import { handler as handlerAllTokensList } from '../src/commands/allTokensList';
 import { handler as handlerArbify } from '../src/commands/arbify';
 import { handler as handlerFull } from '../src/commands/full';
+import { handler as handlerUpdate } from '../src/commands/update';
 import { Action, Args } from '../src/lib/options';
 import { ArbTokenList, EtherscanList } from '../src/lib/types';
 
 const handlers: {
   [action in Action]?: (argv: Args) => Promise<ArbTokenList | EtherscanList>;
 } = {
-  [Action.Update]: handlerUpdate,
+  [Action.AllTokensList]: handlerAllTokensList,
   [Action.Arbify]: handlerArbify,
   [Action.Full]: handlerFull,
+  [Action.Update]: handlerUpdate,
 };
 const runCommand = async (command: Action, options: string[]) => {
   const argv = await yargsInstance.parseAsync(['_', command, ...options]);
@@ -177,6 +179,24 @@ describe('Token Lists', () => {
         fetch('https://tokenlist.arbitrum.io/FullList/all_tokens.json').then(
           response => response.json()
         ),
+      ]);
+
+      compareLists(localList, onlineList);
+    });
+  });
+
+  describe('allTokensList', () => {
+    it.only('should generate fullList for a given network', async () => {
+      expect.assertions(1);
+      const [localList, onlineList] = await Promise.all([
+        runCommand(Action.AllTokensList, [
+          '--l2NetworkID=421613',
+          '--tokenList=full',
+          '--ignorePreviousList=true',
+        ]),
+        fetch(
+          'https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_full.json'
+        ).then(response => response.json()),
       ]);
 
       compareLists(localList, onlineList);
