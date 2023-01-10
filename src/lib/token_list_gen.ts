@@ -76,6 +76,10 @@ export const generateTokenList = async (
   if (options && options.getAllTokensInNetwork && isNova)
     throw new Error('Subgraph not enabled for nova');
 
+  const l1TokenListL1Tokens = l1TokenList.tokens.filter(
+    token => token.chainId === l1.provider.network.chainId
+  );
+
   let tokens: GraphTokenResult[] =
     options && options.getAllTokensInNetwork
       ? await promiseErrorMultiplier(getAllTokens(l2.network.chainID), () =>
@@ -83,7 +87,7 @@ export const generateTokenList = async (
         )
       : await promiseErrorMultiplier(
           getL1TokenAndL2Gateway(
-            l1TokenList.tokens.map(token => ({
+            l1TokenListL1Tokens.map(token => ({
               addr: token.address.toLowerCase(),
               logo: token.logoURI,
             })),
@@ -92,7 +96,7 @@ export const generateTokenList = async (
           ),
           () =>
             getL1TokenAndL2Gateway(
-              l1TokenList.tokens.map(token => ({
+              l1TokenListL1Tokens.map(token => ({
                 addr: token.address.toLowerCase(),
                 logo: token.logoURI,
               })),
@@ -104,9 +108,7 @@ export const generateTokenList = async (
   const l1TokenAddresses =
     options && options.getAllTokensInNetwork && !isNova
       ? tokens.map(curr => curr.l1TokenAddr)
-      : l1TokenList.tokens
-          .filter(token => token.chainId === l1.provider.network.chainId)
-          .map(token => token.address);
+      : l1TokenListL1Tokens.map(token => token.address);
 
   const intermediatel2AddressesFromL1 = [];
   const intermediatel2AddressesFromL2 = [];
