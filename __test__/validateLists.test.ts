@@ -32,12 +32,37 @@ const compareLists = (
   return expect(l1).toStrictEqual(l2);
 };
 
+// check for top-level duplicate token (i.e. same adddress on the same chain) 
+const findDuplicateTokens = (arbTokenList: ArbTokenList)=>{
+  const appearanceCount : {
+    [asdf: string]: number
+  } = {};
+
+  arbTokenList.tokens.forEach((token)=>{
+    const uniqueID = `${token.address},,${token.chainId}`
+    if(appearanceCount[uniqueID]){
+      appearanceCount[uniqueID] ++
+    } else {
+      appearanceCount[uniqueID] = 1
+    }
+  })
+  return Object.keys(appearanceCount).filter((uniqueID)=>{
+    return appearanceCount[uniqueID] > 1
+  }) 
+}
+
+const testNoDuplicates = (arbTokenList: ArbTokenList)=>{
+  const dups = findDuplicateTokens(arbTokenList)
+  expect(dups).toMatchObject([])
+
+}
+
 describe('Token Lists', () => {
   jest.setTimeout(200_000);
 
   describe('Arbify token lists', () => {
     it('Arb1 Uniswap', async () => {
-      expect.assertions(1);
+      expect.assertions(2);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [
           '--l2NetworkID=42161',
@@ -48,12 +73,14 @@ describe('Token Lists', () => {
           'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs_list.json'
         ).then(response => response.json()),
       ]);
+      testNoDuplicates(localList as ArbTokenList)
+      
 
       compareLists(localList, onlineList);
     });
 
     it('Arb1 Gemini', async () => {
-      expect.assertions(1);
+      expect.assertions(2);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [
           '--l2NetworkID=42161',
@@ -65,11 +92,13 @@ describe('Token Lists', () => {
         ).then(response => response.json()),
       ]);
 
+      testNoDuplicates(localList as ArbTokenList)
+
       compareLists(localList, onlineList);
     });
 
     it('Arb1 CMC', async () => {
-      expect.assertions(1);
+      expect.assertions(2);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [
           '--l2NetworkID=42161',
@@ -79,13 +108,14 @@ describe('Token Lists', () => {
         fetch(
           'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_coinmarketcap.json'
         ).then(response => response.json()),
-      ]);
+      ]);      
+      testNoDuplicates(localList as ArbTokenList)
 
       compareLists(localList, onlineList);
     });
 
     it('Arb Nova Uniswap', async () => {
-      expect.assertions(1);
+      expect.assertions(2);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [
           '--l2NetworkID=42170',
@@ -95,13 +125,15 @@ describe('Token Lists', () => {
         fetch(
           'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs_default.json'
         ).then(response => response.json()),
-      ]);
+      ]);      
+
+      testNoDuplicates(localList as ArbTokenList)
 
       compareLists(localList, onlineList);
     });
 
     it('Arb Nova Gemini', async () => {
-      expect.assertions(1);
+      expect.assertions(2);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [
           '--l2NetworkID=42170',
@@ -111,13 +143,13 @@ describe('Token Lists', () => {
         fetch(
           'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_gemini_token_list.json'
         ).then(response => response.json()),
-      ]);
-
+      ]); 
+      testNoDuplicates(localList as ArbTokenList)
       compareLists(localList, onlineList);
     });
 
     it('Arb Nova CMC', async () => {
-      expect.assertions(1);
+      expect.assertions(2);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [
           '--l2NetworkID=42170',
@@ -128,12 +160,12 @@ describe('Token Lists', () => {
           'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_coinmarketcap.json'
         ).then(response => response.json()),
       ]);
-
+      testNoDuplicates(localList as ArbTokenList)
       compareLists(localList, onlineList);
     });
 
     it('Arb Goerli CMC', async () => {
-      expect.assertions(1);
+      expect.assertions(2);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [
           '--l2NetworkID=421613',
@@ -144,14 +176,14 @@ describe('Token Lists', () => {
           'https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coinmarketcap.json'
         ).then(response => response.json()),
       ]);
-
+      testNoDuplicates(localList as ArbTokenList)
       compareLists(localList, onlineList);
     });
   });
 
   describe('Update token lists', () => {
     it('should return the same list as the online version', async () => {
-      expect.assertions(1);
+      expect.assertions(2);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Update, [
           '--l2NetworkID=42161',
@@ -162,6 +194,7 @@ describe('Token Lists', () => {
           'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_arb_whitelist_era.json'
         ).then(response => response.json()),
       ]);
+      testNoDuplicates(localList as ArbTokenList)
 
       compareLists(localList, onlineList);
     });
