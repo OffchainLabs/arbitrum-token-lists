@@ -219,8 +219,8 @@ describe('Token Lists', () => {
   });
 
   describe('allTokensList', () => {
-    it.only('should generate fullList for a given network', async () => {
-      expect.assertions(1);
+    it('should generate allTokensList for a given network', async () => {
+      expect.assertions(2);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.AllTokensList, [
           '--l2NetworkID=421613',
@@ -231,6 +231,7 @@ describe('Token Lists', () => {
           'https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_full.json'
         ).then(response => response.json()),
       ]);
+      testNoDuplicates(localList as ArbTokenList)
 
       compareLists(localList, onlineList);
     });
