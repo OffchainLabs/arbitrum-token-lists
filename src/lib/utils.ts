@@ -1,7 +1,4 @@
-import Ajv from 'ajv';
-import betterAjvErrors from 'better-ajv-errors';
-import addFormats from 'ajv-formats';
-import { schema, TokenList } from '@uniswap/token-lists';
+import { TokenList } from '@uniswap/token-lists';
 import { readFileSync, existsSync } from 'fs';
 import axios from 'axios';
 import { L2Network, MultiCaller } from '@arbitrum/sdk';
@@ -9,17 +6,22 @@ import { L1GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L
 import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory';
 
 import { ArbTokenList, GraphTokenResult } from './types';
-import yargs from './getClargs';
 import path from 'path';
-
+import { tokenListIsValid } from './validateTokenList';
 import {
   l2ToL1GatewayAddresses,
   l2ToL1GatewayAddressesNova,
 } from './constants';
+import { getArgvs } from './options';
 
-export const isArbOne = yargs.l2NetworkID === 42161;
-export const isNova = yargs.l2NetworkID === 42170;
-export const isGoerliRollup = yargs.l2NetworkID === 421613;
+export const isNetwork = () => {
+  const argv = getArgvs();
+  return {
+    isArbOne: argv.l2NetworkID === 42161,
+    isNova: argv.l2NetworkID === 42170,
+    isGoerliRollup: argv.l2NetworkID === 421613,
+  };
+};
 
 const coinGeckoBuff = readFileSync(
   path.resolve(__dirname, '../Assets/coingecko_uris.json')
@@ -84,6 +86,7 @@ export const promiseErrorMultiplier = <T>(
 };
 
 export const getL1GatewayAddress = async (l2GatewayAddress: string) => {
+  const { isNova } = isNetwork();
   const l2Gateway = isNova
     ? l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()]
     : l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()];
@@ -91,21 +94,6 @@ export const getL1GatewayAddress = async (l2GatewayAddress: string) => {
   if (l2Gateway) return l2Gateway;
 
   return undefined;
-
-  // TODO: discuss:
-  // try {
-  //   const tokenGateway = TokenGateway__factory.connect(
-  //     l2GatewayAddress,
-  //     l2Provider
-  //   );
-  //   const l1Gateway = await promiseErrorMultiplier(
-  //     tokenGateway.counterpartGateway(),
-  //     (error) => tokenGateway.counterpartGateway()
-  //   );
-  //   return l1Gateway;
-  // } catch (e) {
-  //   return undefined;
-  // }
 };
 
 export const getL2GatewayAddressesFromL1Token = async (
@@ -221,38 +209,6 @@ export const getTokenListObjFromUrl = async (url: string) => {
 };
 export const getTokenListObjFromLocalPath = async (path: string) => {
   return JSON.parse(readFileSync(path).toString()) as TokenList;
-};
-
-export const tokenListIsValid = (tokenList: ArbTokenList | TokenList) => {
-  const ajv = new Ajv();
-  addFormats(ajv);
-  const validate = ajv.compile(schema);
-
-  const res = validate(tokenList);
-  if (validate.errors) {
-    const output = betterAjvErrors(schema, tokenList, validate.errors, {
-      indent: 2,
-    });
-    console.log(output);
-  }
-
-  return res;
-};
-
-export const validateTokenListWithErrorThrowing = (
-  tokenList: ArbTokenList | TokenList
-) => {
-  try {
-    const valid = tokenListIsValid(tokenList);
-    if (valid) return true;
-    else
-      throw new Error(
-        'Data does not conform to token list schema; not sure why'
-      );
-  } catch (e) {
-    console.log('Invalid token list:');
-    throw e;
-  }
 };
 
 export const removeInvalidTokensFromList = (
@@ -415,26 +371,6 @@ export function* getChunks<T>(arr: Array<T>, chunkSize = 500) {
     yield arr.slice(i, i + chunkSize);
   }
 }
-// export const promiseErrorMultiplier = <T, Q extends Error>(
-//   prom: Promise<T>,
-//   handler: (err: Q) => Promise<T>,
-//   tries = 3,
-//   verbose = false
-// ) => {
-//   let counter = 0;
-//   while (counter < tries) {
-//     prom = prom.catch((err) => handler(err));
-//     counter++;
-//   }
-//   return prom.catch((err) => {
-//     if (verbose) console.error('Failed ' + tries + ' times. Giving up');
-//     // throw err;
-//     console.log("reason" in err ? err.reason : "failed")
-
-//     writeFileSync(TOKENLIST_DIR_PATH+"/error.json", JSON.stringify(err));
-//     throw new Error("promise retrier failed")
-//   });
-// };
 
 export const promiseRetrier = <T>(createProm: () => Promise<T>): Promise<T> =>
   promiseErrorMultiplier(createProm(), () => createProm());

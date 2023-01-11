@@ -1,5 +1,5 @@
 import { request, gql } from 'graphql-request';
-import { isNova } from './utils';
+import { isNetwork } from './utils';
 import { GraphTokenResult, GraphTokensResult } from './types';
 import { excludeList } from './constants';
 
@@ -52,6 +52,7 @@ export const getTokens = async (
   tokenList: { addr: string; logo: string | undefined }[],
   _networkID: string | number
 ): Promise<Array<GraphTokenResult>> => {
+  const { isNova } = isNetwork();
   if (isNova) {
     console.warn('empty subgraph for nova');
     return [];
