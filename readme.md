@@ -4,7 +4,7 @@ From root:
 
 1. `yarn install`
 2. `cd packages/cli; cp .env.sample .env`
-3. In `.env`, set `MAINNET_RPC` and `GOERLI_RPC` var (i.e., set infura key or use different endpoint)
+3. In `.env`, either set `MAINNET_RPC` and `GOERLI_RPC` var or `INFURA_KEY`
 
 ### Arbify an L1 Token List
 

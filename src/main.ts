@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 import { yargsInstance } from './lib/options';
+import * as dotenv from 'dotenv';
+import dotenvExpand from 'dotenv-expand';
+
+var myEnv = dotenv.config();
+dotenvExpand.expand(myEnv);
 
 const update = yargsInstance.command(require('./commands/update'));
 const arbify = yargsInstance.command(require('./commands/arbify'));

@@ -29,6 +29,7 @@
     "axios": "^0.23.0",
     "better-ajv-errors": "^1.1.2",
     "dotenv": "^16.0.3",
+    "dotenv-expand": "^10.0.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
     "graphql": "^15.6.1",
