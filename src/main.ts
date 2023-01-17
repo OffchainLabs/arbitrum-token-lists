@@ -26,6 +26,15 @@ import {
 const myEnv = dotenv.config();
 dotenvExpand.expand(myEnv);
 
+if (!process.env.INFURA_KEY) {
+  console.log('INFURA KEY NOT SET');
+}
+
+console.log(process.env.INFURA_TOP_LEVEL);
+console.log(process.env.INFURA_JOBS_LEVEL);
+console.log(process.env.INFURA_BUILD_LEVEL);
+console.log(process.env.INFURA_TEST_LEVEL);
+
 const update: any = yargsInstance.command(
   commandUpdate,
   describeUpdate,
