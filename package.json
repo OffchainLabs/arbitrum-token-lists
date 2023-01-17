@@ -17,7 +17,8 @@
     "fullNova": "yarn ts-node src/main.ts full --tokenList full --l2NetworkID 42170",
     "test": "jest --runInBand",
     "prettier:format": "yarn prettier './**/*.{js,json,md,ts,yml}' --write && yarn run lint --fix",
-    "prettier:check": "yarn prettier './**/*.{js,json,md,ts,yml}' --check && yarn run lint --fix"
+    "prettier:check": "yarn prettier './**/*.{js,json,md,ts,yml}' --check && yarn run lint --fix",
+    "test:ci": "yarn test --ci"
   },
   "dependencies": {
     "@arbitrum/sdk": "^3.0.0",

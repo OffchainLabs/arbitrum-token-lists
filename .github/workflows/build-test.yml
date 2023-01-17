@@ -42,3 +42,15 @@ jobs:
 
       - name: Check formatting with Prettier
         run: yarn prettier:check
+
+  integration-test:
+    name: 'Integration tests'
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: ./.github/actions/restore-cache
+
+      - name: Test
+        run: yarn test:ci:ui
