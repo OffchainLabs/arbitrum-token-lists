@@ -26,18 +26,6 @@ import {
 const myEnv = dotenv.config();
 dotenvExpand.expand(myEnv);
 
-if (!process.env.INFURA_KEY) {
-  console.log('INFURA KEY NOT SET');
-}
-
-if (!process.env.MAINNET_RPC) {
-  console.log('MAINNET_RPC KEY NOT SET');
-}
-
-if (!process.env.GOERLI_RPC) {
-  console.log('GOERLI_RP KEY NOT SET');
-}
-
 const update: any = yargsInstance.command(
   commandUpdate,
   describeUpdate,
