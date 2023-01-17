@@ -53,4 +53,4 @@ jobs:
       - uses: ./.github/actions/restore-cache
 
       - name: Test
-        run: yarn test:ci:ui
+        run: yarn test:ci
