@@ -6,7 +6,9 @@
   "scripts": {
     "build": "tsc",
     "main": "ts-node src/main.ts",
-    "lint": "eslint .",
+    "lint": "tsc --noEmit && eslint 'src/**/*.{js,ts,tsx}'",
+    "prettier:format": "yarn prettier './**/*.{js,json,md,ts,yml}' --write && yarn run lint --fix",
+    "prettier:check": "yarn prettier './**/*.{js,json,md,ts,yml}' --check && yarn run lint --fix",
     "update": "yarn ts-node src/main.ts update",
     "arbify": "yarn ts-node src/main.ts arbify",
     "permit": "yarn ts-node src/main.ts permit",
@@ -16,8 +18,6 @@
     "novaify": "yarn ts-node src/main.ts arbify --l2NetworkID 42170",
     "fullNova": "yarn ts-node src/main.ts full --tokenList full --l2NetworkID 42170",
     "test": "jest --runInBand",
-    "prettier:format": "yarn prettier './**/*.{js,json,md,ts,yml}' --write && yarn run lint --fix",
-    "prettier:check": "yarn prettier './**/*.{js,json,md,ts,yml}' --check && yarn run lint --fix",
     "test:ci": "yarn test --ci --silent"
   },
   "dependencies": {
@@ -30,12 +30,8 @@
     "better-ajv-errors": "^1.1.2",
     "dotenv": "^16.0.3",
     "dotenv-expand": "^10.0.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-prettier": "^4.0.0",
     "graphql": "^15.6.1",
     "graphql-request": "^3.6.1",
-    "jest": "^29.3.1",
-    "prettier": "^2.4.1",
     "ts-node": "^10.8.1",
     "typescript": "^4.7.3",
     "yargs": "^17.2.1"
@@ -46,6 +42,10 @@
     "@typescript-eslint/eslint-plugin": "^5.1.0",
     "@typescript-eslint/parser": "^5.1.0",
     "eslint": "^8.0.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "jest": "^29.3.1",
+    "prettier": "^2.4.1",
     "ts-jest": "^29.0.3"
   }
 }

@@ -8,8 +8,6 @@ export const command = Action.AllTokensList;
 
 export const describe = 'All tokens list';
 
-export const builder = () => {};
-
 export const handler = async (argvs: Args) => {
   let tokenList: ArbTokenList = await generateFullListFormatted();
   const path = getPath('full');
