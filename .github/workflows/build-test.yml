@@ -8,10 +8,6 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-env:
-  ## Sets environment variable
-  INFURA_TOP_LEVEL: 'INFFFFF ${{ secrets.INFURA_KEY }} after'
-
 jobs:
   install:
     name: 'Install'
@@ -55,19 +51,12 @@ jobs:
     environment: CI
     needs: install
     env:
-      INFURA_JOBS_LEVEL: 'aa ${{ secrets.INFURA_KEY }} after secret'
+      INFURA_KEY: '${{ secrets.INFURA_KEY }}'
 
     steps:
       - uses: actions/checkout@v3
 
       - uses: ./.github/actions/restore-cache
 
-      - name: Build
-        run: yarn build
-        env:
-          INFURA_BUILD_LEVEL: 'aze1'
-
       - name: Test
         run: yarn test:ci
-        env:
-          INFURA_TEST_LEVEL: 'aze ${{ secrets.INFURA_KEY }} AFTER'
