@@ -18,7 +18,7 @@
     "novaify": "yarn ts-node src/main.ts arbify --l2NetworkID 42170",
     "fullNova": "yarn ts-node src/main.ts full --tokenList full --l2NetworkID 42170",
     "test": "jest --runInBand",
-    "test:ci": "yarn test --ci"
+    "test:ci": "yarn test --ci --silent"
   },
   "dependencies": {
     "@arbitrum/sdk": "^3.0.0",
