@@ -10,7 +10,7 @@ on:
 
 env:
   ## Sets environment variable
-  INFURA_TOP_LEVEL: 'INFFFFF ${{ secrets.GITHUB_TOKEN }} after'
+  INFURA_TOP_LEVEL: 'INFFFFF ${{ secrets.INFURA_KEY }} after'
 
 jobs:
   install:
@@ -52,9 +52,10 @@ jobs:
   integration-test:
     name: 'Integration tests'
     runs-on: ubuntu-latest
+    environment: CI
     needs: install
     env:
-      INFURA_JOBS_LEVEL: 'aa ${{ secrets.GITHUB_TOKEN }} after secret'
+      INFURA_JOBS_LEVEL: 'aa ${{ secrets.INFURA_KEY }} after secret'
 
     steps:
       - uses: actions/checkout@v3
@@ -69,4 +70,4 @@ jobs:
       - name: Test
         run: yarn test:ci
         env:
-          INFURA_TEST_LEVEL: 'aze ${{ secrets.GITHUB_TOKEN }} AFTER'
+          INFURA_TEST_LEVEL: 'aze ${{ secrets.INFURA_KEY }} AFTER'
