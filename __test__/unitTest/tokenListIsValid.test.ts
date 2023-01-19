@@ -9,7 +9,6 @@ import arblistWrongAddress from "./schma/arbifyInvalid5.tokenlist.json"
 import arblistWrongChainId from "./schma/arbifyInvalid6.tokenlist.json"
 
 describe("TokenListIsValid Test", () => {
-
     it("Should return true when list is valid (Uniswap Example)", () => {
         expect(tokenListIsValid(uniswapExample)).toBeTruthy()
     })

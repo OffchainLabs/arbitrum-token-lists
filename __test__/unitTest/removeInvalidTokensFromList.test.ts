@@ -5,7 +5,6 @@ import arblistdecimalsTooLow from "./schma/arbifyInvalid1.tokenlist.json"
 import arblistWrongVersion from "./schma/arbifyInvalid7.tokenlist.json"
 
 describe("removeInvalidTokensFromList Test", () => {
-
     it("Should return same when use correct list", () => {
         
         expect(removeInvalidTokensFromList(arblist)).toEqual(arblist)
@@ -22,7 +21,7 @@ describe("removeInvalidTokensFromList Test", () => {
         })
         arblistdecimalsTooLow.tokens = preImage.tokens
     })
-    
+
     it("Should throw Error when issues happen outside of tokens", () => {
         const preImage = JSON.parse(
             JSON.stringify(arblistWrongVersion)
