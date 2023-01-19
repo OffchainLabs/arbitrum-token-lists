@@ -27,10 +27,12 @@ export const validateTokenListWithErrorThrowing = (
     const valid = tokenListIsValid(tokenList);
     if (valid) return true;
     else
-      throw new Error(
+      {
+        throw new Error(
         'Data does not conform to token list schema; not sure why'
-      );
+      );}
   } catch (e) {
+    console.log(e)
     console.log('Invalid token list:');
     throw e;
   }
