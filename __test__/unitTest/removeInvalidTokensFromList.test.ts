@@ -10,15 +10,14 @@ describe("removeInvalidTokensFromList Test", () => {
     })
 
     it("Should remove wrong token when use incorrect list", () => {
-        const preImage = JSON.parse(
+        const listToBeFixed = JSON.parse(
             JSON.stringify(arblistDecimalsTooLow)
           ) as typeof arblistDecimalsTooLow;
-        const correctList = removeInvalidTokensFromList(arblistDecimalsTooLow)
-        expect(correctList.tokens.length).toBeLessThan(preImage.tokens.length)
+        const correctList = removeInvalidTokensFromList(listToBeFixed)
+        expect(correctList.tokens.length).toBeLessThan(arblistDecimalsTooLow.tokens.length)
         correctList.tokens.forEach(tokenInfo => {
             expect(tokenInfo.name).not.toEqual("blah blah ")
         })
-        arblistDecimalsTooLow.tokens = preImage.tokens
     })
 
     it("Should throw Error when issues happen outside of tokens", () => {
