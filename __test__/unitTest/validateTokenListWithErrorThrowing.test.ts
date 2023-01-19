@@ -1,12 +1,12 @@
 import { tokenListIsValid, validateTokenListWithErrorThrowing } from '../../src/lib/validateTokenList'
-import uniswapExample from "./schma/uniswap.tokenlist.json"
-import arblist from "./schma/arbify.tokenlist.json"
-import arblistDecimalsTooLow from "./schma/arblistDecimalsTooLow.tokenlist.json"
-import arblistDecimalsTooHigh from "./schma/arblistDecimalsTooHigh.tokenlist.json"
-import arblistNameTooLong from "./schma/arblistNameTooLong.tokenlist.json"
-import arblistSymbolTooLong from "./schma/arblistSymbolTooLong.tokenlist.json"
-import arblistWrongAddress from "./schma/arblistWrongAddress.tokenlist.json"
-import arblistWrongChainId from "./schma/arblistWrongChainId.tokenlist.json"
+import uniswapExample from "./schema/uniswap.tokenlist.json"
+import arblist from "./schema/arbify.tokenlist.json"
+import arblistDecimalsTooLow from "./schema/arblistDecimalsTooLow.tokenlist.json"
+import arblistDecimalsTooHigh from "./schema/arblistDecimalsTooHigh.tokenlist.json"
+import arblistNameTooLong from "./schema/arblistNameTooLong.tokenlist.json"
+import arblistSymbolTooLong from "./schema/arblistSymbolTooLong.tokenlist.json"
+import arblistWrongAddress from "./schema/arblistWrongAddress.tokenlist.json"
+import arblistWrongChainId from "./schema/arblistWrongChainId.tokenlist.json"
 
 describe("TokenListIsValid Test", () => {
     const errorCode = 'Data does not conform to token list schema; not sure why'
