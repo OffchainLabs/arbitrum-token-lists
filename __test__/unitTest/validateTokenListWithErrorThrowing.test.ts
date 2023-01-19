@@ -1,12 +1,12 @@
-import { tokenListIsValid, validateTokenListWithErrorThrowing } from '../../src/lib/validateTokenList';
-import uniswapExample from "./schma/uniswap.tokenlist.json";
-import arblist from "./schma/arbify.tokenlist.json";
-import arblistdecimalsTooLow from "./schma/arbifyInvalid1.tokenlist.json"
-import arblistdecimalsTooHigh from "./schma/arbifyInvalid2.tokenlist.json"
-import arblistNameTooLong from "./schma/arbifyInvalid3.tokenlist.json"
-import arblistSymbolTooLong from "./schma/arbifyInvalid4.tokenlist.json"
-import arblistWrongAddress from "./schma/arbifyInvalid5.tokenlist.json"
-import arblistWrongChainId from "./schma/arbifyInvalid6.tokenlist.json"
+import { tokenListIsValid, validateTokenListWithErrorThrowing } from '../../src/lib/validateTokenList'
+import uniswapExample from "./schma/uniswap.tokenlist.json"
+import arblist from "./schma/arbify.tokenlist.json"
+import arblistDecimalsTooLow from "./schma/arblistDecimalsTooLow.tokenlist.json"
+import arblistDecimalsTooHigh from "./schma/arblistDecimalsTooHigh.tokenlist.json"
+import arblistNameTooLong from "./schma/arblistNameTooLong.tokenlist.json"
+import arblistSymbolTooLong from "./schma/arblistSymbolTooLong.tokenlist.json"
+import arblistWrongAddress from "./schma/arblistWrongAddress.tokenlist.json"
+import arblistWrongChainId from "./schma/arblistWrongChainId.tokenlist.json"
 
 describe("TokenListIsValid Test", () => {
     const errorCode = 'Data does not conform to token list schema; not sure why'
@@ -21,10 +21,10 @@ describe("TokenListIsValid Test", () => {
 
     it("Should return false when list is invalid (Decimals not right)", () => {
         expect(() => {
-            validateTokenListWithErrorThrowing(arblistdecimalsTooLow)
+            validateTokenListWithErrorThrowing(arblistDecimalsTooLow)
         }).toThrowError(errorCode)
         expect(() => {
-            validateTokenListWithErrorThrowing(arblistdecimalsTooHigh)
+            validateTokenListWithErrorThrowing(arblistDecimalsTooHigh)
         }).toThrowError(errorCode)
     })
 
