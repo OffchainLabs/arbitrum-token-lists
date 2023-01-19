@@ -1,6 +1,6 @@
 import { removeInvalidTokensFromList } from "../../src/lib/utils"
 import arblist from "./schma/arbify.tokenlist.json"
-import arblistDecimalsTooLow from "./schma/arbifyInvalid1.tokenlist.json"
+import arblistDecimalsTooLow from "./schma/arblistDecimalsTooLow.tokenlist.json"
 import arblistWrongVersion from "./schma/arblistWrongVersion.tokenlist.json"
 
 describe("removeInvalidTokensFromList Test", () => {
