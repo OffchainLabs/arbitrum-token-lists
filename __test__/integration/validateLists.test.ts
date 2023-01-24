@@ -1,10 +1,10 @@
-import { yargsInstance } from '../src/main';
-import { handler as handlerAllTokensList } from '../src/commands/allTokensList';
-import { handler as handlerArbify } from '../src/commands/arbify';
-import { handler as handlerFull } from '../src/commands/full';
-import { handler as handlerUpdate } from '../src/commands/update';
-import { Action, Args } from '../src/lib/options';
-import { ArbTokenList, EtherscanList } from '../src/lib/types';
+import { yargsInstance } from '../../src/main';
+import { handler as handlerAllTokensList } from '../../src/commands/allTokensList';
+import { handler as handlerArbify } from '../../src/commands/arbify';
+import { handler as handlerFull } from '../../src/commands/full';
+import { handler as handlerUpdate } from '../../src/commands/update';
+import { Action, Args } from '../../src/lib/options';
+import { ArbTokenList, EtherscanList } from '../../src/lib/types';
 
 const handlers: {
   [action in Action]?: (argv: Args) => Promise<ArbTokenList | EtherscanList>;
@@ -255,7 +255,6 @@ describe('Token Lists', () => {
 
         testNoDuplicates(data as ArbTokenList);
       }
-
     });
   });
 });

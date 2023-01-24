@@ -1,4 +1,4 @@
-import { removeInvalidTokensFromList } from '../src/lib/utils';
+import { removeInvalidTokensFromList } from '../../src/lib/utils';
 import arblist from './schema/arbify.tokenlist.json';
 import arblistDecimalsTooLow from './schema/arblistDecimalsTooLow.tokenlist.json';
 import arblistWrongVersion from './schema/arblistWrongVersion.tokenlist.json';
