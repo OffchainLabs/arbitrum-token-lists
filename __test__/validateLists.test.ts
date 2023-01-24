@@ -234,4 +234,28 @@ describe('Token Lists', () => {
       compareLists(localList, onlineList);
     });
   });
+
+  describe('External lists tests', () => {
+    it.skip('External lists: check no duplicates', async () => {
+      const lists = [
+        'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_gemini_token_list.json',
+        'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_coinmarketcap.json',
+        'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs_default.json',
+        'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs_list.json',
+        'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_arb_whitelist_era.json',
+        'https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coinmarketcap.json',
+        'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_coinmarketcap.json',
+        'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_gemini_token_list.json',
+      ];
+      expect.assertions(lists.length);
+
+      for (const list of lists) {
+        const res = await fetch(list);
+        const data = (await res.json()) as ArbTokenList;
+
+        testNoDuplicates(data as ArbTokenList);
+      }
+
+    });
+  });
 });
