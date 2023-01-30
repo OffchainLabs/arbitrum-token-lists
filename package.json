@@ -16,7 +16,8 @@
     "updateNova": "yarn ts-node src/main.ts update --l2NetworkID 42170",
     "novaify": "yarn ts-node src/main.ts arbify --l2NetworkID 42170",
     "fullNova": "yarn ts-node src/main.ts full --tokenList full --l2NetworkID 42170",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "generate:all": "yarn arbify --l2NetworkID 42161 --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org"
   },
   "dependencies": {
     "@arbitrum/sdk": "^3.0.0",
