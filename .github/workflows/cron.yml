@@ -1,10 +1,8 @@
 name: Cron
 
 on:
-  pull_request:
-    branches: ['master']
-  push:
-    branches: ['master']
+  schedule:
+    - cron: '0/10 * * * *'
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -33,10 +31,65 @@ jobs:
           path: '**/node_modules'
           key: ${{ steps.cache.outputs.primary-key }}
 
+  fetchWhitelist:
+    name: 'Fetch whitelist'
+    runs-on: ubuntu-latest
+    environment: CI
+    needs: install
+    permissions:
+      id-token: write # need this for OIDC
+      contents: read # This is required for actions/checkout@v2
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-region: 'us-east-2'
+          aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: 'Fetch'
+        run: aws s3 cp s3://${{ secrets.AWS_BUCKET }}/ArbTokenLists/arbed_arb_whitelist_era.json ./src/ArbTokenLists/arbed_arb_whitelist_era.json
+
+      - uses: actions/cache@v3
+        id: cache-whitelist
+        with:
+          path: ./src/ArbTokenLists/arbed_arb_whitelist_era.json
+          key: ${{ github.sha }}
+
   generate-token-list:
     name: 'Generate token list'
     runs-on: ubuntu-latest
-    needs: install
+    environment: CI
+    needs: [install, fetchWhitelist]
+    permissions:
+      id-token: write # need this for OIDC
+      contents: read # This is required for actions/checkout@v2
+    strategy:
+      fail-fast: false
+      matrix:
+        commands:
+          - name: Arb1 FullList
+            command: yarn fullList --l2NetworkID 42161
+          - name: Arb1 Arbify Uniswap
+            command: yarn arbify --l2NetworkID 42161 --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org
+          - name: Arb1 Arbify Gemini
+            command: yarn arbify --l2NetworkID 42161 --tokenList https://www.gemini.com/uniswap/manifest.json
+          - name: Arb1 Arbify CMC
+            command: yarn arbify --l2NetworkID 42161 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json
+          - name: Arb1 Update Whitelist
+            command: yarn update --l2NetworkID 42161 --tokenList ./src/ArbTokenLists/arbed_arb_whitelist_era.json --includeOldDataFields true
+
+          - name: ArbNova Arbify Uniswap
+            command: yarn arbify --l2NetworkID 42170 --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org
+          - name: ArbNova Arbify Gemini
+            command: yarn arbify --l2NetworkID 42170 --tokenList https://www.gemini.com/uniswap/manifest.json
+          - name: ArbNova Arbify CMC
+            command: yarn arbify --l2NetworkID 42170 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json
+
+          - name: ArbGoerli Arbify CMC
+            command: yarn arbify --l2NetworkID 421613 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json
+          - name: ArbGoerli FullList
+            command: yarn fullList --l2NetworkID 421613
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
       MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
@@ -47,20 +100,55 @@ jobs:
 
       - uses: ./.github/actions/restore-cache
 
-      - name: Generate
-        run: yarn generate:all
-
-  upload-S3:
-    name: 'Upload to S3'
-    runs-on: ubuntu-latest
-    needs: generate-token-list
-
-    steps:
-      - name: Upload
-        uses: shallwefootball/s3-upload-action@master
+      - name: Use whitelist list cache
+        uses: actions/cache@v3
+        id: restore-whitelist
         with:
-          aws_key_id: ${{ secrets.AWS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          aws_bucket: ${{ secrets.AWS_BUCKET }}
-          source_dir: '/build'
-          destination_dir: '' # Upload to root directory
+          path: ./src/ArbTokenLists/arbed_arb_whitelist_era.json
+          key: ${{ github.sha }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-region: 'us-east-2'
+          aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: ${{ matrix.commands.name }}
+        id: run_command
+        if: success() || failure() # Always would allow manually canceled workflow to run
+        run: ${{ matrix.commands.command }}
+
+      - name: Deploy
+        run: 'aws s3 sync ./build s3://${{ secrets.AWS_BUCKET }}'
+
+      - name: Post to a Slack channel
+        id: slack
+        if: failure()
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          channel-id: 'C04E2CCF3RA'
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Token list generation failed (${{ matrix.commands.name }})"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

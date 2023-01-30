@@ -1,7 +1,9 @@
 node_modules
 .env
-ArbTokenLists
-FullList
+src/ArbTokenLists
+src/FullList
+build/ArbTokenLists/*.json
+build/FullList/*.json
 dist
 
 # Logs
