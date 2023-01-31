@@ -1,5 +1,5 @@
 import axios from 'axios';
-import yargs from './getClargs';
+import { getArgvs } from './options';
 import { graphEndpoints } from './constants'
 
 interface timeComparableEvent {
@@ -26,7 +26,7 @@ export async function getGatewaysets(): Promise<any[]> {
                     blockNumber
                     }   
                 }`
-        const scanResult = await axios.post(graphEndpoints[yargs.l2NetworkID], {query: requestPara});
+        const scanResult = await axios.post(graphEndpoints[getArgvs().l2NetworkID], {query: requestPara});
         currentResult = scanResult.data.data.gatewaySets;
         //get logIndex only
         for(let i = 0; i < currentResult.length; i++) {

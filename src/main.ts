@@ -1,41 +1,18 @@
-import {
-  arbifyL1List,
-  updateArbifiedList,
-  generateFullList,
-} from './lib/token_list_gen';
-import { addPermitTags } from './PermitTokens/permitSignature';
-import args from './lib/getClargs';
-import { ArbTokenList } from './lib/types';
-import { writeToFile } from './lib/store';
+#!/usr/bin/env node
+import { yargsInstance } from './lib/options';
 
-const main = async () => {
-  if (args.action === 'full') {
-    if (args.tokenList !== 'full')
-      throw new Error("expected --tokenList 'full'");
-    if (args.includePermitTags)
-      throw new Error('full list mode does not support permit tagging');
+const update = yargsInstance.command(require('./commands/update'));
+const arbify = yargsInstance.command(require('./commands/arbify'));
+const full = yargsInstance.command(require('./commands/full'));
+const alltokenslist = yargsInstance.command(
+  require('./commands/allTokensList')
+);
 
-    return writeToFile(await generateFullList());
-  }
+if (process.env.NODE_ENV !== 'test') {
+  update.parseAsync();
+  arbify.parseAsync();
+  full.parseAsync();
+  alltokenslist.parseAsync();
+}
 
-  let tokenList: ArbTokenList;
-
-  if (args.action === 'arbify') {
-    tokenList = await arbifyL1List(args.tokenList, !!args.includeOldDataFields);
-  } else if (args.action === 'update') {
-    tokenList = await updateArbifiedList(args.tokenList);
-  } else {
-    throw new Error(`action ${args.action} not recognised`);
-  }
-
-  if (args.includePermitTags) tokenList = await addPermitTags(tokenList);
-
-  writeToFile(tokenList);
-};
-
-main()
-  .then(() => console.log('Done.'))
-  .catch(err => {
-    console.error(err);
-    throw err;
-  });
+export { update, yargsInstance };

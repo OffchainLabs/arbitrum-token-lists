@@ -1,27 +1,27 @@
-import Ajv from 'ajv';
-import betterAjvErrors from 'better-ajv-errors';
-import addFormats from 'ajv-formats';
-import { schema, TokenList } from '@uniswap/token-lists';
+import { TokenList } from '@uniswap/token-lists';
 import { readFileSync, existsSync } from 'fs';
 import axios from 'axios';
-import dotenv from 'dotenv';
+import { ethers } from 'ethers';
 import { CallInput, L2Network, MultiCaller } from '@arbitrum/sdk';
 import { L1GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory';
 import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory';
+import { TokenGateway__factory } from '@arbitrum/sdk/dist/lib/abi/factories/TokenGateway__factory';
 import { getGatewaysets } from './subgraph'
 import { ArbTokenList, GraphTokenResult } from './types';
-import yargs from './getClargs';
-import { ethers } from 'ethers';
 import path from 'path';
-import { TokenGateway__factory } from '@arbitrum/sdk/dist/lib/abi/factories/TokenGateway__factory';
 import { exit } from 'process';
 import { Provider } from '@ethersproject/providers';
-dotenv.config();
+import { tokenListIsValid } from './validateTokenList';
+import { getArgvs } from './options';
 
-export const EtherscanKey = process.env.Etherscan_KEY;
-export const isArbOne = yargs.l2NetworkID === 42161;
-export const isNova = yargs.l2NetworkID === 42170;
-export const isGoerliRollup = yargs.l2NetworkID === 421613;
+export const isNetwork = () => {
+  const argv = getArgvs();
+  return {
+    isArbOne: argv.l2NetworkID === 42161,
+    isNova: argv.l2NetworkID === 42170,
+    isGoerliRollup: argv.l2NetworkID === 421613,
+  };
+};
 
 const coinGeckoBuff = readFileSync(
   path.resolve(__dirname, '../Assets/coingecko_uris.json')
@@ -102,7 +102,7 @@ export const generateGatewayMap = async (
       l1Provider
     );
     const defaultGateway = await l1GatewayRouter.defaultGateway();
-    const defaultGatewayContract = await new ethers.Contract(
+    const defaultGatewayContract = new ethers.Contract(
       defaultGateway,
       TokenGateway__factory.abi
     ).connect(l1Provider);
@@ -361,38 +361,6 @@ export const getTokenListObjFromLocalPath = async (path: string) => {
   return JSON.parse(readFileSync(path).toString()) as TokenList;
 };
 
-export const tokenListIsValid = (tokenList: ArbTokenList | TokenList) => {
-  const ajv = new Ajv();
-  addFormats(ajv);
-  const validate = ajv.compile(schema);
-
-  const res = validate(tokenList);
-  if (validate.errors) {
-    const output = betterAjvErrors(schema, tokenList, validate.errors, {
-      indent: 2,
-    });
-    console.log(output);
-  }
-
-  return res;
-};
-
-export const validateTokenListWithErrorThrowing = (
-  tokenList: ArbTokenList | TokenList
-) => {
-  try {
-    const valid = tokenListIsValid(tokenList);
-    if (valid) return true;
-    else
-      throw new Error(
-        'Data does not conform to token list schema; not sure why'
-      );
-  } catch (e) {
-    console.log('Invalid token list:');
-    throw e;
-  }
-};
-
 export const removeInvalidTokensFromList = (
   tokenList: ArbTokenList | TokenList
 ): ArbTokenList | TokenList => {
@@ -553,26 +521,6 @@ export function* getChunks<T>(arr: Array<T>, chunkSize = 500) {
     yield arr.slice(i, i + chunkSize);
   }
 }
-// export const promiseErrorMultiplier = <T, Q extends Error>(
-//   prom: Promise<T>,
-//   handler: (err: Q) => Promise<T>,
-//   tries = 3,
-//   verbose = false
-// ) => {
-//   let counter = 0;
-//   while (counter < tries) {
-//     prom = prom.catch((err) => handler(err));
-//     counter++;
-//   }
-//   return prom.catch((err) => {
-//     if (verbose) console.error('Failed ' + tries + ' times. Giving up');
-//     // throw err;
-//     console.log("reason" in err ? err.reason : "failed")
-
-//     writeFileSync(TOKENLIST_DIR_PATH+"/error.json", JSON.stringify(err));
-//     throw new Error("promise retrier failed")
-//   });
-// };
 
 export const promiseRetrier = <T>(createProm: () => Promise<T>): Promise<T> =>
   promiseErrorMultiplier(createProm(), () => createProm());
