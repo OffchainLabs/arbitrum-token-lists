@@ -19,7 +19,7 @@ export const handler = async (argvs: Args) => {
     prevArbifiedList: argvs.prevArbifiedList
   });
   let tokenList: ArbTokenList = newList;
-  const path = getPath(l1ListName);
+  const path = argvs.newArbifiedList? argvs.newArbifiedList: getPath(l1ListName);
 
   if (argvs.includePermitTags) tokenList = await addPermitTags(tokenList);
   writeToFile(tokenList, path);

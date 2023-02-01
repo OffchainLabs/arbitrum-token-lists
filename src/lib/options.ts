@@ -50,10 +50,11 @@ const options = {
   },
   prevArbifiedList: {
     type: 'string',
-    default: null
+    default: null,
   },
   newArbifiedList: {
     type: 'string',
+    default: null,
   }
 
 } as const;
