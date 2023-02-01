@@ -423,10 +423,11 @@ export const updateArbifiedList = async (
 ) => {
   const arbTokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(arbTokenList);
-  const path = prevArbifiedList? prevArbifiedList:
-    process.env.PWD +
-    '/src/ArbTokenLists/' +
-    listNameToFileName(arbTokenList.name);
+  const path = prevArbifiedList
+    ? prevArbifiedList
+    : process.env.PWD +
+      '/src/ArbTokenLists/' +
+      listNameToFileName(arbTokenList.name);
   let prevArbTokenList: ArbTokenList | undefined;
 
   if (existsSync(path)) {
@@ -446,7 +447,6 @@ export const updateArbifiedList = async (
     preserveListName: true,
   });
 
-  
   return {
     newList,
     path,

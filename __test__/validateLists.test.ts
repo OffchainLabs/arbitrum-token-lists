@@ -255,7 +255,6 @@ describe('Token Lists', () => {
 
         testNoDuplicates(data as ArbTokenList);
       }
-
     });
   });
 });

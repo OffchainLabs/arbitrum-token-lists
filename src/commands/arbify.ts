@@ -16,10 +16,10 @@ export const handler = async (argvs: Args) => {
   const { newList, l1ListName } = await arbifyL1List(argvs.tokenList, {
     includeOldDataFields,
     ignorePreviousList: argvs.ignorePreviousList,
-    prevArbifiedList: argvs.prevArbifiedList
+    prevArbifiedList: argvs.prevArbifiedList,
   });
   let tokenList: ArbTokenList = newList;
-  const path = argvs.newArbifiedList? argvs.newArbifiedList: getPath(l1ListName);
+  const path = argvs.newArbifiedList ?? getPath(l1ListName);
 
   if (argvs.includePermitTags) tokenList = await addPermitTags(tokenList);
   writeToFile(tokenList, path);

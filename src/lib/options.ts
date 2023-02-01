@@ -55,8 +55,7 @@ const options = {
   newArbifiedList: {
     type: 'string',
     default: null,
-  }
-
+  },
 } as const;
 
 const yargsInstance = yargs(hideBin(process.argv)).options(options);
