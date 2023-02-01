@@ -36,6 +36,7 @@ import { readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
 import { getPrevList, listNameToFileName } from './store';
 import { getArgvs } from './options';
+import { TOKENLIST_DIR_PATH } from './constants';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -423,11 +424,9 @@ export const updateArbifiedList = async (
 ) => {
   const arbTokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(arbTokenList);
-  const path = prevArbifiedList
-    ? prevArbifiedList
-    : process.env.PWD +
-      '/src/ArbTokenLists/' +
-      listNameToFileName(arbTokenList.name);
+  const path =
+    prevArbifiedList ??
+    TOKENLIST_DIR_PATH + listNameToFileName(arbTokenList.name);
   let prevArbTokenList: ArbTokenList | undefined;
 
   if (existsSync(path)) {
