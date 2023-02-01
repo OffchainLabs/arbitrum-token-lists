@@ -413,15 +413,17 @@ export const updateArbifiedList = async (
     includeOldDataFields,
     skipValidation,
     ignorePreviousList,
+    prevArbifiedList,
   }: {
     includeOldDataFields: boolean;
     skipValidation: boolean;
     ignorePreviousList: boolean;
+    prevArbifiedList: string | null;
   }
 ) => {
   const arbTokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(arbTokenList);
-  const path =
+  const path = prevArbifiedList? prevArbifiedList:
     process.env.PWD +
     '/src/ArbTokenLists/' +
     listNameToFileName(arbTokenList.name);
@@ -444,6 +446,7 @@ export const updateArbifiedList = async (
     preserveListName: true,
   });
 
+  
   return {
     newList,
     path,

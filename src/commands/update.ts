@@ -16,6 +16,7 @@ export const handler = async (argvs: Args) => {
     includeOldDataFields,
     skipValidation: argvs.skipValidation,
     ignorePreviousList: argvs.ignorePreviousList,
+    prevArbifiedList: argvs.prevArbifiedList,
   });
   let tokenList: ArbTokenList = newList;
 
