@@ -16,6 +16,7 @@ export const handler = async (argvs: Args) => {
   const { newList, l1ListName } = await arbifyL1List(argvs.tokenList, {
     includeOldDataFields,
     ignorePreviousList: argvs.ignorePreviousList,
+    prevArbifiedList: argvs.prevArbifiedList
   });
   let tokenList: ArbTokenList = newList;
   const path = getPath(l1ListName);

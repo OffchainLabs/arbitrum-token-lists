@@ -375,9 +375,11 @@ export const arbifyL1List = async (
   {
     includeOldDataFields,
     ignorePreviousList,
+    prevArbifiedList,
   }: {
     includeOldDataFields: boolean;
     ignorePreviousList: boolean;
+    prevArbifiedList: string | null;
   }
 ): Promise<{
   newList: ArbTokenList;
@@ -391,7 +393,7 @@ export const arbifyL1List = async (
 
   const prevArbTokenList = ignorePreviousList
     ? null
-    : getPrevList(l1TokenList.name);
+    : getPrevList(l1TokenList.name, prevArbifiedList);
 
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
     includeAllL1Tokens: true,
