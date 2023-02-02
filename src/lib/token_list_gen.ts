@@ -149,7 +149,6 @@ export const generateTokenList = async (
     (acc, curr) => ((acc[curr.address.toLowerCase()] = curr.logoURI), acc),
     {} as { [addr: string]: string | undefined }
   );
-  console.log('LOGOS', logos);
 
   // if the l2 route hasn't been updated yet we remove the token from the bridged tokens
   const filteredTokens: GraphTokenResult[] = [];

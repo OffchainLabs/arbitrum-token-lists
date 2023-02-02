@@ -26,7 +26,11 @@ const compareLists = (
   if ('timestamp' in l1 && 'timestamp' in l2) {
     const { timestamp: t1, version: v1, ...list1 } = l1;
     const { timestamp: t2, version: v2, ...list2 } = l2;
-    return expect(list1).toStrictEqual(list2);
+    /**
+     * Lists are stored using JSON.stringify which removes property with undefined values
+     * We use stringify then parse here to get the same list
+     */
+    return expect(JSON.parse(JSON.stringify(list1))).toStrictEqual(list2);
   }
 
   return expect(l1).toStrictEqual(l2);
@@ -180,8 +184,8 @@ describe('Token Lists', () => {
   });
 
   describe('Update token lists', () => {
-    it.only('should return the same list as the online version', async () => {
-      expect.assertions(2);
+    it('should return the same list as the online version', async () => {
+      expect.assertions(1);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Update, [
           '--l2NetworkID=42161',
@@ -193,7 +197,6 @@ describe('Token Lists', () => {
         ).then(response => response.json()),
       ]);
       testNoDuplicates(localList as ArbTokenList);
-
       compareLists(localList, onlineList);
     });
   });
@@ -230,7 +233,6 @@ describe('Token Lists', () => {
         ).then(response => response.json()),
       ]);
       testNoDuplicates(localList as ArbTokenList);
-
       compareLists(localList, onlineList);
     });
   });

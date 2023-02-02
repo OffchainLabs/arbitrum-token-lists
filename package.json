@@ -17,7 +17,7 @@
     "updateNova": "yarn ts-node src/main.ts update --l2NetworkID 42170",
     "novaify": "yarn ts-node src/main.ts arbify --l2NetworkID 42170",
     "fullNova": "yarn ts-node src/main.ts full --tokenList full --l2NetworkID 42170",
-    "test": "jest --runInBand --silent",
+    "test": "jest --runInBand",
     "test:integration": "yarn test --ci __test__/integration",
     "test:unit": "yarn test --ci __test__/unit"
   },
