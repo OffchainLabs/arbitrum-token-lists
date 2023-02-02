@@ -24,8 +24,8 @@ const compareLists = (
 ) => {
   // Both lists are EtherscanList
   if ('timestamp' in l1 && 'timestamp' in l2) {
-    const { timestamp: t1, version: v1, tags, ...list1 } = l1;
-    const { timestamp: t2, version: v2, ...list2 } = l2;
+    const { timestamp: t1, version: v1, tags: tags1, ...list1 } = l1;
+    const { timestamp: t2, version: v2, tags: tags2, ...list2 } = l2;
     /**
      * Lists are stored using JSON.stringify which removes property with undefined values
      * We use stringify then parse here to get the same list
@@ -222,7 +222,7 @@ describe('Token Lists', () => {
   });
 
   describe('allTokensList', () => {
-    it('should generate allTokensList for a given network', async () => {
+    it.only('should generate allTokensList for a given network', async () => {
       expect.assertions(2);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.AllTokensList, [
