@@ -222,7 +222,7 @@ describe('Token Lists', () => {
   });
 
   describe('allTokensList', () => {
-    it.only('should generate allTokensList for a given network', async () => {
+    it('should generate allTokensList for a given network', async () => {
       expect.assertions(2);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.AllTokensList, [
