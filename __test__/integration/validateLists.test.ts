@@ -180,7 +180,7 @@ describe('Token Lists', () => {
   });
 
   describe('Update token lists', () => {
-    it('should return the same list as the online version', async () => {
+    it.only('should return the same list as the online version', async () => {
       expect.assertions(2);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Update, [

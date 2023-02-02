@@ -63,6 +63,11 @@ jobs:
       - name: Test
         run: yarn test:integration
 
+      - uses: actions/upload-artifact@v3
+        with:
+          name: whitelist
+          path: src/ArbTokenLists/arbed_arb_whitelist_era.json
+
   unit-test:
     name: 'Unit tests'
     runs-on: ubuntu-latest
