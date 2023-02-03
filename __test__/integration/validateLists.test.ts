@@ -64,7 +64,7 @@ describe('Token Lists', () => {
   jest.setTimeout(200_000);
 
   describe('Arbify token lists', () => {
-    it('Arb1 Uniswap', async () => {
+    it.only('Arb1 Uniswap', async () => {
       expect.assertions(2);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [
@@ -73,7 +73,7 @@ describe('Token Lists', () => {
           '--ignorePreviousList=true',
         ]),
         fetch(
-          'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs_list.json'
+          'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs_default.json'
         ).then(response => response.json()),
       ]);
 
