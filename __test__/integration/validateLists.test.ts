@@ -64,7 +64,7 @@ describe('Token Lists', () => {
   jest.setTimeout(200_000);
 
   describe('Arbify token lists', () => {
-    it.only('Arb1 Uniswap', async () => {
+    it('Arb1 Uniswap', async () => {
       expect.assertions(2);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [
