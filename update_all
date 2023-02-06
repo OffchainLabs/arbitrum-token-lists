@@ -9,18 +9,19 @@ fi
 
 # arb1
 yarn fullList --l2NetworkID 42161
-yarn arbify --l2NetworkID 42161 --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org
-yarn arbify --l2NetworkID 42161 --tokenList https://www.gemini.com/uniswap/manifest.json
-yarn arbify --l2NetworkID 42161 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json
+yarn arbify --l2NetworkID 42161 --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/arbed_uniswap_labs.json
+yarn arbify --l2NetworkID 42161 --tokenList https://www.gemini.com/uniswap/manifest.json --newArbifiedList ./src/ArbTokenLists/arbed_gemini_token_list.json
+yarn arbify --l2NetworkID 42161 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/arbed_coinmarketcap.json
+
 # update whitelist era list (for e.g. changed gateways)
 yarn update --l2NetworkID 42161 --tokenList ./src/ArbTokenLists/arbed_arb_whitelist_era.json --includeOldDataFields true
 
 # nova
 # yarn fullList --l2NetworkID 42170
-yarn arbify --l2NetworkID 42170 --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org
-yarn arbify --l2NetworkID 42170 --tokenList https://www.gemini.com/uniswap/manifest.json
-yarn arbify --l2NetworkID 42170 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json
+yarn arbify --l2NetworkID 42170 --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/42170_arbed_uniswap_labs.json
+yarn arbify --l2NetworkID 42170 --tokenList https://www.gemini.com/uniswap/manifest.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_gemini_token_list.json
+yarn arbify --l2NetworkID 42170 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_coinmarketcap.json
 
 # goerli rollup testnet
-yarn arbify --l2NetworkID 421613 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json
+yarn arbify --l2NetworkID 421613 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421613_arbed_coinmarketcap.json
 yarn fullList --l2NetworkID 421613

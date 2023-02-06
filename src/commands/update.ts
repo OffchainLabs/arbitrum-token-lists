@@ -21,6 +21,7 @@ export const handler = async (argvs: Args) => {
   let tokenList: ArbTokenList = newList;
 
   if (argvs.includePermitTags) tokenList = await addPermitTags(tokenList);
+  console.log(path);
   writeToFile(tokenList, path);
   return tokenList;
 };

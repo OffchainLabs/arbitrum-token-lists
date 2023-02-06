@@ -426,7 +426,7 @@ export const updateArbifiedList = async (
   removeInvalidTokensFromList(arbTokenList);
   const path =
     prevArbifiedList ??
-    TOKENLIST_DIR_PATH + listNameToFileName(arbTokenList.name);
+    TOKENLIST_DIR_PATH + '/' + listNameToFileName(arbTokenList.name);
   let prevArbTokenList: ArbTokenList | undefined;
 
   if (existsSync(path)) {
