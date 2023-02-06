@@ -26,12 +26,12 @@ import {
 const myEnv = dotenv.config();
 dotenvExpand.expand(myEnv);
 
-const update: any = yargsInstance.command(
+const update = yargsInstance.command(
   commandUpdate,
   describeUpdate,
   {},
   // @ts-ignore: handler returns list so we can compare the result in test, yargs expect handler to return void
-  handlerUpdate
+  handlerUpdate,
 );
 
 const arbify = yargsInstance.command(
@@ -39,21 +39,21 @@ const arbify = yargsInstance.command(
   describeArbify,
   {},
   // @ts-ignore: handler returns list so we can compare the result in test, yargs expect handler to return void
-  handlerArbify
+  handlerArbify,
 );
 const full = yargsInstance.command(
   commandFull,
   describeFull,
   {},
   // @ts-ignore: handler returns list so we can compare the result in test, yargs expect handler to return void
-  handlerFull
+  handlerFull,
 );
 const alltokenslist = yargsInstance.command(
   commandAllTokensList,
   describeAllTokensList,
   {},
   // @ts-ignore: handler returns list so we can compare the result in test, yargs expect handler to return void
-  handlerAllTokensList
+  handlerAllTokensList,
 );
 
 if (process.env.NODE_ENV !== 'test') {

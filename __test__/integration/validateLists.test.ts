@@ -20,7 +20,7 @@ const runCommand = async (command: Action, options: string[]) => {
 };
 const compareLists = (
   l1: ArbTokenList | EtherscanList,
-  l2: ArbTokenList | EtherscanList
+  l2: ArbTokenList | EtherscanList,
 ) => {
   // Both lists are EtherscanList
   if ('timestamp' in l1 && 'timestamp' in l2) {
@@ -42,7 +42,7 @@ const findDuplicateTokens = (arbTokenList: ArbTokenList) => {
     [asdf: string]: number;
   } = {};
 
-  arbTokenList.tokens.forEach(token => {
+  arbTokenList.tokens.forEach((token) => {
     const uniqueID = `${token.address},,${token.chainId}`;
     if (appearanceCount[uniqueID]) {
       appearanceCount[uniqueID]++;
@@ -50,7 +50,7 @@ const findDuplicateTokens = (arbTokenList: ArbTokenList) => {
       appearanceCount[uniqueID] = 1;
     }
   });
-  return Object.keys(appearanceCount).filter(uniqueID => {
+  return Object.keys(appearanceCount).filter((uniqueID) => {
     return appearanceCount[uniqueID] > 1;
   });
 };
@@ -73,8 +73,8 @@ describe('Token Lists', () => {
           '--ignorePreviousList=true',
         ]),
         fetch(
-          'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs_default.json'
-        ).then(response => response.json()),
+          'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs_default.json',
+        ).then((response) => response.json()),
       ]);
 
       testNoDuplicates(localList as ArbTokenList);
@@ -90,8 +90,8 @@ describe('Token Lists', () => {
           '--ignorePreviousList=true',
         ]),
         fetch(
-          'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_gemini_token_list.json'
-        ).then(response => response.json()),
+          'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_gemini_token_list.json',
+        ).then((response) => response.json()),
       ]);
 
       testNoDuplicates(localList as ArbTokenList);
@@ -107,8 +107,8 @@ describe('Token Lists', () => {
           '--ignorePreviousList=true',
         ]),
         fetch(
-          'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_coinmarketcap.json'
-        ).then(response => response.json()),
+          'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_coinmarketcap.json',
+        ).then((response) => response.json()),
       ]);
 
       testNoDuplicates(localList as ArbTokenList);
@@ -124,8 +124,8 @@ describe('Token Lists', () => {
           '--ignorePreviousList=true',
         ]),
         fetch(
-          'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs_default.json'
-        ).then(response => response.json()),
+          'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs_default.json',
+        ).then((response) => response.json()),
       ]);
 
       testNoDuplicates(localList as ArbTokenList);
@@ -141,8 +141,8 @@ describe('Token Lists', () => {
           '--ignorePreviousList=true',
         ]),
         fetch(
-          'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_gemini_token_list.json'
-        ).then(response => response.json()),
+          'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_gemini_token_list.json',
+        ).then((response) => response.json()),
       ]);
 
       testNoDuplicates(localList as ArbTokenList);
@@ -158,8 +158,8 @@ describe('Token Lists', () => {
           '--ignorePreviousList=true',
         ]),
         fetch(
-          'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_coinmarketcap.json'
-        ).then(response => response.json()),
+          'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_coinmarketcap.json',
+        ).then((response) => response.json()),
       ]);
 
       testNoDuplicates(localList as ArbTokenList);
@@ -175,8 +175,8 @@ describe('Token Lists', () => {
           '--ignorePreviousList=true',
         ]),
         fetch(
-          'https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coinmarketcap.json'
-        ).then(response => response.json()),
+          'https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coinmarketcap.json',
+        ).then((response) => response.json()),
       ]);
 
       testNoDuplicates(localList as ArbTokenList);
@@ -194,8 +194,8 @@ describe('Token Lists', () => {
           '--includeOldDataFields=true',
         ]),
         fetch(
-          'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_arb_whitelist_era.json'
-        ).then(response => response.json()),
+          'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_arb_whitelist_era.json',
+        ).then((response) => response.json()),
       ]);
 
       testNoDuplicates(localList as ArbTokenList);
@@ -213,7 +213,7 @@ describe('Token Lists', () => {
           '--ignorePreviousList=true',
         ]),
         fetch('https://tokenlist.arbitrum.io/FullList/all_tokens.json').then(
-          response => response.json()
+          (response) => response.json(),
         ),
       ]);
 
@@ -231,8 +231,8 @@ describe('Token Lists', () => {
           '--ignorePreviousList=true',
         ]),
         fetch(
-          'https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_full.json'
-        ).then(response => response.json()),
+          'https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_full.json',
+        ).then((response) => response.json()),
       ]);
 
       testNoDuplicates(localList as ArbTokenList);

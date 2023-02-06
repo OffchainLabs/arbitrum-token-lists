@@ -11,6 +11,9 @@ export interface ArbTokenInfo extends Omit<TokenInfo, 'extensions'> {
         destBridgeAddress: string;
       };
     };
+    l1Address?: string;
+    l2GatewayAddress?: string;
+    l1GatewayAddress?: string;
   };
 }
 
@@ -33,7 +36,7 @@ export interface GraphTokenResult {
       gateway: {
         gatewayAddr: string;
       };
-    }
+    },
   ];
   l1TokenAddr: string;
 }

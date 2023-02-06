@@ -53,7 +53,7 @@ export const getPrevList = (l1ListName: string): ArbTokenList | undefined => {
 
 export const writeToFile = (
   list: ArbTokenList | EtherscanList,
-  path: string
+  path: string,
 ) => {
   if (!existsSync(TOKENLIST_DIR_PATH)) {
     console.log(`Setting up token list dir at ${TOKENLIST_DIR_PATH}`);
