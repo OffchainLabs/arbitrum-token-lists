@@ -57,12 +57,12 @@ export const writeToFile = (
 ) => {
   if (!existsSync(TOKENLIST_DIR_PATH)) {
     console.log(`Setting up token list dir at ${TOKENLIST_DIR_PATH}`);
-    mkdirSync(TOKENLIST_DIR_PATH, { recursive: true });
+    mkdirSync(TOKENLIST_DIR_PATH);
   }
 
   if (!existsSync(FULLLIST_DIR_PATH)) {
     console.log(`Setting up full list dir at ${FULLLIST_DIR_PATH}`);
-    mkdirSync(FULLLIST_DIR_PATH, { recursive: true });
+    mkdirSync(FULLLIST_DIR_PATH);
   }
 
   writeFileSync(path, JSON.stringify(list));
