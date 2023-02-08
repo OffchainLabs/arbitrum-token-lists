@@ -97,8 +97,8 @@ export const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60;
 
 export const ETHERSCAN_LIST_NAME = 'EtherscanList';
 
-export const OUTPUT_FOLDER = process.env.PWD + '/src';
-export const ETHERSCAN_PATH = `${OUTPUT_FOLDER}/FullList/all_tokens.json`;
-export const ALL_TOKENS_GOERLI_ROLLUP_PATH = `${OUTPUT_FOLDER}/FullList/421613_all_tokens.json`;
-export const TOKENLIST_DIR_PATH = `${OUTPUT_FOLDER}/ArbTokenLists`;
-export const FULLLIST_DIR_PATH = `${OUTPUT_FOLDER}/FullList`;
+export const ETHERSCAN_PATH = process.env.PWD + '/src/FullList/all_tokens.json';
+export const ALL_TOKENS_GOERLI_ROLLUP_PATH =
+  process.env.PWD + '/src/FullList/421613_all_tokens.json';
+export const TOKENLIST_DIR_PATH = process.env.PWD + '/src/ArbTokenLists';
+export const FULLLIST_DIR_PATH = process.env.PWD + '/src/FullList';
