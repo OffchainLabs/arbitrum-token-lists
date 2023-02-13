@@ -65,6 +65,7 @@ jobs:
       id-token: write # need this for OIDC
       contents: read # This is required for actions/checkout@v2
     strategy:
+      max-parallel: 5
       fail-fast: false
       matrix:
         commands:
