@@ -24,14 +24,14 @@ const chaidIdToGraphClientUrl = (chainID: string) => {
   }
 };
 
-const isGraphTokenResult = (obj: any) => {
+const isGraphTokenResult = (obj: GraphTokenResult) => {
   if (!obj) {
     throw new Error('Graph result: undefined');
   }
   const expectedKeys = ['joinTableEntry', 'l1TokenAddr'];
   const actualKeys = new Set(Object.keys(obj));
 
-  if (!expectedKeys.every(key => actualKeys.has(key))) {
+  if (!expectedKeys.every((key) => actualKeys.has(key))) {
     throw new Error('Graph result: missing top level key');
   }
   const joinTableEntry = obj.joinTableEntry[0];
@@ -50,7 +50,7 @@ const graphGatewayBlockNumField = (networkID: string | number) => {
 
 export const getTokens = async (
   tokenList: { addr: string; logo: string | undefined }[],
-  _networkID: string | number
+  _networkID: string | number,
 ): Promise<Array<GraphTokenResult>> => {
   const { isNova } = isNetwork();
   if (isNova) {
@@ -64,16 +64,16 @@ export const getTokens = async (
   if (tokenList.length > 500) {
     const allTokens = await getAllTokens(networkID);
     const allTokenAddresses = new Set(
-      allTokens.map(token => token.l1TokenAddr.toLowerCase())
+      allTokens.map((token) => token.l1TokenAddr.toLowerCase()),
     );
-    tokenList = tokenList.filter(token =>
-      allTokenAddresses.has(token.addr.toLowerCase())
+    tokenList = tokenList.filter((token) =>
+      allTokenAddresses.has(token.addr.toLowerCase()),
     );
     if (tokenList.length > 500)
       throw new Error('Too many tokens for graph query');
   }
   const formattedAddresses = tokenList
-    .map(token => `"${token.addr}"`.toLowerCase())
+    .map((token) => `"${token.addr}"`.toLowerCase())
     .join(',');
   const blockNumber = graphGatewayBlockNumField(_networkID);
   const query = gql`
@@ -101,15 +101,15 @@ export const getTokens = async (
 `;
 
   const { tokens } = (await request(clientUrl, query)) as GraphTokensResult;
-  tokens.map(token => isGraphTokenResult(token));
+  tokens.map((token) => isGraphTokenResult(token));
 
   return tokens.filter(
-    token => !excludeList.includes(token.l1TokenAddr.toLowerCase())
+    (token) => !excludeList.includes(token.l1TokenAddr.toLowerCase()),
   );
 };
 
 export const getAllTokens = async (
-  _networkID: string | number
+  _networkID: string | number,
 ): Promise<Array<GraphTokenResult>> => {
   const networkID =
     typeof _networkID === 'number' ? _networkID.toString() : _networkID;
@@ -138,12 +138,12 @@ export const getAllTokens = async (
   `;
 
   const { tokens } = (await request(clientUrl, query)) as GraphTokensResult;
-  const res = tokens.map(token => {
+  const res = tokens.map((token) => {
     isGraphTokenResult(token);
     return { ...token };
   });
 
   return res.filter(
-    token => !excludeList.includes(token.l1TokenAddr.toLowerCase())
+    (token) => !excludeList.includes(token.l1TokenAddr.toLowerCase()),
   );
 };

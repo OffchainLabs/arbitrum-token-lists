@@ -7,8 +7,6 @@ export const command = Action.Full;
 
 export const describe = 'Full';
 
-export const builder = () => {};
-
 export const handler = async (argvs: Args) => {
   if (argvs.tokenList !== 'full')
     throw new Error("expected --tokenList 'full'");

@@ -1,7 +1,7 @@
 import {
   tokenListIsValid,
   validateTokenListWithErrorThrowing,
-} from '../src/lib/validateTokenList';
+} from '../../src/lib/validateTokenList';
 import uniswapExample from './schema/uniswap.tokenlist.json';
 import arblist from './schema/arbify.tokenlist.json';
 import arblistDecimalsTooLow from './schema/arblistDecimalsTooLow.tokenlist.json';

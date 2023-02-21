@@ -1,9 +1,6 @@
 import { providers } from 'ethers';
-import dotenv from 'dotenv';
 import { getL2Network, MultiCaller } from '@arbitrum/sdk';
 import { getArgvs } from './options';
-
-dotenv.config();
 
 export const getNetworkConfig = async () => {
   const argv = getArgvs();

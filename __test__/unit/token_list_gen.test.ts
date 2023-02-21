@@ -1,4 +1,4 @@
-import { arbListtoEtherscanList } from '../src/lib/token_list_gen';
+import { arbListtoEtherscanList } from '../../src/lib/token_list_gen';
 import arblist from './schema/arbify.tokenlist.json';
 
 describe('token_list_gen Test', () => {

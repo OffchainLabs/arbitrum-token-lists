@@ -8,8 +8,6 @@ export const command = Action.Arbify;
 
 export const describe = 'Arbify';
 
-export const builder = () => {};
-
 export const handler = async (argvs: Args) => {
   const includeOldDataFields = !!argvs.includeOldDataFields;
 
