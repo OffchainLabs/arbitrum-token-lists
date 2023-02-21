@@ -33,7 +33,7 @@ const compareLists = (
     return expect(JSON.parse(JSON.stringify(list1))).toStrictEqual(list2);
   }
 
-  return expect(l1).toStrictEqual(l2);
+  return expect(JSON.parse(JSON.stringify(l1))).toStrictEqual(l2);
 };
 
 // check for top-level duplicate token (i.e. same adddress on the same chain)
