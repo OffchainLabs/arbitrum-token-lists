@@ -188,7 +188,7 @@ export const generateTokenList = async (
   const l2ToL1GatewayAddresses = await generateGatewayMap(
     l2.multiCaller,
     l2.network,
-    l1.provider
+    l1.provider,
   );
   const _arbifiedTokenList = tokens
     .map((t, i) => ({

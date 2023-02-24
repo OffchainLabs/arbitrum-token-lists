@@ -1,28 +1,8 @@
 import { request, gql } from 'graphql-request';
 import { isNetwork } from './utils';
 import { GraphTokenResult, GraphTokensResult } from './types';
-import { excludeList } from './constants';
-
-const apolloL2GatewaysRinkebyClient =
-  'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-rinkeby';
-const apolloL2GatewaysClient =
-  'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway';
-
-const appoloL2GatewaysGoerliRollupClient =
-  'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-nitro-goerli';
-
-const chaidIdToGraphClientUrl = (chainID: string) => {
-  switch (chainID) {
-    case '42161':
-      return apolloL2GatewaysClient;
-    case '421611':
-      return apolloL2GatewaysRinkebyClient;
-    case '421613':
-      return appoloL2GatewaysGoerliRollupClient;
-    default:
-      throw new Error('Unsupported chain');
-  }
-};
+import { excludeList, tokenGatewayGraphEndpoints, bridgeGraphEndpoints } from './constants';
+import { getArgvs } from './options';
 
 const isGraphTokenResult = (obj: GraphTokenResult) => {
   if (!obj) {
@@ -59,7 +39,7 @@ export const getTokens = async (
   }
   const networkID =
     typeof _networkID === 'number' ? _networkID.toString() : _networkID;
-  const clientUrl = chaidIdToGraphClientUrl(networkID);
+  const clientUrl = tokenGatewayGraphEndpoints[Number(networkID)];
   // lazy solution for big lists for now; we'll have to paginate once we have > 500 tokens registed
   if (tokenList.length > 500) {
     const allTokens = await getAllTokens(networkID);
@@ -113,7 +93,7 @@ export const getAllTokens = async (
 ): Promise<Array<GraphTokenResult>> => {
   const networkID =
     typeof _networkID === 'number' ? _networkID.toString() : _networkID;
-  const clientUrl = chaidIdToGraphClientUrl(networkID);
+  const clientUrl = tokenGatewayGraphEndpoints[Number(networkID)];
   const blockNumber = graphGatewayBlockNumField(_networkID);
   const query = gql`
     {
@@ -147,3 +127,44 @@ export const getAllTokens = async (
     (token) => !excludeList.includes(token.l1TokenAddr.toLowerCase()),
   );
 };
+
+interface timeComparableEvent {
+  logIndex: number;
+  blockNumber: number;
+}
+const sortByTime = (a: timeComparableEvent, b: timeComparableEvent): number => {
+  if (a.blockNumber === b.blockNumber) {
+    return a.logIndex - b.logIndex;
+  }
+  return a.blockNumber - b.blockNumber;
+};
+export async function getGatewaysets(): Promise<any[]> {
+  let eventResult = [];
+  let currentResult = [];
+  let skip = 0;
+  do {
+    const requestPara = gql`query EventQuery {
+                gatewaySets(first: 100, orderBy: id, skip: ${skip}) {
+                    id 
+                    l1Token 
+                    gateway
+                    blockNumber
+                    }   
+                }`;
+    const scanResult = await axios.post(
+      bridgeGraphEndpoints[getArgvs().l2NetworkID],
+      { query: requestPara },
+    );
+    currentResult = scanResult.data.data.gatewaySets;
+    //get logIndex only
+    for (let i = 0; i < currentResult.length; i++) {
+      currentResult[i].tx = currentResult[i].id.substring(0, 66);
+      currentResult[i].logIndex = Number(currentResult[i].id.substring(67));
+      currentResult[i].blockNumber = Number(currentResult[i].blockNumber);
+    }
+    eventResult.push(...currentResult);
+    skip += 100;
+  } while (currentResult.length == 100);
+  eventResult.sort(sortByTime);
+  return eventResult;
+}

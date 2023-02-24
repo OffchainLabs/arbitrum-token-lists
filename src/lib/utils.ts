@@ -6,7 +6,7 @@ import { CallInput, L2Network, MultiCaller } from '@arbitrum/sdk';
 import { L1GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory';
 import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory';
 import { TokenGateway__factory } from '@arbitrum/sdk/dist/lib/abi/factories/TokenGateway__factory';
-import { getGatewaysets } from './subgraph'
+import { getGatewaysets } from './subgraph';
 import { ArbTokenList, GraphTokenResult } from './types';
 import path from 'path';
 import { exit } from 'process';
@@ -88,7 +88,7 @@ export const promiseErrorMultiplier = <T>(
 export const generateGatewayMap = async (
   l2Multicaller: MultiCaller,
   l2Network: L2Network,
-  l1Provider: Provider
+  l1Provider: Provider,
 ) => {
   const l1GatewayResults: Map<string, string> = new Map();
   const l1Token: any[] = [];
@@ -99,26 +99,26 @@ export const generateGatewayMap = async (
   {
     const l1GatewayRouter = L1GatewayRouter__factory.connect(
       l2Network.tokenBridge.l1GatewayRouter,
-      l1Provider
+      l1Provider,
     );
     const defaultGateway = await l1GatewayRouter.defaultGateway();
     const defaultGatewayContract = new ethers.Contract(
       defaultGateway,
-      TokenGateway__factory.abi
+      TokenGateway__factory.abi,
     ).connect(l1Provider);
     const defaultCounterPartGateway =
       await defaultGatewayContract.counterpartGateway();
     gatewayMap.set(
       defaultCounterPartGateway.toLowerCase(),
-      defaultGateway.toLowerCase()
+      defaultGateway.toLowerCase(),
     );
   }
 
-  const gatewaySetsList = await getGatewaysets()
-  
-  for(let i = 0; i < gatewaySetsList.length; i++) {
-    const tokenAddress = gatewaySetsList[i].l1Token
-    let l1GatewayAddress = gatewaySetsList[i].gateway
+  const gatewaySetsList = await getGatewaysets();
+
+  for (let i = 0; i < gatewaySetsList.length; i++) {
+    const tokenAddress = gatewaySetsList[i].l1Token;
+    let l1GatewayAddress = gatewaySetsList[i].gateway;
 
     //if gateway set to zero, which means it sets back to standard erc20 gateway
     if (l1GatewayAddress === ethers.constants.AddressZero) {
@@ -127,11 +127,11 @@ export const generateGatewayMap = async (
     l1GatewayResults.set(tokenAddress, l1GatewayAddress);
     l1Token.push(tokenAddress);
   }
-  
+
   const l2GatewayMaps = await getL2GatewayAddressesFromL1Token(
     l1Token,
     l2Multicaller,
-    l2Network
+    l2Network,
   );
 
   //set gateway map
@@ -139,7 +139,7 @@ export const generateGatewayMap = async (
     if (l2GatewayMaps[i] === ethers.constants.AddressZero) continue;
     gatewayMap.set(
       l2GatewayMaps[i].toLowerCase(),
-      l1GatewayResults.get(l1Token[i])!.toLowerCase()
+      l1GatewayResults.get(l1Token[i])!.toLowerCase(),
     );
   }
 
@@ -154,14 +154,14 @@ export const generateGatewayMap = async (
 
 export const getL1GatewayAddress = async (
   l2GatewayAddress: string,
-  l2ToL1GatewayAddresses: Map<string, string>
+  l2ToL1GatewayAddresses: Map<string, string>,
 ) => {
   return l2ToL1GatewayAddresses.get(l2GatewayAddress.toLowerCase());
 };
 
 export const checkMapResultByL2Gateway = async (
   l2ToL1GatewayAddresses: Map<string, string>,
-  l2Multicaller: MultiCaller
+  l2Multicaller: MultiCaller,
 ) => {
   const keys = l2ToL1GatewayAddresses.keys();
   const l2Gateways: string[] = [...keys];
@@ -172,7 +172,7 @@ export const checkMapResultByL2Gateway = async (
     ) {
       console.log(
         `Gateway map check invalid, invalid l2 gateway address is` +
-          `${l2Gateways[i]}, invalid l1 gateway address is ${l1Gateways[i]}`
+          `${l2Gateways[i]}, invalid l1 gateway address is ${l1Gateways[i]}`,
       );
       return false;
     }
@@ -181,44 +181,44 @@ export const checkMapResultByL2Gateway = async (
 };
 
 // Since l2 grt gateway has different interface, we should change the call id
-const getCallInput = (addr: string, standardiFace: ethers.utils.Interface): CallInput<string> => {
-  if(addr === "0x65e1a5e8946e7e87d9774f5288f41c30a99fd302") {
+const getCallInput = (
+  addr: string,
+  standardiFace: ethers.utils.Interface,
+): CallInput<string> => {
+  if (addr === '0x65e1a5e8946e7e87d9774f5288f41c30a99fd302') {
     const iFace = new ethers.utils.Interface([
-      "function l1Counterpart() view returns (address)"
-    ])
+      'function l1Counterpart() view returns (address)',
+    ]);
     return {
       encoder: () => iFace.encodeFunctionData('l1Counterpart'),
       decoder: (returnData: string) =>
-      iFace.decodeFunctionResult(
-          'l1Counterpart',
-          returnData
-        )[0] as string,
-      targetAddr: addr
-    }
+        iFace.decodeFunctionResult('l1Counterpart', returnData)[0] as string,
+      targetAddr: addr,
+    };
   }
   return {
     encoder: () => standardiFace.encodeFunctionData('counterpartGateway'),
     decoder: (returnData: string) =>
       standardiFace.decodeFunctionResult(
         'counterpartGateway',
-        returnData
+        returnData,
       )[0] as string,
-    targetAddr: addr
-  }
-}
+    targetAddr: addr,
+  };
+};
 
 export const getL1GatewayFromL2Gateway = async (
   l2Gateways: string[],
-  l2Multicaller: MultiCaller
+  l2Multicaller: MultiCaller,
 ): Promise<string[]> => {
   const iFace = L2GatewayRouter__factory.createInterface();
-  
+
   const INC = 500;
   let index = 0;
   console.info(
     'getL1GatewayFromL2Gateway for',
     l2Gateways.length,
-    'l2 Gateways'
+    'l2 Gateways',
   );
 
   let l1Gateways: (string | undefined)[] = [];
@@ -228,12 +228,12 @@ export const getL1GatewayFromL2Gateway = async (
       'Getting tokens',
       index,
       'through',
-      Math.min(index + INC, l2Gateways.length)
+      Math.min(index + INC, l2Gateways.length),
     );
 
     const l2GatewaySlice = l2Gateways.slice(index, index + INC);
     const result = await l2Multicaller.multiCall(
-      l2GatewaySlice.map(addr => getCallInput(addr, iFace))
+      l2GatewaySlice.map((addr) => getCallInput(addr, iFace)),
     );
     l1Gateways = l1Gateways.concat(result);
     index += INC;
