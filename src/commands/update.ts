@@ -8,13 +8,10 @@ export const command = Action.Update;
 
 export const describe = 'Update';
 
-export const builder = () => {};
-
 export const handler = async (argvs: Args) => {
   const includeOldDataFields = !!argvs.includeOldDataFields;
   const { newList, path } = await updateArbifiedList(argvs.tokenList, {
     includeOldDataFields,
-    skipValidation: argvs.skipValidation,
     ignorePreviousList: argvs.ignorePreviousList,
     prevArbifiedList: argvs.prevArbifiedList,
   });

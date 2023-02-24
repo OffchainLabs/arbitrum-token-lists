@@ -91,7 +91,7 @@ export const excludeList = [
   '0x106538cc16f938776c7c180186975bca23875287', // remove once bridged (basv2)
   '0xB4A3B0Faf0Ab53df58001804DdA5Bfc6a3D59008', // spera
   // "0x960b236a07cf122663c4303350609a66a7b288c0", //aragon old
-].map(s => s.toLowerCase());
+].map((s) => s.toLowerCase());
 
 export const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60;
 

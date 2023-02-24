@@ -1,8 +1,10 @@
 node_modules
 .env
-ArbTokenLists
-FullList
+src/ArbTokenLists/*
+src/FullList/*
 dist
+!src/ArbTokenLists/arbed_arb_whitelist_era.json
+
 
 # Logs
 logs

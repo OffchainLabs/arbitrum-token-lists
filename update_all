@@ -14,6 +14,7 @@ yarn arbify --l2NetworkID 42161 --tokenList https://www.gemini.com/uniswap/manif
 yarn arbify --l2NetworkID 42161 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/arbed_coinmarketcap.json
 
 # update whitelist era list (for e.g. changed gateways)
+aws s3 cp s3://arb-token-lists/ArbTokenLists/arbed_arb_whitelist_era.json ./src/ArbTokenLists/arbed_arb_whitelist_era.json
 yarn update --l2NetworkID 42161 --tokenList ./src/ArbTokenLists/arbed_arb_whitelist_era.json --includeOldDataFields true
 
 # nova

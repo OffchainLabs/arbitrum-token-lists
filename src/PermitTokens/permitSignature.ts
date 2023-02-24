@@ -18,7 +18,7 @@ async function getPermitSig(
     name?: string;
     chainId?: number;
     version?: string;
-  }
+  },
 ) {
   // TODO: check that error is that function instead available (differentiate network fails)
   const [nonce, name, version, chainId] = await Promise.all([
@@ -63,7 +63,7 @@ async function getPermitSigNoVersion(
   spender: string,
   value: BigNumberish,
   deadline: BigNumberish,
-  optional?: { nonce?: number; name?: string; chainId?: number }
+  optional?: { nonce?: number; name?: string; chainId?: number },
 ) {
   // TODO: check that error is that function instead available (differentiate network fails)
   const [nonce, name, chainId] = await Promise.all([
@@ -105,7 +105,7 @@ async function getDaiLikePermitSignature(
   token: Contract,
   spender: string,
   deadline: BigNumberish,
-  optional?: { nonce?: number; name?: string; chainId?: number }
+  optional?: { nonce?: number; name?: string; chainId?: number },
 ): Promise<[string, number]> {
   // TODO: check that error is that function instead available (differentiate network fails)
   const [nonce, name, chainId] = await Promise.all([
@@ -151,7 +151,7 @@ enum PermitTypes {
 }
 
 export const addPermitTags = async (
-  tokenList: ArbTokenList
+  tokenList: ArbTokenList,
 ): Promise<ArbTokenList> => {
   console.log('Adding permit tags');
   const { l1, l2 } = await getNetworkConfig();
@@ -182,7 +182,7 @@ export const addPermitTags = async (
     const tokenContract = new Contract(
       curr.address,
       permitTokenAbi['abi'],
-      wallet
+      wallet,
     );
 
     const signature = await getPermitSig(
@@ -190,7 +190,7 @@ export const addPermitTags = async (
       tokenContract,
       spender.address,
       value,
-      deadline
+      deadline,
     );
     const { v, r, s } = utils.splitSignature(signature);
     const iface = new utils.Interface(permitTokenAbi['abi']);
@@ -210,7 +210,7 @@ export const addPermitTags = async (
       tokenContract,
       spender.address,
       value,
-      deadline
+      deadline,
     );
     const { v: vNo, r: rNo, s: sNo } = utils.splitSignature(signatureNoVersion);
     const callDataNoVersion = iface.encodeFunctionData('permit', [
@@ -227,13 +227,13 @@ export const addPermitTags = async (
     const daiTokenContract = new Contract(
       curr.address,
       daiPermitTokenAbi,
-      wallet
+      wallet,
     );
     const signatureDAI = await getDaiLikePermitSignature(
       wallet,
       daiTokenContract,
       spender.address,
-      deadline
+      deadline,
     );
     const { v: vDAI, r: rDAI, s: sDAI } = utils.splitSignature(signatureDAI[0]);
     const ifaceDAI = new utils.Interface(daiPermitTokenAbi);
@@ -263,7 +263,7 @@ export const addPermitTags = async (
         tokenIndex: i,
         target: curr.address,
         callData: callDataDAI, // DAI permit
-      }
+      },
     );
   }
 
@@ -286,11 +286,11 @@ export const addPermitTags = async (
           isL1Mainnet ? 'tryAggregateGasRation' : 'tryAggregate'
         ](
           false,
-          chunk.map(curr => ({
+          chunk.map((curr) => ({
             target: curr.target,
             callData: curr.callData,
-          }))
-        )
+          })),
+        ),
       );
       tryPermit.push(...(await curr));
     }
