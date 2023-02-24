@@ -8,10 +8,8 @@ export const command = Action.Arbify;
 
 export const describe = 'Arbify';
 
-export const builder = () => {};
-
 export const handler = async (argvs: Args) => {
-  const includeOldDataFields: boolean = !!argvs.includeOldDataFields;
+  const includeOldDataFields = !!argvs.includeOldDataFields;
 
   const { newList, l1ListName } = await arbifyL1List(argvs.tokenList, {
     includeOldDataFields,

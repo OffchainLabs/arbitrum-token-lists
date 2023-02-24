@@ -35,7 +35,7 @@ export const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses =
       '0xd3b5b60020504bc3489d6949d545893982ba3011',
     // graph gateway arb1
     '0x65E1a5e8946e7E87d9774f5288f41c30a99fD302':
-    '0x01cDC91B0A9bA741903aA3699BF4CE31d6C5cC06',
+      '0x01cDC91B0A9bA741903aA3699BF4CE31d6C5cC06',
 
     // L2 ERC20 Gateway	rinkeby
     '0x195c107f3f75c4c93eba7d9a1312f19305d6375f':
@@ -101,7 +101,7 @@ export const excludeList = [
   '0x106538cc16f938776c7c180186975bca23875287', // remove once bridged (basv2)
   '0xB4A3B0Faf0Ab53df58001804DdA5Bfc6a3D59008', // spera
   // "0x960b236a07cf122663c4303350609a66a7b288c0", //aragon old
-].map(s => s.toLowerCase());
+].map((s) => s.toLowerCase());
 
 export const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60;
 

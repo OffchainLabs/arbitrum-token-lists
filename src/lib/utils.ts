@@ -24,10 +24,10 @@ export const isNetwork = () => {
 };
 
 const coinGeckoBuff = readFileSync(
-  path.resolve(__dirname, '../Assets/coingecko_uris.json')
+  path.resolve(__dirname, '../Assets/coingecko_uris.json'),
 );
 const logoURIsBuff = readFileSync(
-  path.resolve(__dirname, '../Assets/logo_uris.json')
+  path.resolve(__dirname, '../Assets/logo_uris.json'),
 );
 
 const coingeckoURIs = JSON.parse(coinGeckoBuff.toString());
@@ -49,12 +49,12 @@ export const listNameToArbifiedListName = (name: string) => {
 export const getL1TokenAndL2Gateway = async (
   tokenList: { addr: string; logo: string | undefined }[],
   l2Multicaller: MultiCaller,
-  l2Network: L2Network
+  l2Network: L2Network,
 ): Promise<Array<GraphTokenResult>> => {
   const routerData = await getL2GatewayAddressesFromL1Token(
-    tokenList.map(curr => curr.addr),
+    tokenList.map((curr) => curr.addr),
     l2Multicaller,
-    l2Network
+    l2Network,
   );
 
   return tokenList.map((curr, i) => ({
@@ -72,14 +72,14 @@ export const promiseErrorMultiplier = <T>(
   prom: Promise<T>,
   handler: (err: Error) => Promise<T>,
   tries = 3,
-  verbose = false
+  verbose = false,
 ) => {
   let counter = 0;
   while (counter < tries) {
-    prom = prom.catch(err => handler(err));
+    prom = prom.catch((err) => handler(err));
     counter++;
   }
-  return prom.catch(err => {
+  return prom.catch((err) => {
     if (verbose) console.error('Failed ' + tries + ' times. Giving up');
     throw err;
   });
@@ -249,7 +249,7 @@ export const getL1GatewayFromL2Gateway = async (
 export const getL2GatewayAddressesFromL1Token = async (
   l1TokenAddresses: string[],
   l2Multicaller: MultiCaller,
-  l2Network: L2Network
+  l2Network: L2Network,
 ): Promise<string[]> => {
   const iFace = L1GatewayRouter__factory.createInterface();
 
@@ -258,7 +258,7 @@ export const getL2GatewayAddressesFromL1Token = async (
   console.info(
     'getL2GatewayAddressesFromL1Token for',
     l1TokenAddresses.length,
-    'tokens'
+    'tokens',
   );
 
   let gateways: (string | undefined)[] = [];
@@ -268,17 +268,17 @@ export const getL2GatewayAddressesFromL1Token = async (
       'Getting tokens',
       index,
       'through',
-      Math.min(index + INC, l1TokenAddresses.length)
+      Math.min(index + INC, l1TokenAddresses.length),
     );
 
     const l1TokenAddressesSlice = l1TokenAddresses.slice(index, index + INC);
     const result = await l2Multicaller.multiCall(
-      l1TokenAddressesSlice.map(addr => ({
+      l1TokenAddressesSlice.map((addr) => ({
         encoder: () => iFace.encodeFunctionData('getGateway', [addr]),
         decoder: (returnData: string) =>
           iFace.decodeFunctionResult('getGateway', returnData)[0] as string,
         targetAddr: l2Network.tokenBridge.l2GatewayRouter,
-      }))
+      })),
     );
     gateways = gateways.concat(result);
     index += INC;
@@ -294,42 +294,42 @@ export const getL2GatewayAddressesFromL1Token = async (
 export const getL2TokenAddressesFromL1 = async (
   l1TokenAddresses: string[],
   multiCaller: MultiCaller,
-  l1GatewayRouterAddress: string
+  l1GatewayRouterAddress: string,
 ) => {
   const iFace = L1GatewayRouter__factory.createInterface();
 
   return await multiCaller.multiCall(
-    l1TokenAddresses.map(addr => ({
+    l1TokenAddresses.map((addr) => ({
       encoder: () =>
         iFace.encodeFunctionData('calculateL2TokenAddress', [addr]),
       decoder: (returnData: string) =>
         iFace.decodeFunctionResult(
           'calculateL2TokenAddress',
-          returnData
+          returnData,
         )[0] as string,
       targetAddr: l1GatewayRouterAddress,
-    }))
+    })),
   );
 };
 
 export const getL2TokenAddressesFromL2 = async (
   l1TokenAddresses: string[],
   multiCaller: MultiCaller,
-  l2GatewayRouterAddress: string
+  l2GatewayRouterAddress: string,
 ) => {
   const iFace = L2GatewayRouter__factory.createInterface();
 
   return await multiCaller.multiCall(
-    l1TokenAddresses.map(addr => ({
+    l1TokenAddresses.map((addr) => ({
       encoder: () =>
         iFace.encodeFunctionData('calculateL2TokenAddress', [addr]),
       decoder: (returnData: string) =>
         iFace.decodeFunctionResult(
           'calculateL2TokenAddress',
-          returnData
+          returnData,
         )[0] as string,
       targetAddr: l2GatewayRouterAddress,
-    }))
+    })),
   );
 };
 
@@ -339,7 +339,7 @@ export const getLogoUri = async (l1TokenAddress: string) => {
   const coinGeckoURI: string | undefined = coingeckoURIs[l1TokenAddressLCase];
   const trustWalletUri = `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/${l1TokenAddress}/logo.png`;
   const uris = [logoUri, coinGeckoURI, trustWalletUri].filter(
-    (x): x is string => !!x
+    (x): x is string => !!x,
   );
 
   for (const uri of uris) {
@@ -362,7 +362,7 @@ export const getTokenListObjFromLocalPath = async (path: string) => {
 };
 
 export const removeInvalidTokensFromList = (
-  tokenList: ArbTokenList | TokenList
+  tokenList: ArbTokenList | TokenList,
 ): ArbTokenList | TokenList => {
   let valid = tokenListIsValid(tokenList);
   const startingTokenListLen = tokenList.tokens.length;
@@ -371,7 +371,7 @@ export const removeInvalidTokensFromList = (
     return tokenList;
   } else {
     const tokenListCopy = JSON.parse(
-      JSON.stringify(tokenList)
+      JSON.stringify(tokenList),
     ) as typeof tokenList;
     console.log('Invalid token list:');
     while (!valid && tokenListCopy.tokens.length > 0) {
@@ -385,7 +385,7 @@ export const removeInvalidTokensFromList = (
         // pre-recursion sanity check:
         if (tokenList.tokens.length >= startingTokenListLen) {
           throw new Error(
-            '666: removeInvalidTokensFromList failed basic sanity check'
+            '666: removeInvalidTokensFromList failed basic sanity check',
           );
         }
         return removeInvalidTokensFromList(tokenList);
@@ -436,14 +436,14 @@ export const getFormattedSourceURL = (sourceUrl?: string) => {
 export const isArbTokenList = (obj: any) => {
   const expectedListKeys = ['name', 'timestamp', 'version', 'tokens'];
   const actualListKeys = new Set(Object.keys(obj));
-  if (!expectedListKeys.every(key => actualListKeys.has(key))) {
+  if (!expectedListKeys.every((key) => actualListKeys.has(key))) {
     throw new Error(
-      'ArbTokenList typeguard error: required list key not included'
+      'ArbTokenList typeguard error: required list key not included',
     );
   }
   const { version, tokens } = obj;
   if (
-    !['major', 'minor', 'patch'].every(key => {
+    !['major', 'minor', 'patch'].every((key) => {
       return typeof version[key] === 'number';
     })
   ) {
@@ -452,9 +452,11 @@ export const isArbTokenList = (obj: any) => {
   if (
     !tokens.every((token: any) => {
       const tokenKeys = new Set(Object.keys(token));
-      return ['chainId', 'address', 'name', 'decimals', 'symbol'].every(key => {
-        return tokenKeys.has(key);
-      });
+      return ['chainId', 'address', 'name', 'decimals', 'symbol'].every(
+        (key) => {
+          return tokenKeys.has(key);
+        },
+      );
     })
   ) {
     throw new Error('ArbTokenList typeguard error: token missing required key');
@@ -473,7 +475,7 @@ export const isArbTokenList = (obj: any) => {
         bridgeInfo[someDestinationChain];
 
       if (
-        ![tokenAddress, originBridgeAddress, destBridgeAddress].every(k => k)
+        ![tokenAddress, originBridgeAddress, destBridgeAddress].every((k) => k)
       ) {
         throw new Error('ArbTokenList typeguard error: missing extension');
       }
@@ -485,14 +487,14 @@ export const isArbTokenList = (obj: any) => {
 export const isTokenList = (obj: any) => {
   const expectedListKeys = ['name', 'timestamp', 'version', 'tokens'];
   const actualListKeys = new Set(Object.keys(obj));
-  if (!expectedListKeys.every(key => actualListKeys.has(key))) {
+  if (!expectedListKeys.every((key) => actualListKeys.has(key))) {
     throw new Error(
-      'tokenlist typeguard error: required list key not included'
+      'tokenlist typeguard error: required list key not included',
     );
   }
   const { version, tokens } = obj;
   if (
-    !['major', 'minor', 'patch'].every(key => {
+    !['major', 'minor', 'patch'].every((key) => {
       return typeof version[key] === 'number';
     })
   ) {
@@ -501,9 +503,11 @@ export const isTokenList = (obj: any) => {
   if (
     !tokens.every((token: any) => {
       const tokenKeys = new Set(Object.keys(token));
-      return ['chainId', 'address', 'name', 'decimals', 'symbol'].every(key => {
-        return tokenKeys.has(key);
-      });
+      return ['chainId', 'address', 'name', 'decimals', 'symbol'].every(
+        (key) => {
+          return tokenKeys.has(key);
+        },
+      );
     })
   ) {
     throw new Error('tokenlist typeguard error: token missing required key');
