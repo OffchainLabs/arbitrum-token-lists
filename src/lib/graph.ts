@@ -20,7 +20,6 @@ const sortByTime = (a: GatewaySetInfo, b: GatewaySetInfo): number => {
   return Number(a.blockNumber) - Number(b.blockNumber);
 };
 
-
 const isGraphTokenResult = (obj: GraphTokenResult) => {
   if (!obj) {
     throw new Error('Graph result: undefined');
@@ -144,7 +143,6 @@ export const getAllTokens = async (
     (token) => !excludeList.includes(token.l1TokenAddr.toLowerCase()),
   );
 };
-
 
 export async function getGatewaysets(): Promise<any[]> {
   const eventResult = [];
