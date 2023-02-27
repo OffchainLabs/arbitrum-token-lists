@@ -1,8 +1,25 @@
 import { request, gql } from 'graphql-request';
 import { isNetwork } from './utils';
-import { GraphTokenResult, GraphTokensResult } from './types';
-import { excludeList, tokenGatewayGraphEndpoints, bridgeGraphEndpoints } from './constants';
+import {
+  GraphTokenResult,
+  GraphTokensResult,
+  GatewaySetsResult,
+  GatewaySetInfo,
+} from './types';
+import {
+  excludeList,
+  tokenGatewayGraphEndpoints,
+  bridgeGraphEndpoints,
+} from './constants';
 import { getArgvs } from './options';
+
+const sortByTime = (a: GatewaySetInfo, b: GatewaySetInfo): number => {
+  if (Number(a.blockNumber) === Number(b.blockNumber)) {
+    return a.logIndex - b.logIndex;
+  }
+  return Number(a.blockNumber) - Number(b.blockNumber);
+};
+
 
 const isGraphTokenResult = (obj: GraphTokenResult) => {
   if (!obj) {
@@ -128,22 +145,14 @@ export const getAllTokens = async (
   );
 };
 
-interface timeComparableEvent {
-  logIndex: number;
-  blockNumber: number;
-}
-const sortByTime = (a: timeComparableEvent, b: timeComparableEvent): number => {
-  if (a.blockNumber === b.blockNumber) {
-    return a.logIndex - b.logIndex;
-  }
-  return a.blockNumber - b.blockNumber;
-};
+
 export async function getGatewaysets(): Promise<any[]> {
-  let eventResult = [];
-  let currentResult = [];
+  const eventResult = [];
+  const currentResult: GatewaySetInfo[] = [];
   let skip = 0;
+  const clientUrl = bridgeGraphEndpoints[getArgvs().l2NetworkID];
   do {
-    const requestPara = gql`query EventQuery {
+    const query = gql`query EventQuery {
                 gatewaySets(first: 100, orderBy: id, skip: ${skip}) {
                     id 
                     l1Token 
@@ -151,16 +160,22 @@ export async function getGatewaysets(): Promise<any[]> {
                     blockNumber
                     }   
                 }`;
-    const scanResult = await axios.post(
-      bridgeGraphEndpoints[getArgvs().l2NetworkID],
-      { query: requestPara },
-    );
-    currentResult = scanResult.data.data.gatewaySets;
+    // const scanResult = await axios.post(
+    //   bridgeGraphEndpoints[getArgvs().l2NetworkID],
+    //   { query: requestPara },
+    // );
+    const { gatewaySets } = (await request(
+      clientUrl,
+      query,
+    )) as GatewaySetsResult;
+
     //get logIndex only
-    for (let i = 0; i < currentResult.length; i++) {
-      currentResult[i].tx = currentResult[i].id.substring(0, 66);
-      currentResult[i].logIndex = Number(currentResult[i].id.substring(67));
-      currentResult[i].blockNumber = Number(currentResult[i].blockNumber);
+    for (let i = 0; i < gatewaySets.length; i++) {
+      currentResult[i] = {
+        ...gatewaySets[i],
+        tx: currentResult[i].id.substring(0, 66),
+        logIndex: 1,
+      };
     }
     eventResult.push(...currentResult);
     skip += 100;

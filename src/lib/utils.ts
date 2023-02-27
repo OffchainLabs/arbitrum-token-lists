@@ -6,7 +6,7 @@ import { CallInput, L2Network, MultiCaller } from '@arbitrum/sdk';
 import { L1GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory';
 import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory';
 import { TokenGateway__factory } from '@arbitrum/sdk/dist/lib/abi/factories/TokenGateway__factory';
-import { getGatewaysets } from './subgraph';
+import { getGatewaysets } from './graph';
 import { ArbTokenList, GraphTokenResult } from './types';
 import path from 'path';
 import { exit } from 'process';

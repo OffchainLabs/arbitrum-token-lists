@@ -1,6 +1,4 @@
 import { TokenInfo, TokenList } from '@uniswap/token-lists';
-import { text } from 'stream/consumers';
-import { string } from 'yargs';
 
 // extensions object is allowed to be 2 levels deep, but type is out-of-date
 // https://github.com/Uniswap/token-lists/pull/67
@@ -55,10 +53,10 @@ export interface GatewaySetResult {
 }
 
 export interface GatewaySetsResult {
-  gatewaySets: GatewaySetResult[]
+  gatewaySets: GatewaySetResult[];
 }
 
 export interface GatewaySetInfo extends GatewaySetResult {
-  tx: string | null;
-  logIndex: Number | null;
+  tx: string;
+  logIndex: number;
 }

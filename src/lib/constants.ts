@@ -15,8 +15,7 @@ const objKeyAndValToLowerCase = (obj: { [key: string]: string }) =>
 export const bridgeGraphEndpoints: GraphEndpoints = {
   42161:
     'https://api.thegraph.com/subgraphs/name/gvladika/arb-bridge-eth-nitro',
-  42170: 
-    'https://api.thegraph.com/subgraphs/name/gvladika/arb-bridge-eth-nova',
+  42170: 'https://api.thegraph.com/subgraphs/name/gvladika/arb-bridge-eth-nova',
   421613:
     'https://api.thegraph.com/subgraphs/name/gvladika/arb-bridge-eth-goerli',
 };
@@ -28,8 +27,7 @@ export const tokenGatewayGraphEndpoints: GraphEndpoints = {
     'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway',
   421613:
     'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-nitro-goerli',
-
-}
+};
 
 // TODO: read these values from the gateway or a subgraph
 export const l2ToL1GatewayAddresses: L2ToL1GatewayAddresses =
