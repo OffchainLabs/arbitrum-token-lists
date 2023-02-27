@@ -146,10 +146,11 @@ export const getAllTokens = async (
 
 export async function getGatewaysets(): Promise<any[]> {
   const eventResult = [];
-  const currentResult: GatewaySetInfo[] = [];
+  let currentResult: GatewaySetInfo[];
   let skip = 0;
   const clientUrl = bridgeGraphEndpoints[getArgvs().l2NetworkID];
   do {
+    currentResult = [];
     const query = gql`query EventQuery {
                 gatewaySets(first: 100, orderBy: id, skip: ${skip}) {
                     id 
@@ -158,10 +159,6 @@ export async function getGatewaysets(): Promise<any[]> {
                     blockNumber
                     }   
                 }`;
-    // const scanResult = await axios.post(
-    //   bridgeGraphEndpoints[getArgvs().l2NetworkID],
-    //   { query: requestPara },
-    // );
     const { gatewaySets } = (await request(
       clientUrl,
       query,
@@ -171,7 +168,7 @@ export async function getGatewaysets(): Promise<any[]> {
     for (let i = 0; i < gatewaySets.length; i++) {
       currentResult[i] = {
         ...gatewaySets[i],
-        tx: currentResult[i].id.substring(0, 66),
+        tx: gatewaySets[i].id.substring(0, 66),
         logIndex: 1,
       };
     }
