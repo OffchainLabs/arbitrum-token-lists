@@ -148,8 +148,12 @@ export const getL2TokenAddressesFromL1 = async (
 ) => {
   const iFace = L1GatewayRouter__factory.createInterface();
 
+  const l1TokenAddressesLowercased = l1TokenAddresses.map((address) =>
+    address.toLowerCase(),
+  );
+
   return await multiCaller.multiCall(
-    l1TokenAddresses.map((addr) => ({
+    l1TokenAddressesLowercased.map((addr) => ({
       encoder: () =>
         iFace.encodeFunctionData('calculateL2TokenAddress', [addr]),
       decoder: (returnData: string) =>
@@ -169,8 +173,12 @@ export const getL2TokenAddressesFromL2 = async (
 ) => {
   const iFace = L2GatewayRouter__factory.createInterface();
 
+  const l1TokenAddressesLowercased = l1TokenAddresses.map((address) =>
+    address.toLowerCase(),
+  );
+
   return await multiCaller.multiCall(
-    l1TokenAddresses.map((addr) => ({
+    l1TokenAddressesLowercased.map((addr) => ({
       encoder: () =>
         iFace.encodeFunctionData('calculateL2TokenAddress', [addr]),
       decoder: (returnData: string) =>
