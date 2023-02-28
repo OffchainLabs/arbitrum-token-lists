@@ -22,9 +22,9 @@ export const bridgeGraphEndpoints: GraphEndpoints = {
 
 export const tokenGatewayGraphEndpoints: GraphEndpoints = {
   42161:
-    'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-rinkeby',
-  42170:
     'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway',
+  421611:
+    'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-rinkeby',
   421613:
     'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-nitro-goerli',
 };

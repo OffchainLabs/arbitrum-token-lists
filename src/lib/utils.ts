@@ -120,8 +120,11 @@ export const generateGatewayMap = async (
     let l1GatewayAddress = gatewaySetsList[i].gateway;
 
     // This token on goerli doesn't set correctly, so we should ignore it.
-    if(tokenAddress == '0x208d48e7eb3f316214c28894b3a6aea9e87c59a5' && l2Network.chainID == 421613) {
-      console.log(gatewaySetsList[i])
+    if (
+      tokenAddress == '0x208d48e7eb3f316214c28894b3a6aea9e87c59a5' &&
+      l2Network.chainID == 421613
+    ) {
+      console.log(gatewaySetsList[i]);
       continue;
     }
 
@@ -191,7 +194,10 @@ const getCallInput = (
   standardiFace: ethers.utils.Interface,
 ): CallInput<string> => {
   // The graph token (grt) doesn't use our standard interface, we should handle it as this:
-  if (addr === '0x65e1a5e8946e7e87d9774f5288f41c30a99fd302' || addr === `0xef2757855d2802ba53733901f90c91645973f743`) {
+  if (
+    addr === '0x65e1a5e8946e7e87d9774f5288f41c30a99fd302' ||
+    addr === `0xef2757855d2802ba53733901f90c91645973f743`
+  ) {
     const iFace = new ethers.utils.Interface([
       'function l1Counterpart() view returns (address)',
     ]);
@@ -246,7 +252,6 @@ export const getL1GatewayFromL2Gateway = async (
   }
   for (const curr of l1Gateways) {
     if (typeof curr === 'undefined') {
-
       throw new Error('undefined l1 gateway!');
     }
   }
