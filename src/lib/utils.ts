@@ -188,15 +188,15 @@ export const checkMapResultByL2Gateway = async (
   return true;
 };
 
-// Since l2 grt gateway has different interface, we should change the call id
 const getCallInput = (
   addr: string,
   standardiFace: ethers.utils.Interface,
 ): CallInput<string> => {
+  const { isArbOne, isGoerliRollup } = isNetwork();
   // The graph token (grt) doesn't use our standard interface, we should handle it as this:
   if (
-    addr === '0x65e1a5e8946e7e87d9774f5288f41c30a99fd302' ||
-    addr === `0xef2757855d2802ba53733901f90c91645973f743`
+    (addr === '0x65e1a5e8946e7e87d9774f5288f41c30a99fd302' && isArbOne) ||
+    (addr === `0xef2757855d2802ba53733901f90c91645973f743` && isGoerliRollup)
   ) {
     const iFace = new ethers.utils.Interface([
       'function l1Counterpart() view returns (address)',
