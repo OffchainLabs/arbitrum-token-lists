@@ -96,7 +96,7 @@ export const getTokens = async (
   }
 `;
 
-  const { tokens } = (await request(clientUrl, query)) as GraphTokensResult;
+  const { tokens }: GraphTokensResult = await request(clientUrl, query);
   tokens.map((token) => isGraphTokenResult(token));
 
   return tokens.filter(
@@ -133,7 +133,7 @@ export const getAllTokens = async (
     }
   `;
 
-  const { tokens } = (await request(clientUrl, query)) as GraphTokensResult;
+  const { tokens }: GraphTokensResult = await request(clientUrl, query);
   const res = tokens.map((token) => {
     isGraphTokenResult(token);
     return { ...token };
@@ -159,16 +159,13 @@ export async function getGatewaysets(): Promise<any[]> {
                     blockNumber
                     }   
                 }`;
-    const { gatewaySets } = (await request(
-      clientUrl,
-      query,
-    )) as GatewaySetsResult;
+    const { gatewaySets }: GatewaySetsResult = await request(clientUrl, query);
 
     //get logIndex only
     for (let i = 0; i < gatewaySets.length; i++) {
       currentResult[i] = {
         ...gatewaySets[i],
-        tx: gatewaySets[i].id.substring(0, 66),
+        tx: gatewaySets[i].id.substring(0, 66), //tx length 64 but there is 0x in front so it is 66
         logIndex: 1,
       };
     }

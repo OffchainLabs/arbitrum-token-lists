@@ -96,23 +96,21 @@ export const generateGatewayMap = async (
 
   //default gateway can be set during initialize call, it does not emit GatewaySet, so we should
   //manually set it
-  {
-    const l1GatewayRouter = L1GatewayRouter__factory.connect(
-      l2Network.tokenBridge.l1GatewayRouter,
-      l1Provider,
-    );
-    const defaultGateway = await l1GatewayRouter.defaultGateway();
-    const defaultGatewayContract = new ethers.Contract(
-      defaultGateway,
-      TokenGateway__factory.abi,
-    ).connect(l1Provider);
-    const defaultCounterPartGateway =
-      await defaultGatewayContract.counterpartGateway();
-    gatewayMap.set(
-      defaultCounterPartGateway.toLowerCase(),
-      defaultGateway.toLowerCase(),
-    );
-  }
+  const l1GatewayRouter = L1GatewayRouter__factory.connect(
+    l2Network.tokenBridge.l1GatewayRouter,
+    l1Provider,
+  );
+  const defaultGateway = await l1GatewayRouter.defaultGateway();
+  const defaultGatewayContract = new ethers.Contract(
+    defaultGateway,
+    TokenGateway__factory.abi,
+  ).connect(l1Provider);
+  const defaultCounterPartGateway =
+    await defaultGatewayContract.counterpartGateway();
+  gatewayMap.set(
+    defaultCounterPartGateway.toLowerCase(),
+    defaultGateway.toLowerCase(),
+  );
 
   const gatewaySetsList = await getGatewaysets();
   for (let i = 0; i < gatewaySetsList.length; i++) {
