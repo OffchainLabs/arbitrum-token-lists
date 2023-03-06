@@ -76,7 +76,7 @@ jobs:
           - name: Arb1 FullList
             command: yarn fullList --l2NetworkID 42161
           - name: Arb1 Arbify Uniswap
-            command: yarn arbify --l2NetworkID 42161 --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org
+            command: yarn arbify --l2NetworkID 42161 --tokenList https://tokens.uniswap.org/
           - name: Arb1 Arbify Gemini
             command: yarn arbify --l2NetworkID 42161 --tokenList https://www.gemini.com/uniswap/manifest.json
           - name: Arb1 Arbify CMC
@@ -85,7 +85,7 @@ jobs:
             command: yarn update --l2NetworkID 42161 --tokenList ./src/ArbTokenLists/arbed_arb_whitelist_era.json --includeOldDataFields true
 
           - name: ArbNova Arbify Uniswap
-            command: yarn arbify --l2NetworkID 42170 --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org
+            command: yarn arbify --l2NetworkID 42170 --tokenList https://tokens.uniswap.org/
           - name: ArbNova Arbify Gemini
             command: yarn arbify --l2NetworkID 42170 --tokenList https://www.gemini.com/uniswap/manifest.json
           - name: ArbNova Arbify CMC
@@ -121,41 +121,39 @@ jobs:
       - name: ${{ matrix.commands.name }}
         id: run_command
         if: success() || failure() # Always would allow manually canceled workflow to run
-        with:
-          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
         run: |
           ${{ matrix.commands.command }}
 
       - name: Deploy
         run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"'
 
-      # - name: Post to a Slack channel
-      #   id: slack
-      #   if: failure()
-      #   uses: slackapi/slack-github-action@v1.23.0
-      #   with:
-      #     channel-id: 'C04E2CCF3RA'
-      #     payload: |
-      #       {
-      #         "blocks": [
-      #           {
-      #             "type": "section",
-      #             "text": {
-      #               "type": "mrkdwn",
-      #               "text": "Token list generation failed (${{ matrix.commands.name }})"
-      #             }
-      #           },
-      #           {
-      #             "type": "divider"
-      #           },
-      #           {
-      #             "type": "section",
-      #             "text": {
-      #               "type": "mrkdwn",
-      #               "text": "${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}"
-      #             }
-      #           }
-      #         ]
-      #       }
-      #   env:
-      #     SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      - name: Post to a Slack channel
+        id: slack
+        if: failure()
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          channel-id: 'C04E2CCF3RA'
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Token list generation failed (${{ matrix.commands.name }})"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
