@@ -13,6 +13,7 @@ export const handler = async (argvs: Args) => {
   const { newList, path } = await updateArbifiedList(argvs.tokenList, {
     includeOldDataFields,
     ignorePreviousList: argvs.ignorePreviousList,
+    prevArbifiedList: argvs.prevArbifiedList,
   });
   let tokenList: ArbTokenList = newList;
 
