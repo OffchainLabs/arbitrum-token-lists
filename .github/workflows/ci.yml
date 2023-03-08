@@ -83,6 +83,4 @@ jobs:
 
   generate-token-lists:
     runs-on: ubuntu-latest
-    environment: Test
-    steps:
-      - uses: ./.github/workflows/generate-token-lists.yml
+    uses: ./.github/workflows/generate-token-lists.yml
