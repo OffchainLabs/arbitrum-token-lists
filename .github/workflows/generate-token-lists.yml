@@ -77,6 +77,11 @@ jobs:
         commands:
           - name: Arb1 FullList
             command: yarn fullList --l2NetworkID 42161
+          - name: Test slack error 1
+            command: yarn exit 1
+          - name: Test slack error 2
+            command: yarn exit 2
+
           # - name: Arb1 Arbify Uniswap
           #   command: yarn arbify --l2NetworkID 42161 --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/arbed_uniswap_labs.json
           # - name: Arb1 Arbify Gemini
