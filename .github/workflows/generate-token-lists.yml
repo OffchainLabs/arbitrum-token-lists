@@ -1,19 +1,17 @@
 name: Generate token lists
 
 on:
-  pull_request:
-    branches: ['master']
+  schedule:
+    - cron: '0/10 * * * *'
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
     inputs:
       environment:
         description: 'Environment to run generation'
         type: environment
         default: Test
         required: true
-
-  schedule:
-    - cron: '0/10 * * * *'
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+  workflow_call:
     inputs:
       environment:
         description: 'Environment to run generation'
@@ -49,7 +47,7 @@ jobs:
   fetchWhitelist:
     name: 'Fetch whitelist'
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
+    environment: ${{ inputs.environment }}
     needs: install
     permissions:
       id-token: write # need this for OIDC
@@ -77,7 +75,7 @@ jobs:
   generate-token-list:
     name: 'Generate'
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
+    environment: ${{ inputs.environment }}
     needs: [install, fetchWhitelist]
     permissions:
       id-token: write # need this for OIDC
