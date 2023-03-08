@@ -53,9 +53,6 @@ jobs:
       id-token: write # need this for OIDC
       contents: read # This is required for actions/checkout@v2
     steps:
-      - name: 'Debug'
-        run: echo "${{ toJson(github) }}"
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
