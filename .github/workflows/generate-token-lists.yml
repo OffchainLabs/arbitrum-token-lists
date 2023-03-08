@@ -144,7 +144,6 @@ jobs:
       - name: Deploy
         if: ${{ github.event_name != 'pull_request' }}
         run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"'
-         aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --profile arbi --dryrun
 
       - name: Post to a Slack channel
         id: slack
