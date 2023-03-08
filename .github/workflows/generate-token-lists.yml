@@ -7,7 +7,7 @@ on:
       environment:
         description: 'Environment to run generation'
         type: environment
-        default: PR
+        default: Test
         required: true
 
   schedule:
@@ -18,7 +18,7 @@ on:
       environment:
         description: 'Environment to run generation'
         type: environment
-        default: PR
+        default: Test
         required: true
 
 jobs:
@@ -107,6 +107,9 @@ jobs:
             command: yarn arbify --l2NetworkID 421613 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421613_arbed_coinmarketcap.json
           - name: ArbGoerli FullList
             command: yarn fullList --l2NetworkID 421613
+
+          - name: Test error
+            command: yarn exit 1
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
       MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
@@ -135,15 +138,16 @@ jobs:
         if: success() || failure() # Always would allow manually canceled workflow to run
         run: ${{ matrix.commands.command }}
 
-      - name: Deploy
-        run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"'
+      # - name: Deploy
+      #   run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"'
+      #    aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --profile arbi --dryrun
 
       - name: Post to a Slack channel
         id: slack
         if: failure()
         uses: slackapi/slack-github-action@v1.23.0
         with:
-          channel-id: 'C04QLBVM3HQ'
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
           payload: |
             {
               "blocks": [
