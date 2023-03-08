@@ -143,12 +143,8 @@ jobs:
         if: ${{ github.workflow == 'CI' }}
         run: echo 'CALLED FROM CI'
 
-      - name: Deploy diff CI
-        if: ${{ github.workflow != 'CI' }}
-        run: echo 'NOT CALLED FROM CI'
-
       - name: Test
-        if: ${{ github.workflow == 'CI' && github.event_name == 'workflow' }}
+        if: ${{ github.event_name == 'workflow' }}
         run: echo 'both condition ok'
 
       # - name: Deploy
