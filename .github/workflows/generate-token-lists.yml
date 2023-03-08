@@ -49,7 +49,7 @@ jobs:
   fetchWhitelist:
     name: 'Fetch whitelist'
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: ${{ github.event.inputs.environment }}
     needs: install
     permissions:
       id-token: write # need this for OIDC
@@ -74,7 +74,7 @@ jobs:
   generate-token-list:
     name: 'Generate'
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: ${{ github.event.inputs.environment }}
     needs: [install, fetchWhitelist]
     permissions:
       id-token: write # need this for OIDC
