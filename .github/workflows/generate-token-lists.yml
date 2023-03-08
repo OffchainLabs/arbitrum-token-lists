@@ -139,15 +139,9 @@ jobs:
         if: success() || failure() # Always would allow manually canceled workflow to run
         run: ${{ matrix.commands.command }}
 
-      - name: Deploy equal to CI
-        if: ${{ github.workflow == 'CI' }}
-        run: |
-          echo 'CALLED FROM CI'
-          echo "${{ github.event_name }}"
-
-      - name: Test
-        if: ${{ github.event_name == 'workflow' }}
-        run: echo 'both condition ok'
+      - name: Deploy yes
+        if: ${{ github.workflow == 'CI' && github.event_name == 'pull_request' }}
+        run: echo 'should call s3 with different folder'
 
       # - name: Deploy
       #   run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"'
