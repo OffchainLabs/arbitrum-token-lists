@@ -1,13 +1,22 @@
 name: Generate token lists
 
 on:
+  pull_request:
+    branches: ['master']
+    inputs:
+      environment:
+        description: 'Environment to run generation'
+        type: environment
+        default: PR
+        required: true
+
   schedule:
     - cron: '0/10 * * * *'
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Environment to run tests against'
+        description: 'Environment to run generation'
         type: environment
         default: PR
         required: true
@@ -140,7 +149,6 @@ jobs:
         uses: slackapi/slack-github-action@v1.23.0
         with:
           channel-id: 'C04QLBVM3HQ'
-          update-ts: ${{ steps.slack.outputs.ts }}
           payload: |
             {
               "blocks": [
@@ -159,6 +167,13 @@ jobs:
                   "text": {
                     "type": "mrkdwn",
                     "text": "${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "text",
+                    "text": ${{ steps.run_command.outputs }}
                   }
                 }
               ]
