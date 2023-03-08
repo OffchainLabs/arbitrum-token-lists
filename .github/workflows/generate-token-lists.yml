@@ -141,7 +141,9 @@ jobs:
 
       - name: Deploy equal to CI
         if: ${{ github.workflow == 'CI' }}
-        run: echo 'CALLED FROM CI'
+        run: |
+          echo 'CALLED FROM CI'
+          echo "${{ github.event_name }}"
 
       - name: Test
         if: ${{ github.event_name == 'workflow' }}
