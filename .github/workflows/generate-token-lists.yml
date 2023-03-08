@@ -74,7 +74,7 @@ jobs:
   generate-token-list:
     name: 'Generate'
     runs-on: ubuntu-latest
-    environment: CI
+    environment: ${{ inputs.environment }}
     needs: [install, fetchWhitelist]
     permissions:
       id-token: write # need this for OIDC
