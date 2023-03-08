@@ -172,7 +172,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ${{ steps.run_command.outputs }}
+                    "text": "${{ steps.run_command.outputs }}"
                   }
                 }
               ]
