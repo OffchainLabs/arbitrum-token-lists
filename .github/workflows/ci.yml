@@ -82,5 +82,4 @@ jobs:
         run: yarn test:unit
 
   generate-token-lists:
-    runs-on: ubuntu-latest
     uses: ./.github/workflows/generate-token-lists.yml
