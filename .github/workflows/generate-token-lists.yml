@@ -62,6 +62,9 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
+      - name: 'Debug'
+        run: echo ${{ github }}
+
       - name: 'Fetch'
         run: aws s3 cp s3://${{ secrets.AWS_BUCKET }}/ArbTokenLists/arbed_arb_whitelist_era.json ./src/ArbTokenLists/arbed_arb_whitelist_era.json
 
