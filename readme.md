@@ -8,7 +8,7 @@ From root:
 
 ### Arbify an L1 Token List
 
-`yarn arbify --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org --l2NetworkID 42161 --newArbifiedList ./src/ArbTokenLists/arbed_uniswap_labs_default.json`
+`yarn arbify --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org --l2NetworkID 42161 --newArbifiedList ./src/ArbTokenLists/arbed_uniswap_labs.json`
 
 Note that a local list can also be used, i.e.:
 
