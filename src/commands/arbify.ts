@@ -15,7 +15,6 @@ export const handler = async (argvs: Args) => {
     includeOldDataFields,
     ignorePreviousList: argvs.ignorePreviousList,
     prevArbifiedList: argvs.prevArbifiedList,
-    newArbifiedList: argvs.newArbifiedList
   });
   let tokenList: ArbTokenList = newList;
   const path = argvs.newArbifiedList;

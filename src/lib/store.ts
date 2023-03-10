@@ -38,10 +38,9 @@ export const getPath = (l1ListName: string) => {
 };
 
 export const getPrevList = (
-  l1ListName: string,
   arbifiedList: string | null,
 ): ArbTokenList | undefined => {
-  const path = arbifiedList ?? getPath(l1ListName);
+  const path = arbifiedList ?? '';
   if (!existsSync(path)) {
     console.log("Doesn't exist an arbified list.");
     return undefined;

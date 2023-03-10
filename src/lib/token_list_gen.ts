@@ -35,9 +35,8 @@ import { validateTokenListWithErrorThrowing } from './validateTokenList';
 import { constants as arbConstants } from '@arbitrum/sdk';
 import { readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
-import { getPrevList, listNameToFileName } from './store';
+import { getPrevList } from './store';
 import { getArgvs } from './options';
-import { TOKENLIST_DIR_PATH } from './constants';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -375,12 +374,10 @@ export const arbifyL1List = async (
     includeOldDataFields,
     ignorePreviousList,
     prevArbifiedList,
-    newArbifiedList
   }: {
     includeOldDataFields: boolean;
     ignorePreviousList: boolean;
     prevArbifiedList: string | null;
-    newArbifiedList: string;
   },
 ): Promise<{
   newList: ArbTokenList;
@@ -413,12 +410,10 @@ export const updateArbifiedList = async (
   {
     includeOldDataFields,
     ignorePreviousList,
-    prevArbifiedList,
-    newArbifiedList
+    newArbifiedList,
   }: {
     includeOldDataFields: boolean;
     ignorePreviousList: boolean;
-    prevArbifiedList: string | null;
     newArbifiedList: string;
   },
 ) => {
@@ -468,7 +463,7 @@ export const generateFullList = async () => {
 
   return arbListtoEtherscanList(tokenData);
 };
-export const  generateFullListFormatted = async () => {
+export const generateFullListFormatted = async () => {
   const mockList: TokenList = {
     name: 'Full',
     logoURI: 'ipfs://QmTvWJ4kmzq9koK74WJQ594ov8Es1HHurHZmMmhU8VY68y',

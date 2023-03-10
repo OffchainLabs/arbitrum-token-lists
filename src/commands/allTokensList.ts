@@ -9,10 +9,6 @@ export const command = Action.AllTokensList;
 export const describe = 'All tokens list';
 
 export const handler = async (argvs: Args) => {
-  if(!argvs.newArbifiedList) {
-    throw new Error("Action allTokenList needs --newArbifiedList flag")
-  }
-  
   let tokenList: ArbTokenList = await generateFullListFormatted();
   if (argvs.includePermitTags) tokenList = await addPermitTags(tokenList);
   writeToFile(tokenList, argvs.newArbifiedList);
