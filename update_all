@@ -15,7 +15,7 @@ yarn arbify --l2NetworkID 42161 --tokenList https://api.coinmarketcap.com/data-a
 
 # update whitelist era list (for e.g. changed gateways)
 aws s3 cp s3://arb-token-lists/ArbTokenLists/arbed_arb_whitelist_era.json ./src/ArbTokenLists/arbed_arb_whitelist_era.json
-yarn update --l2NetworkID 42161 --tokenList ./src/ArbTokenLists/arbed_arb_whitelist_era.json --includeOldDataFields true
+yarn update --l2NetworkID 42161 --tokenList ./src/ArbTokenLists/arbed_arb_whitelist_era.json --includeOldDataFields true --newArbifiedList ./src/ArbTokenLists/arbed_arb_whitelist_era.json
 
 # nova
 # yarn fullList --l2NetworkID 42170
@@ -25,4 +25,4 @@ yarn arbify --l2NetworkID 42170 --tokenList https://api.coinmarketcap.com/data-a
 
 # goerli rollup testnet
 yarn arbify --l2NetworkID 421613 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421613_arbed_coinmarketcap.json
-yarn fullList --l2NetworkID 421613
+yarn fullList --l2NetworkID 421613 ./src/ArbTokenLists/arbed_full.json
