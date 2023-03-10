@@ -74,7 +74,7 @@ describe('Token Lists', () => {
           '--newArbifiedList=./src/ArbTokenLists/arbed_uniswap_labs.json',
         ]),
         fetch(
-          'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap.json',
+          'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json',
         ).then((response) => response.json()),
       ]);
 
