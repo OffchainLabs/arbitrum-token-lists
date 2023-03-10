@@ -10,14 +10,14 @@ export const describe = 'Update';
 
 export const handler = async (argvs: Args) => {
   const includeOldDataFields = !!argvs.includeOldDataFields;
-  const { newList, path } = await updateArbifiedList(argvs.tokenList, {
+  const { newList } = await updateArbifiedList(argvs.tokenList, {
     includeOldDataFields,
     ignorePreviousList: argvs.ignorePreviousList,
-    newArbifiedList: argvs.newArbifiedList,
+    prevArbifiedList: argvs.prevArbifiedList,
   });
   let tokenList: ArbTokenList = newList;
 
   if (argvs.includePermitTags) tokenList = await addPermitTags(tokenList);
-  writeToFile(tokenList, path);
+  writeToFile(tokenList, argvs.newArbifiedList);
   return tokenList;
 };

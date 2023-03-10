@@ -410,20 +410,20 @@ export const updateArbifiedList = async (
   {
     includeOldDataFields,
     ignorePreviousList,
-    newArbifiedList,
+    prevArbifiedList,
   }: {
     includeOldDataFields: boolean;
     ignorePreviousList: boolean;
-    newArbifiedList: string;
+    prevArbifiedList: string | null;
   },
 ) => {
   const arbTokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(arbTokenList);
-  const path = newArbifiedList;
+  const oldPath = prevArbifiedList ?? '';
   let prevArbTokenList: ArbTokenList | undefined;
 
-  if (existsSync(path)) {
-    const data = readFileSync(path);
+  if (existsSync(oldPath)) {
+    const data = readFileSync(oldPath);
     console.log('Prev version of Arb List found');
 
     if (!ignorePreviousList) {
@@ -441,7 +441,6 @@ export const updateArbifiedList = async (
 
   return {
     newList,
-    path,
   };
 };
 
