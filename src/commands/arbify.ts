@@ -9,15 +9,13 @@ export const command = Action.Arbify;
 export const describe = 'Arbify';
 
 export const handler = async (argvs: Args) => {
-  if(!argvs.newArbifiedList) {
-    throw new Error("Action arbify needs --newArbifiedList flag")
-  }
   const includeOldDataFields = !!argvs.includeOldDataFields;
 
   const { newList } = await arbifyL1List(argvs.tokenList, {
     includeOldDataFields,
     ignorePreviousList: argvs.ignorePreviousList,
     prevArbifiedList: argvs.prevArbifiedList,
+    newArbifiedList: argvs.newArbifiedList
   });
   let tokenList: ArbTokenList = newList;
   const path = argvs.newArbifiedList;

@@ -375,10 +375,12 @@ export const arbifyL1List = async (
     includeOldDataFields,
     ignorePreviousList,
     prevArbifiedList,
+    newArbifiedList
   }: {
     includeOldDataFields: boolean;
     ignorePreviousList: boolean;
     prevArbifiedList: string | null;
+    newArbifiedList: string;
   },
 ): Promise<{
   newList: ArbTokenList;
@@ -392,7 +394,7 @@ export const arbifyL1List = async (
 
   const prevArbTokenList = ignorePreviousList
     ? null
-    : getPrevList(l1TokenList.name, prevArbifiedList);
+    : getPrevList(prevArbifiedList);
 
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
     includeAllL1Tokens: true,
@@ -412,17 +414,17 @@ export const updateArbifiedList = async (
     includeOldDataFields,
     ignorePreviousList,
     prevArbifiedList,
+    newArbifiedList
   }: {
     includeOldDataFields: boolean;
     ignorePreviousList: boolean;
     prevArbifiedList: string | null;
+    newArbifiedList: string;
   },
 ) => {
   const arbTokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(arbTokenList);
-  const path =
-    prevArbifiedList ??
-    TOKENLIST_DIR_PATH + '/' + listNameToFileName(arbTokenList.name);
+  const path = newArbifiedList;
   let prevArbTokenList: ArbTokenList | undefined;
 
   if (existsSync(path)) {
@@ -466,7 +468,7 @@ export const generateFullList = async () => {
 
   return arbListtoEtherscanList(tokenData);
 };
-export const generateFullListFormatted = async () => {
+export const  generateFullListFormatted = async () => {
   const mockList: TokenList = {
     name: 'Full',
     logoURI: 'ipfs://QmTvWJ4kmzq9koK74WJQ594ov8Es1HHurHZmMmhU8VY68y',
