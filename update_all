@@ -25,4 +25,4 @@ yarn arbify --l2NetworkID 42170 --tokenList https://api.coinmarketcap.com/data-a
 
 # goerli rollup testnet
 yarn arbify --l2NetworkID 421613 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421613_arbed_coinmarketcap.json
-yarn fullList --l2NetworkID 421613 ./src/ArbTokenLists/arbed_full.json
+yarn fullList --l2NetworkID 421613 --newArbifiedList ./src/ArbTokenLists/arbed_full.json
