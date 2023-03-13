@@ -125,10 +125,10 @@ describe('Token Lists', () => {
           '--l2NetworkID=42170',
           '--tokenList=https://gateway.ipfs.io/ipns/tokens.uniswap.org',
           '--ignorePreviousList=true',
-          '--newArbifiedList=./src/ArbTokenLists/42170_arbed_uniswap_labs_default.json',
+          '--newArbifiedList=./src/ArbTokenLists/42170_arbed_uniswap_labs.json',
         ]),
         fetch(
-          'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs_default.json',
+          'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs.json',
         ).then((response) => response.json()),
       ]);
 
