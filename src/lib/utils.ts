@@ -19,9 +19,7 @@ import { getArgvs } from './options';
 axiosRetry(axios, {
   retries: 3,
   retryCondition: () => true,
-  retryDelay: (retryCount) => {
-    return retryCount * 20_000; // milliseconds
-  },
+  retryDelay: (retryCount) => retryCount * 10_000, // milliseconds
 });
 
 export const isNetwork = () => {
@@ -280,7 +278,6 @@ export const getTokenListObj = async (pathOrUrl: string) => {
 };
 
 // https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url
-
 export function isValidHttpUrl(urlString: string) {
   let url;
 
