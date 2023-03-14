@@ -1,41 +1,6 @@
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
-import {
-  ETHERSCAN_LIST_NAME,
-  ETHERSCAN_PATH,
-  FULLLIST_DIR_PATH,
-  TOKENLIST_DIR_PATH,
-  ALL_TOKENS_GOERLI_ROLLUP_PATH,
-} from './constants';
 import { ArbTokenList, EtherscanList } from './types';
-import { isArbTokenList, isNetwork } from './utils';
-
-export const listNameToFileName = (name: string) => {
-  const prefix = 'arbed_';
-  let fileName = name.split(' ').join('_').toLowerCase() + '.json';
-  if (!fileName.startsWith(prefix)) {
-    fileName = prefix + fileName;
-  }
-  return fileName;
-};
-
-export const getPath = (l1ListName: string) => {
-  const { isArbOne, isGoerliRollup, isNova } = isNetwork();
-
-  if (l1ListName === ETHERSCAN_LIST_NAME) {
-    if (isArbOne) return ETHERSCAN_PATH;
-    if (isGoerliRollup) return ALL_TOKENS_GOERLI_ROLLUP_PATH;
-    throw new Error('Unsupported full list');
-  }
-  let path = '';
-  if (isNova) {
-    path = TOKENLIST_DIR_PATH + '/42170_' + listNameToFileName(l1ListName);
-  } else if (isGoerliRollup) {
-    path = TOKENLIST_DIR_PATH + '/421613_' + listNameToFileName(l1ListName);
-  } else {
-    path = TOKENLIST_DIR_PATH + '/' + listNameToFileName(l1ListName);
-  }
-  return path;
-};
+import { isArbTokenList } from './utils';
 
 export const getPrevList = (
   arbifiedList: string | null,
@@ -58,14 +23,20 @@ export const writeToFile = (
   list: ArbTokenList | EtherscanList,
   path: string,
 ) => {
-  if (!existsSync(TOKENLIST_DIR_PATH)) {
-    console.log(`Setting up token list dir at ${TOKENLIST_DIR_PATH}`);
-    mkdirSync(TOKENLIST_DIR_PATH);
+  const fileTypeArr = path.split('.');
+  const fileType = fileTypeArr[fileTypeArr.length - 1];
+
+  const dirPath = path.substring(0, path.lastIndexOf('/'));
+
+  if (fileType !== 'json') {
+    throw new Error('The --newArbifiedList file should be json type.');
   }
 
-  if (!existsSync(FULLLIST_DIR_PATH)) {
-    console.log(`Setting up full list dir at ${FULLLIST_DIR_PATH}`);
-    mkdirSync(FULLLIST_DIR_PATH);
+  if (!existsSync(dirPath)) {
+    console.log(`Setting up token list dir at ${dirPath}`);
+    mkdirSync(dirPath, {
+      recursive: true,
+    });
   }
 
   writeFileSync(path, JSON.stringify(list));
