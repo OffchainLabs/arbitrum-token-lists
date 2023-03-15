@@ -35,9 +35,8 @@ import { validateTokenListWithErrorThrowing } from './validateTokenList';
 import { constants as arbConstants } from '@arbitrum/sdk';
 import { readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
-import { getPrevList, listNameToFileName } from './store';
+import { getPrevList } from './store';
 import { getArgvs } from './options';
-import { TOKENLIST_DIR_PATH } from './constants';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -392,7 +391,7 @@ export const arbifyL1List = async (
 
   const prevArbTokenList = ignorePreviousList
     ? null
-    : getPrevList(l1TokenList.name, prevArbifiedList);
+    : getPrevList(prevArbifiedList);
 
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
     includeAllL1Tokens: true,
@@ -420,13 +419,11 @@ export const updateArbifiedList = async (
 ) => {
   const arbTokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(arbTokenList);
-  const path =
-    prevArbifiedList ??
-    TOKENLIST_DIR_PATH + '/' + listNameToFileName(arbTokenList.name);
+  const oldPath = prevArbifiedList ?? '';
   let prevArbTokenList: ArbTokenList | undefined;
 
-  if (existsSync(path)) {
-    const data = readFileSync(path);
+  if (existsSync(oldPath)) {
+    const data = readFileSync(oldPath);
     console.log('Prev version of Arb List found');
 
     if (!ignorePreviousList) {
@@ -444,7 +441,6 @@ export const updateArbifiedList = async (
 
   return {
     newList,
-    path,
   };
 };
 

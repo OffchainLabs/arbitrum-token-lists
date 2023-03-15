@@ -34,6 +34,10 @@ const options = {
     type: 'string',
     demandOption: true,
   },
+  newArbifiedList: {
+    type: 'string',
+    demandOption: true,
+  },
   includeOldDataFields: {
     type: 'boolean',
   },
@@ -49,10 +53,6 @@ const options = {
     default: false,
   },
   prevArbifiedList: {
-    type: 'string',
-    default: null,
-  },
-  newArbifiedList: {
     type: 'string',
     default: null,
   },
