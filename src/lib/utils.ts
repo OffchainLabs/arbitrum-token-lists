@@ -1,6 +1,7 @@
 import { TokenList } from '@uniswap/token-lists';
 import { readFileSync, existsSync } from 'fs';
 import axios from 'axios';
+import axiosRetry from 'axios-retry';
 import { L2Network, MultiCaller } from '@arbitrum/sdk';
 import { L1GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory';
 import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory';
@@ -13,6 +14,13 @@ import {
   l2ToL1GatewayAddressesNova,
 } from './constants';
 import { getArgvs } from './options';
+
+// On failed request, retry with exponential back-off
+axiosRetry(axios, {
+  retries: 3,
+  retryCondition: () => true,
+  retryDelay: (retryCount) => retryCount * 10_000, // milliseconds
+});
 
 export const isNetwork = () => {
   const argv = getArgvs();
@@ -270,7 +278,6 @@ export const getTokenListObj = async (pathOrUrl: string) => {
 };
 
 // https://stackoverflow.com/questions/5717093/check-if-a-javascript-string-is-a-url
-
 export function isValidHttpUrl(urlString: string) {
   let url;
 
