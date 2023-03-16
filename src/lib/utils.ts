@@ -19,7 +19,7 @@ import { getArgvs } from './options';
 axiosRetry(axios, {
   retries: 3,
   retryCondition: () => true,
-  retryDelay: (retryCount) => retryCount * 10_000, // milliseconds
+  retryDelay: (retryCount) => 65_000 + retryCount * 10_000, // (milliseconds)
 });
 
 export const isNetwork = () => {
