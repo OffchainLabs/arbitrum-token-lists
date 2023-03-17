@@ -17,7 +17,7 @@ import { getArgvs } from './options';
 
 // On failed request, retry with exponential back-off
 axiosRetry(axios, {
-  retries: 3,
+  retries: 5,
   retryCondition: () => true,
   retryDelay: (retryCount) => 65_000 + retryCount * 10_000, // (milliseconds)
 });
