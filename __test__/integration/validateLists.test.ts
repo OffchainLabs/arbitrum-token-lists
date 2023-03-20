@@ -69,11 +69,12 @@ describe('Token Lists', () => {
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [
           '--l2NetworkID=42161',
-          '--tokenList=https://tokens.uniswap.org',
+          '--tokenList=https://gateway.ipfs.io/ipns/tokens.uniswap.org',
           '--ignorePreviousList=true',
+          '--newArbifiedList=./src/ArbTokenLists/arbed_uniswap_labs.json',
         ]),
         fetch(
-          'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs_default.json',
+          'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json',
         ).then((response) => response.json()),
       ]);
 
@@ -88,6 +89,7 @@ describe('Token Lists', () => {
           '--l2NetworkID=42161',
           '--tokenList=https://www.gemini.com/uniswap/manifest.json',
           '--ignorePreviousList=true',
+          '--newArbifiedList=./src/ArbTokenLists/arbed_gemini_token_list.json',
         ]),
         fetch(
           'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_gemini_token_list.json',
@@ -105,6 +107,7 @@ describe('Token Lists', () => {
           '--l2NetworkID=42161',
           '--tokenList=https://api.coinmarketcap.com/data-api/v3/uniswap/all.json',
           '--ignorePreviousList=true',
+          '--newArbifiedList=./src/ArbTokenLists/arbed_coinmarketcap.json',
         ]),
         fetch(
           'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_coinmarketcap.json',
@@ -120,11 +123,12 @@ describe('Token Lists', () => {
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [
           '--l2NetworkID=42170',
-          '--tokenList=https://tokens.uniswap.org',
+          '--tokenList=https://gateway.ipfs.io/ipns/tokens.uniswap.org',
           '--ignorePreviousList=true',
+          '--newArbifiedList=./src/ArbTokenLists/42170_arbed_uniswap_labs.json',
         ]),
         fetch(
-          'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs_default.json',
+          'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs.json',
         ).then((response) => response.json()),
       ]);
 
@@ -139,6 +143,7 @@ describe('Token Lists', () => {
           '--l2NetworkID=42170',
           '--tokenList=https://www.gemini.com/uniswap/manifest.json',
           '--ignorePreviousList=true',
+          '--newArbifiedList=./src/ArbTokenLists/42170_arbed_gemini_token_list.json',
         ]),
         fetch(
           'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_gemini_token_list.json',
@@ -156,6 +161,7 @@ describe('Token Lists', () => {
           '--l2NetworkID=42170',
           '--tokenList=https://api.coinmarketcap.com/data-api/v3/uniswap/all.json',
           '--ignorePreviousList=true',
+          '--newArbifiedList=./src/ArbTokenLists/42170_arbed_coinmarketcap.json',
         ]),
         fetch(
           'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_coinmarketcap.json',
@@ -173,6 +179,7 @@ describe('Token Lists', () => {
           '--l2NetworkID=421613',
           '--tokenList=https://api.coinmarketcap.com/data-api/v3/uniswap/all.json',
           '--ignorePreviousList=true',
+          '--newArbifiedList=./src/ArbTokenLists/421613_arbed_coinmarketcap.json',
         ]),
         fetch(
           'https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coinmarketcap.json',
@@ -192,6 +199,7 @@ describe('Token Lists', () => {
           '--l2NetworkID=42161',
           '--tokenList=https://tokenlist.arbitrum.io/ArbTokenLists/arbed_arb_whitelist_era.json',
           '--includeOldDataFields=true',
+          '--newArbifiedList=./src/ArbTokenLists/arbed_arb_whitelist_era.json',
         ]),
         fetch(
           'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_arb_whitelist_era.json',
@@ -211,6 +219,7 @@ describe('Token Lists', () => {
           '--l2NetworkID=42161',
           '--tokenList=full',
           '--ignorePreviousList=true',
+          '--newArbifiedList=./src/ArbTokenLists/all_tokens.json',
         ]),
         fetch('https://tokenlist.arbitrum.io/FullList/all_tokens.json').then(
           (response) => response.json(),
@@ -229,6 +238,7 @@ describe('Token Lists', () => {
           '--l2NetworkID=421613',
           '--tokenList=full',
           '--ignorePreviousList=true',
+          '--newArbifiedList=./src/ArbTokenLists/421613_arbed_full.json',
         ]),
         fetch(
           'https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_full.json',

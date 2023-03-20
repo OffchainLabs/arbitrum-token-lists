@@ -5173,7 +5173,7 @@
   "tags": {
     "sourceList": {
       "name": "Source list url",
-      "description": "https:__tokens.uniswap.org replace _ with forwardslash"
+      "description": "https:__gateway.ipfs.io_ipns_tokens.uniswap.org replace _ with forwardslash"
     }
   }
 }
