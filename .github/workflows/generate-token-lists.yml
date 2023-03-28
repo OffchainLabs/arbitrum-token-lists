@@ -124,7 +124,7 @@ jobs:
       - name: Deploy
         run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"'
 
-      - name: Post to a Slack channel
+      - name: Post errors to Slack channel
         id: slack
         if: failure()
         uses: slackapi/slack-github-action@v1.23.0
