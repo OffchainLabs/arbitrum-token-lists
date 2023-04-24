@@ -151,7 +151,7 @@ jobs:
       - name: Post errors to Slack channel
         uses: slackapi/slack-github-action@v1.23.0
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          channel-id: C04E2CCF3RA
           payload: |
             {
               "blocks": [
