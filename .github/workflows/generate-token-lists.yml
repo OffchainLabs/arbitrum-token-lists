@@ -85,7 +85,8 @@ jobs:
       matrix:
         commands:
           - name: Arb1 FullList
-            command: yarn fullList --l2NetworkID 42161 --newArbifiedList ./src/ArbTokenLists/arbed_full.json
+            # command: yarn fullList --l2NetworkID 42161 --newArbifiedList ./src/ArbTokenLists/arbed_full.json
+            command: exit 12
           - name: Arb1 Arbify Uniswap
             command: yarn arbify --l2NetworkID 42161 --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/arbed_uniswap_labs.json && cp ./src/ArbTokenLists/arbed_uniswap_labs.json ./src/ArbTokenLists/arbed_uniswap_labs_default.json
           - name: Arb1 Arbify Gemini
