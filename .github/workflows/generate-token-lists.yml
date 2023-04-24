@@ -5,19 +5,6 @@ on:
     - cron: '0/10 * * * *'
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to run generation'
-        type: environment
-        default: Test
-        required: true
-  workflow_call:
-    inputs:
-      environment:
-        description: 'Environment to run generation'
-        type: string
-        required: true
-        default: 'Test'
 
 jobs:
   install:
@@ -47,7 +34,7 @@ jobs:
   fetchWhitelist:
     name: 'Fetch whitelist'
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: CI
     needs: install
     permissions:
       id-token: write # need this for OIDC
@@ -72,7 +59,7 @@ jobs:
   generate-token-list:
     name: 'Generate'
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: CI
     needs: [install, fetchWhitelist]
     permissions:
       id-token: write # need this for OIDC
@@ -131,14 +118,10 @@ jobs:
       - name: ${{ matrix.commands.name }}
         id: run_command
         if: success() || failure() # Always would allow manually canceled workflow to run
-        run: ${{ matrix.commands.command }}
-
-      - name: Deploy (Test folder)
-        if: ${{ github.event_name == 'pull_request' }}
-        run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder/ --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"'
+        run: |
+          ${{ matrix.commands.command }}
 
       - name: Deploy
-        if: ${{ github.event_name != 'pull_request' }}
         run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"'
 
       - name: Post errors to Slack channel
@@ -146,7 +129,7 @@ jobs:
         if: failure()
         uses: slackapi/slack-github-action@v1.23.0
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          channel-id: 'C04E2CCF3RA'
           payload: |
             {
               "blocks": [
