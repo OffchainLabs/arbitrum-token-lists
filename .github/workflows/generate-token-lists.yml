@@ -74,8 +74,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     needs: [install, fetchWhitelist]
-    outputs:
-      commands: ${{ steps.run_command.outputs.commands }}
     permissions:
       id-token: write # need this for OIDC
       contents: read # This is required for actions/checkout@v2
@@ -134,13 +132,7 @@ jobs:
       - name: ${{ matrix.commands.name }}
         id: run_command
         if: success() || failure() # Always would allow manually canceled workflow to run
-        run: |
-          if ${{ matrix.commands.command }} ; then
-            exit 0
-          else
-            echo ${{ matrix.commands.name }} >> $GITHUB_OUTPUT
-            exit 1
-          fi
+        run: ${{ matrix.commands.command }}
 
       - name: Deploy (Test folder)
         if: ${{ github.event_name == 'pull_request' }}
@@ -168,7 +160,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Token list generation failed (${{ toJSON(needs.generate-token-lists.outputs.commands) }})"
+                    "text": "Token list generation failed"
                   }
                 },
                 {
