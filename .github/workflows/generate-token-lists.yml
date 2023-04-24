@@ -134,7 +134,7 @@ jobs:
         id: run_command
         if: success() || failure() # Always would allow manually canceled workflow to run
         run: |
-          if ${{ matrix.commands.name }} ; then
+          if ${{ matrix.commands.command }} ; then
             exit 1
           else
             echo ${{ matrix.commands.name }} >> $GITHUB_OUTPUT
