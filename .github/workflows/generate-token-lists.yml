@@ -144,17 +144,15 @@ jobs:
 
   error-alerts:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     needs: [install, fetchWhitelist, generate-token-lists]
     # Run this job if any of the job in needs array failed
     if: ${{ always() && contains(needs.*.result, 'failure') }}
     steps:
-      - name: Test
-        run: echo "job running"
-
       - name: Post errors to Slack channel
         uses: slackapi/slack-github-action@v1.23.0
         with:
-          channel-id: C04E2CCF3RA
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
           payload: |
             {
               "blocks": [
