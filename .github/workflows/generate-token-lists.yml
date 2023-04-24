@@ -131,7 +131,10 @@ jobs:
       - name: ${{ matrix.commands.name }}
         id: run_command
         if: success() || failure() # Always would allow manually canceled workflow to run
-        run: ${{ matrix.commands.command }}
+        run: |
+          ${{ matrix.commands.command }}
+          echo "command=${{matrix.commands.name}}" >> $GITHUB_OUTPUT
+          done
 
       - name: Deploy (Test folder)
         if: ${{ github.event_name == 'pull_request' }}
@@ -142,7 +145,6 @@ jobs:
         run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"'
 
       - name: Post errors to Slack channel
-        id: slack
         if: failure()
         uses: slackapi/slack-github-action@v1.23.0
         with:
