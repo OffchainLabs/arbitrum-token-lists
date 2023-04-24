@@ -1,4 +1,4 @@
-name: "PR Title Check"
+name: 'PR Title Check'
 # PR title is checked according to https://www.conventionalcommits.org/en/v1.0.0/
 
 on:
