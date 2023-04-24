@@ -14,10 +14,3 @@ jobs:
     with:
       environment: 'CI'
     secrets: inherit
-
-  test:
-    runs-on: ubuntu-latest
-    needs: [generate-token-lists]
-    steps:
-      - name: debug
-        run: echo ${{ job.generate-token-lists.outputs.commands }}
