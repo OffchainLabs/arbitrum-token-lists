@@ -168,7 +168,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Token list generation failed (${{ needs.generate-token-lists.outputs }})"
+                    "text": "Token list generation failed (${{ toJSON(needs.generate-token-lists.outputs) }})"
                   }
                 },
                 {
