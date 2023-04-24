@@ -74,6 +74,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     needs: [install, fetchWhitelist]
+    outputs:
+      commands: ${{ steps.run_command.outputs.commands }}
     permissions:
       id-token: write # need this for OIDC
       contents: read # This is required for actions/checkout@v2
@@ -132,9 +134,8 @@ jobs:
         id: run_command
         if: success() || failure() # Always would allow manually canceled workflow to run
         run: |
+          echo "commands=${{matrix.commands.name}}" >> $GITHUB_OUTPUT
           ${{ matrix.commands.command }}
-          echo "command=${{matrix.commands.name}}" >> $GITHUB_OUTPUT
-          done
 
       - name: Deploy (Test folder)
         if: ${{ github.event_name == 'pull_request' }}
@@ -144,32 +145,32 @@ jobs:
         if: ${{ github.event_name != 'pull_request' }}
         run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"'
 
-      - name: Post errors to Slack channel
-        if: failure()
-        uses: slackapi/slack-github-action@v1.23.0
-        with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
-          payload: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "Token list generation failed (${{ matrix.commands.name }})"
-                  }
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}"
-                  }
-                }
-              ]
-            }
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      # - name: Post errors to Slack channel
+      #   if: failure()
+      #   uses: slackapi/slack-github-action@v1.23.0
+      #   with:
+      #     channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+      #     payload: |
+      #       {
+      #         "blocks": [
+      #           {
+      #             "type": "section",
+      #             "text": {
+      #               "type": "mrkdwn",
+      #               "text": "Token list generation failed (${{ matrix.commands.name }})"
+      #             }
+      #           },
+      #           {
+      #             "type": "divider"
+      #           },
+      #           {
+      #             "type": "section",
+      #             "text": {
+      #               "type": "mrkdwn",
+      #               "text": "${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}"
+      #             }
+      #           }
+      #         ]
+      #       }
+      #   env:
+      #     SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
