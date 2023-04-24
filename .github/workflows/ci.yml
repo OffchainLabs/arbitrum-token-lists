@@ -81,16 +81,10 @@ jobs:
       - name: Test
         run: yarn test:unit
 
-  # generate-token-lists:
-  #   uses: ./.github/workflows/generate-token-lists.yml
-  #   with:
-  #     environment: 'Test'
-  #   secrets: inherit
-
-
   generate-token-lists:
-    runs-on: ubuntu-latest
-    environment: Test
-    steps:
-      - uses: ./.github/workflows/generate-token-lists.yml
-        secrets: inherit
+    uses: ./.github/workflows/generate-token-lists.yml
+    with:
+      environment: 'Test'
+    secrets: inherit
+
+  
