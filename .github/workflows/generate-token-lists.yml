@@ -87,24 +87,24 @@ jobs:
           - name: Arb1 FullList
             # command: yarn fullList --l2NetworkID 42161 --newArbifiedList ./src/ArbTokenLists/arbed_full.json
             command: exit 12
-          - name: Arb1 Arbify Uniswap
-            command: yarn arbify --l2NetworkID 42161 --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/arbed_uniswap_labs.json && cp ./src/ArbTokenLists/arbed_uniswap_labs.json ./src/ArbTokenLists/arbed_uniswap_labs_default.json
-          - name: Arb1 Arbify Gemini
-            command: yarn arbify --l2NetworkID 42161 --tokenList https://www.gemini.com/uniswap/manifest.json --newArbifiedList ./src/ArbTokenLists/arbed_gemini_token_list.json
-          - name: Arb1 Arbify CMC
-            command: yarn arbify --l2NetworkID 42161 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/arbed_coinmarketcap.json
-          - name: Arb1 Update Whitelist
-            command: yarn update --l2NetworkID 42161 --tokenList ./src/ArbTokenLists/arbed_arb_whitelist_era.json --includeOldDataFields true --newArbifiedList ./src/ArbTokenLists/arbed_arb_whitelist_era.json
+          # - name: Arb1 Arbify Uniswap
+          #   command: yarn arbify --l2NetworkID 42161 --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/arbed_uniswap_labs.json && cp ./src/ArbTokenLists/arbed_uniswap_labs.json ./src/ArbTokenLists/arbed_uniswap_labs_default.json
+          # - name: Arb1 Arbify Gemini
+          #   command: yarn arbify --l2NetworkID 42161 --tokenList https://www.gemini.com/uniswap/manifest.json --newArbifiedList ./src/ArbTokenLists/arbed_gemini_token_list.json
+          # - name: Arb1 Arbify CMC
+          #   command: yarn arbify --l2NetworkID 42161 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/arbed_coinmarketcap.json
+          # - name: Arb1 Update Whitelist
+          #   command: yarn update --l2NetworkID 42161 --tokenList ./src/ArbTokenLists/arbed_arb_whitelist_era.json --includeOldDataFields true --newArbifiedList ./src/ArbTokenLists/arbed_arb_whitelist_era.json
 
-          - name: ArbNova Arbify Uniswap
-            command: yarn arbify --l2NetworkID 42170 --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/42170_arbed_uniswap_labs.json && cp ./src/ArbTokenLists/42170_arbed_uniswap_labs.json ./src/ArbTokenLists/42170_arbed_uniswap_labs_default.json
-          - name: ArbNova Arbify Gemini
-            command: yarn arbify --l2NetworkID 42170 --tokenList https://www.gemini.com/uniswap/manifest.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_gemini_token_list.json
-          - name: ArbNova Arbify CMC
-            command: yarn arbify --l2NetworkID 42170 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_coinmarketcap.json
+          # - name: ArbNova Arbify Uniswap
+          #   command: yarn arbify --l2NetworkID 42170 --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/42170_arbed_uniswap_labs.json && cp ./src/ArbTokenLists/42170_arbed_uniswap_labs.json ./src/ArbTokenLists/42170_arbed_uniswap_labs_default.json
+          # - name: ArbNova Arbify Gemini
+          #   command: yarn arbify --l2NetworkID 42170 --tokenList https://www.gemini.com/uniswap/manifest.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_gemini_token_list.json
+          # - name: ArbNova Arbify CMC
+          #   command: yarn arbify --l2NetworkID 42170 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_coinmarketcap.json
 
-          - name: ArbGoerli Arbify CMC
-            command: yarn arbify --l2NetworkID 421613 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421613_arbed_coinmarketcap.json
+          # - name: ArbGoerli Arbify CMC
+          #   command: yarn arbify --l2NetworkID 421613 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421613_arbed_coinmarketcap.json
           - name: ArbGoerli FullList
             command: yarn fullList --l2NetworkID 421613 --newArbifiedList ./src/ArbTokenLists/421613_arbed_full.json
     env:
@@ -160,7 +160,7 @@ jobs:
         uses: slackapi/slack-github-action@v1.23.0
         with:
           # channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
-          channel-id: C04QLBVM3HQ
+          channel-id: 'C04QLBVM3HQ'
           payload: |
             {
               "blocks": [
@@ -168,7 +168,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Token list generation failed (${{ toJSON(needs.generate-token-lists.outputs) }})"
+                    "text": "Token list generation failed (${{ toJSON(needs.generate-token-lists.outputs.commands) }})"
                   }
                 },
                 {
