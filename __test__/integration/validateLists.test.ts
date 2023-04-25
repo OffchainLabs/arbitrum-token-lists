@@ -221,9 +221,9 @@ describe('Token Lists', () => {
           '--ignorePreviousList=true',
           '--newArbifiedList=./src/ArbTokenLists/all_tokens.json',
         ]),
-        fetch('https://tokenlist.arbitrum.io/FullList/all_tokens.json').then(
-          (response) => response.json(),
-        ),
+        fetch(
+          'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_full.json',
+        ).then((response) => response.json()),
       ]);
 
       compareLists(localList, onlineList);
