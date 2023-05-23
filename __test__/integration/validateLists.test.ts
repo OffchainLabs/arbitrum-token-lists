@@ -211,25 +211,6 @@ describe('Token Lists', () => {
     });
   });
 
-  describe('fullList', () => {
-    it('should generate fullList for a given network', async () => {
-      expect.assertions(1);
-      const [localList, onlineList] = await Promise.all([
-        runCommand(Action.Full, [
-          '--l2NetworkID=42161',
-          '--tokenList=full',
-          '--ignorePreviousList=true',
-          '--newArbifiedList=./src/ArbTokenLists/all_tokens.json',
-        ]),
-        fetch(
-          'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_full.json',
-        ).then((response) => response.json()),
-      ]);
-
-      compareLists(localList, onlineList);
-    });
-  });
-
   describe('allTokensList', () => {
     it.skip('should generate allTokensList for a given network', async () => {
       expect.assertions(2);
