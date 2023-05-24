@@ -131,46 +131,54 @@ jobs:
         if: success() || failure() # Always would allow manually canceled workflow to run
         run: ${{ matrix.commands.command }}
 
-      - name: Deploy (Test folder)
-        if: ${{ github.event_name == 'pull_request' }}
-        run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder/ --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"'
+      # - name: Deploy (Test folder)
+      #   if: ${{ github.event_name == 'pull_request' }}
+      #   run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder/ --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"'
 
-      - name: Deploy
-        if: ${{ github.event_name != 'pull_request' }}
-        run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"'
+      # - name: Deploy
+      #   if: ${{ github.event_name != 'pull_request' }}
+      #   run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"'
 
-  error-alerts:
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    needs: [install, fetchWhitelist, generate-token-lists]
-    # Run this job if any of the job in needs array failed
-    if: ${{ always() && contains(needs.*.result, 'failure') }}
-    steps:
-      - name: Post errors to Slack channel
-        uses: slackapi/slack-github-action@v1.23.0
-        with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
-          payload: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "Token list generation failed"
-                  }
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}"
-                  }
-                }
-              ]
-            }
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      - name: Log (Test)
+        if: ${{  inputs.environment == 'Test' }}
+        run: echo 'Test, environment === test'
+
+      - name: Log (Prod)
+        if: ${{  inputs.environment == 'CI' }}
+        run: echo 'Prod'
+
+  # error-alerts:
+  #   runs-on: ubuntu-latest
+  #   environment: ${{ inputs.environment }}
+  #   needs: [install, fetchWhitelist, generate-token-lists]
+  #   # Run this job if any of the job in needs array failed
+  #   if: ${{ always() && contains(needs.*.result, 'failure') }}
+  #   steps:
+  #     - name: Post errors to Slack channel
+  #       uses: slackapi/slack-github-action@v1.23.0
+  #       with:
+  #         channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+  #         payload: |
+  #           {
+  #             "blocks": [
+  #               {
+  #                 "type": "section",
+  #                 "text": {
+  #                   "type": "mrkdwn",
+  #                   "text": "Token list generation failed"
+  #                 }
+  #               },
+  #               {
+  #                 "type": "divider"
+  #               },
+  #               {
+  #                 "type": "section",
+  #                 "text": {
+  #                   "type": "mrkdwn",
+  #                   "text": "${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}"
+  #                 }
+  #               }
+  #             ]
+  #           }
+  #       env:
+  #         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
