@@ -1,10 +1,21 @@
 name: Generate token lists
 
 on:
-  schedule:
-    - cron: '0/10 * * * *'
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to run generation'
+        type: environment
+        default: Test
+        required: true
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment to run generation'
+        type: string
+        required: true
+        default: 'Test'
 
 jobs:
   install:
@@ -34,7 +45,7 @@ jobs:
   fetchWhitelist:
     name: 'Fetch whitelist'
     runs-on: ubuntu-latest
-    environment: CI
+    environment: ${{ inputs.environment }}
     needs: install
     permissions:
       id-token: write # need this for OIDC
@@ -56,10 +67,10 @@ jobs:
           path: ./src/ArbTokenLists/arbed_arb_whitelist_era.json
           key: ${{ github.sha }}
 
-  generate-token-list:
+  generate-token-lists:
     name: 'Generate'
     runs-on: ubuntu-latest
-    environment: CI
+    environment: ${{ inputs.environment }}
     needs: [install, fetchWhitelist]
     permissions:
       id-token: write # need this for OIDC
@@ -118,18 +129,27 @@ jobs:
       - name: ${{ matrix.commands.name }}
         id: run_command
         if: success() || failure() # Always would allow manually canceled workflow to run
-        run: |
-          ${{ matrix.commands.command }}
+        run: ${{ matrix.commands.command }}
+
+      - name: Deploy (Test folder)
+        if: ${{ inputs.environment == 'Test' }}
+        run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder/ --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"'
 
       - name: Deploy
+        if: ${{ inputs.environment == 'CI' }}
         run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"'
 
+  error-alerts:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    needs: [install, fetchWhitelist, generate-token-lists]
+    # Run this job if any of the job in needs array failed
+    if: ${{ always() && contains(needs.*.result, 'failure') }}
+    steps:
       - name: Post errors to Slack channel
-        id: slack
-        if: failure()
         uses: slackapi/slack-github-action@v1.23.0
         with:
-          channel-id: 'C04E2CCF3RA'
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
           payload: |
             {
               "blocks": [
@@ -137,7 +157,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Token list generation failed (${{ matrix.commands.name }})"
+                    "text": "Token list generation failed"
                   }
                 },
                 {

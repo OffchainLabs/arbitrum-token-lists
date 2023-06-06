@@ -1,0 +1,12 @@
+name: Cron
+
+on:
+  schedule:
+    - cron: '0/10 * * * *'
+
+jobs:
+  generate-token-lists:
+    uses: ./.github/workflows/generate-token-lists.yml
+    with:
+      environment: 'CI'
+    secrets: inherit
