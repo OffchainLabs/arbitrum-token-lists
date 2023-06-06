@@ -13,9 +13,9 @@ on:
     inputs:
       environment:
         description: 'Environment to run generation'
-        type: environment
-        default: Test
+        type: string
         required: true
+        default: 'Test'
 
 jobs:
   install:
