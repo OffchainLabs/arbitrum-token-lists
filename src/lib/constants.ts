@@ -93,7 +93,7 @@ export const excludeList = [
   // "0x960b236a07cf122663c4303350609a66a7b288c0", //aragon old
 ].map((s) => s.toLowerCase());
 
-export const USDCContractAddressArb1 =
+export const BridgedUSDCContractAddressArb1 =
   '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8';
 
 export const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60;
