@@ -221,7 +221,7 @@ export const generateTokenList = async (
         else if (_name.length === 64)
           return utils.parseBytes32String('0x' + _name);
         else if (token.l2Address === USDCContractAddressArb1) {
-          return 'Bridged USDC (Arb1)';
+          return 'Bridged USDC';
         } else return _name;
       })();
 
