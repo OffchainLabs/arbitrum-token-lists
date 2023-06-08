@@ -129,6 +129,14 @@ jobs:
       - name: 'Fetch'
         run: aws s3 cp s3://${{ secrets.AWS_BUCKET }}/ArbTokenLists/arbed_arb_whitelist_era.json ./src/ArbTokenLists/arbed_arb_whitelist_era.json
 
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v3
+        if: ${{ matrix.commands.name == 'Arb1 Update Whitelist' }}
+        with:
+          name: input-whitelist
+          path: ./src/ArbTokenLists/arbed_arb_whitelist_era.json
+          retention-days: 1
+
       - name: ${{ matrix.commands.name }}
         id: run_command
         if: success() || failure() # Always would allow manually canceled workflow to run
@@ -141,14 +149,6 @@ jobs:
       - name: Deploy
         if: ${{ inputs.environment == 'CI' }}
         run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"'
-
-      - name: 'Upload Artifact'
-        uses: actions/upload-artifact@v3
-        if: ${{ matrix.commands.name == 'Arb1 Update Whitelist' }}
-        with:
-          name: whitelist-artifact
-          path: ./src/ArbTokenLists/arbed_arb_whitelist_era.json
-          retention-days: 1
 
   error-alerts:
     runs-on: ubuntu-latest
