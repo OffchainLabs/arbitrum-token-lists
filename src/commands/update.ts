@@ -19,5 +19,6 @@ export const handler = async (argvs: Args) => {
 
   if (argvs.includePermitTags) tokenList = await addPermitTags(tokenList);
   writeToFile(tokenList, argvs.newArbifiedList);
+  console.log('Just after write', tokenList.timestamp);
   return tokenList;
 };

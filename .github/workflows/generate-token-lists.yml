@@ -136,7 +136,7 @@ jobs:
 
       - name: Deploy (Test folder)
         if: ${{ inputs.environment == 'Test' }}
-        run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder/ --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"'
+        run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"'
 
       - name: Deploy
         if: ${{ inputs.environment == 'CI' }}
