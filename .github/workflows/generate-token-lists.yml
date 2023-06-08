@@ -42,36 +42,36 @@ jobs:
           path: '**/node_modules'
           key: ${{ steps.cache.outputs.primary-key }}
 
-  fetchWhitelist:
-    name: 'Fetch whitelist'
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    needs: install
-    permissions:
-      id-token: write # need this for OIDC
-      contents: read # This is required for actions/checkout@v2
-    steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          aws-region: 'us-west-2'
-          aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  # fetchWhitelist:
+  #   name: 'Fetch whitelist'
+  #   runs-on: ubuntu-latest
+  #   environment: ${{ inputs.environment }}
+  #   needs: install
+  #   permissions:
+  #     id-token: write # need this for OIDC
+  #     contents: read # This is required for actions/checkout@v2
+  #   steps:
+  #     - name: Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v1-node16
+  #       with:
+  #         aws-region: 'us-west-2'
+  #         aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: 'Fetch'
-        run: aws s3 cp s3://${{ secrets.AWS_BUCKET }}/ArbTokenLists/arbed_arb_whitelist_era.json ./src/ArbTokenLists/arbed_arb_whitelist_era.json
+  #     - name: 'Fetch'
+  #       run: aws s3 cp s3://${{ secrets.AWS_BUCKET }}/ArbTokenLists/arbed_arb_whitelist_era.json ./src/ArbTokenLists/arbed_arb_whitelist_era.json
 
-      - uses: actions/cache@v3
-        id: cache-whitelist
-        with:
-          path: ./src/ArbTokenLists/arbed_arb_whitelist_era.json
-          key: ${{ github.run_id }}-${{ github.run_attempt }}
+  #     - uses: actions/cache@v3
+  #       id: cache-whitelist
+  #       with:
+  #         path: ./src/ArbTokenLists/arbed_arb_whitelist_era.json
+  #         key: ${{ github.run_id }}-${{ github.run_attempt }}
 
   generate-token-lists:
     name: 'Generate'
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    needs: [install, fetchWhitelist]
+    needs: [install]
     permissions:
       id-token: write # need this for OIDC
       contents: read # This is required for actions/checkout@v2
@@ -112,12 +112,12 @@ jobs:
 
       - uses: ./.github/actions/restore-cache
 
-      - name: Use whitelist list cache
-        uses: actions/cache@v3
-        id: restore-whitelist
-        with:
-          path: ./src/ArbTokenLists/arbed_arb_whitelist_era.json
-          key: ${{ github.run_id }}-${{ github.run_attempt }}
+      # - name: Use whitelist list cache
+      #   uses: actions/cache@v3
+      #   id: restore-whitelist
+      #   with:
+      #     path: ./src/ArbTokenLists/arbed_arb_whitelist_era.json
+      #     key: ${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
@@ -125,6 +125,9 @@ jobs:
           aws-region: 'us-west-2'
           aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: 'Fetch'
+        run: aws s3 cp s3://${{ secrets.AWS_BUCKET }}/ArbTokenLists/arbed_arb_whitelist_era.json ./src/ArbTokenLists/arbed_arb_whitelist_era.json
 
       - name: ${{ matrix.commands.name }}
         id: run_command
@@ -142,7 +145,7 @@ jobs:
   error-alerts:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    needs: [install, fetchWhitelist, generate-token-lists]
+    needs: [install, generate-token-lists]
     # Run this job if any of the job in needs array failed
     if: ${{ always() && contains(needs.*.result, 'failure') }}
     steps:
