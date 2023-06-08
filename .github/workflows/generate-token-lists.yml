@@ -144,7 +144,7 @@ jobs:
 
       - name: 'Upload Artifact'
         uses: actions/upload-artifact@v3
-        if: ${{ matrix.commands.name === 'Arb1 Update Whitelist' }}
+        if: ${{ matrix.commands.name == 'Arb1 Update Whitelist' }}
         with:
           name: whitelist-artifact
           path: ./src/ArbTokenLists/arbed_arb_whitelist_era.json
