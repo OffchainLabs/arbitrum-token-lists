@@ -343,7 +343,6 @@ export const generateTokenList = async (
       patch: 0,
     };
   })();
-  console.log('New timestamp', new Date().toISOString());
   const sourceListURL = getFormattedSourceURL(options?.sourceListURL);
   const arbTokenList: ArbTokenList = {
     name:
