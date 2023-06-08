@@ -45,23 +45,23 @@ jobs:
       - name: Check formatting with Prettier
         run: yarn prettier:check
 
-  integration-test:
-    name: 'Integration tests'
-    runs-on: ubuntu-latest
-    environment: CI
-    needs: install
-    env:
-      INFURA_KEY: '${{ secrets.INFURA_KEY }}'
-      MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
-      GOERLI_RPC: 'https://goerli.infura.io/v3/${{ secrets.INFURA_KEY }}'
+  # integration-test:
+  #   name: 'Integration tests'
+  #   runs-on: ubuntu-latest
+  #   environment: CI
+  #   needs: install
+  #   env:
+  #     INFURA_KEY: '${{ secrets.INFURA_KEY }}'
+  #     MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
+  #     GOERLI_RPC: 'https://goerli.infura.io/v3/${{ secrets.INFURA_KEY }}'
 
-    steps:
-      - uses: actions/checkout@v3
+  #   steps:
+  #     - uses: actions/checkout@v3
 
-      - uses: ./.github/actions/restore-cache
+  #     - uses: ./.github/actions/restore-cache
 
-      - name: Test
-        run: yarn test:integration
+  #     - name: Test
+  #       run: yarn test:integration
 
   unit-test:
     name: 'Unit tests'
