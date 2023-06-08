@@ -142,6 +142,14 @@ jobs:
         if: ${{ inputs.environment == 'CI' }}
         run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"'
 
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v3
+        if: ${{ matrix.commands.name === 'Arb1 Update Whitelist' }}
+        with:
+          name: whitelist-artifact
+          path: ./src/ArbTokenLists/arbed_arb_whitelist_era.json
+          retention-days: 1
+
   error-alerts:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
