@@ -61,11 +61,12 @@ jobs:
       - name: 'Fetch'
         run: aws s3 cp s3://${{ secrets.AWS_BUCKET }}/ArbTokenLists/arbed_arb_whitelist_era.json ./src/ArbTokenLists/arbed_arb_whitelist_era.json
 
-      - uses: actions/cache@v3
-        id: cache-whitelist
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v3
         with:
+          name: whitelist-artifact
           path: ./src/ArbTokenLists/arbed_arb_whitelist_era.json
-          key: ${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 1
 
   generate-token-lists:
     name: 'Generate'
@@ -112,12 +113,18 @@ jobs:
 
       - uses: ./.github/actions/restore-cache
 
-      - name: Use whitelist list cache
-        uses: actions/cache@v3
-        id: restore-whitelist
+      # - name: Use whitelist list cache
+      #   uses: actions/cache@v3
+      #   id: restore-whitelist
+      #   with:
+      #     path: ./src/ArbTokenLists/arbed_arb_whitelist_era.json
+      #     key: ${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Use whitelist list artifact
+        uses: actions/download-artifact@v3
         with:
           path: ./src/ArbTokenLists/arbed_arb_whitelist_era.json
-          key: ${{ github.run_id }}-${{ github.run_attempt }}
+          name: whitelist-artifact
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
