@@ -37,6 +37,7 @@ import { readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
 import { getPrevList } from './store';
 import { getArgvs } from './options';
+import { BridgedUSDCContractAddressArb1 } from './constants';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -219,7 +220,12 @@ export const generateTokenList = async (
         // parse null terminated bytes32 strings
         else if (_name.length === 64)
           return utils.parseBytes32String('0x' + _name);
-        else return _name;
+        else if (
+          token.l2Address.toLowerCase() ===
+          BridgedUSDCContractAddressArb1.toLowerCase()
+        ) {
+          return 'Bridged USDC';
+        } else return _name;
       })();
 
       _symbol = (() => {
@@ -233,7 +239,12 @@ export const generateTokenList = async (
         // parse null terminated bytes32 strings
         else if (_symbol.length === 64)
           return utils.parseBytes32String('0x' + _symbol);
-        else return _symbol;
+        else if (
+          token.l2Address.toLowerCase() ===
+          BridgedUSDCContractAddressArb1.toLowerCase()
+        ) {
+          return 'USDC.e';
+        } else return _symbol;
       })();
 
       const name = sanitizeNameString(_name);
