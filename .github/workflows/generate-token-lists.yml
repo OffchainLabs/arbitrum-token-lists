@@ -64,10 +64,7 @@ jobs:
           - name: Arb1 Arbify CMC
             command: yarn arbify --l2NetworkID 42161 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/arbed_coinmarketcap.json
           - name: Arb1 Update Whitelist
-            command: |
-              aws s3 cp s3://${{ secrets.AWS_BUCKET }}/ArbTokenLists/arbed_arb_whitelist_era.json ./src/ArbTokenLists/whitelist.json
-              yarn update --l2NetworkID 42161 --tokenList ./src/ArbTokenLists/whitelist.json --includeOldDataFields true --newArbifiedList ./src/ArbTokenLists/arbed_arb_whitelist_era.json
-              rm ./src/ArbTokenLists/whitelist.json
+            command: yarn update --l2NetworkID 42161 --tokenList ./src/ArbTokenLists/whitelist.json --includeOldDataFields true --newArbifiedList ./src/ArbTokenLists/arbed_arb_whitelist_era.json
 
           - name: ArbNova Arbify Uniswap
             command: yarn arbify --l2NetworkID 42170 --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/42170_arbed_uniswap_labs.json && cp ./src/ArbTokenLists/42170_arbed_uniswap_labs.json ./src/ArbTokenLists/42170_arbed_uniswap_labs_default.json
@@ -97,9 +94,15 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
+      - name: Fetch whitelist
+        run: aws s3 cp s3://${{ secrets.AWS_BUCKET }}/ArbTokenLists/arbed_arb_whitelist_era.json ./src/ArbTokenLists/whitelist.json
+
       - name: ${{ matrix.commands.name }}
         if: success() || failure() # Always would allow manually canceled workflow to run
         run: ${{ matrix.commands.command }}
+
+      - name: Cleanup whitelist
+        run: rm -f ./src/ArbTokenLists/whitelist.json
 
       - name: Deploy (Test folder)
         if: ${{ inputs.environment == 'Test' }}
