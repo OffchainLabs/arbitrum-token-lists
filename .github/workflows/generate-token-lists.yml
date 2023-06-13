@@ -64,8 +64,8 @@ jobs:
           - name: Arb1 Arbify CMC
             command: yarn arbify --l2NetworkID 42161 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/arbed_coinmarketcap.json
           - name: Arb1 Update Whitelist
-            command: yarn update --l2NetworkID 42161 --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_arb_whitelist_era.json --includeOldDataFields true --newArbifiedList ./src/ArbTokenLists/arbed_arb_whitelist_era.json
-
+            # command: yarn update --l2NetworkID 42161 --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_arb_whitelist_era.json --includeOldDataFields true --newArbifiedList ./src/ArbTokenLists/arbed_arb_whitelist_era.json
+            command: exit 1
           - name: ArbNova Arbify Uniswap
             command: yarn arbify --l2NetworkID 42170 --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/42170_arbed_uniswap_labs.json && cp ./src/ArbTokenLists/42170_arbed_uniswap_labs.json ./src/ArbTokenLists/42170_arbed_uniswap_labs_default.json
           - name: ArbNova Arbify Gemini
@@ -88,12 +88,11 @@ jobs:
       - uses: ./.github/actions/restore-cache
 
       - name: Configure AWS credentials
-        run: exit 1
-        # uses: aws-actions/configure-aws-credentials@v1-node16
-        # with:
-        #   aws-region: 'us-west-2'
-        #   aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
-        #   aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-region: 'us-west-2'
+          aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: ${{ matrix.commands.name }}
         if: success()
