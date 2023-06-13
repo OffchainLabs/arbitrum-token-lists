@@ -88,7 +88,6 @@ jobs:
       - uses: ./.github/actions/restore-cache
 
       - name: Configure AWS credentials
-        id: aws-credentials-setup
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           aws-region: 'us-west-2'
@@ -96,7 +95,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: ${{ matrix.commands.name }}
-        if: ${{ steps.aws-credentials-setup.conclusion == 'success' }}
+        if: success()
         run: ${{ matrix.commands.command }}
 
       - name: Deploy (Test folder)
