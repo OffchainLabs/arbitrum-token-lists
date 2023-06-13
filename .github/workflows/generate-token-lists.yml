@@ -99,9 +99,12 @@ jobs:
         run: aws s3 cp s3://${{ secrets.AWS_BUCKET }}/ArbTokenLists/arbed_arb_whitelist_era.json ./src/ArbTokenLists/whitelist.json
 
       - name: ${{ matrix.commands.name }}
-        id: run_command
         if: success() || failure() # Always would allow manually canceled workflow to run
         run: ${{ matrix.commands.command }}
+
+      - name: Cleanup whitelist
+        if: ${{ matrix.commands.name == 'Arb1 Update Whitelist' }}
+        run: rm ./src/ArbTokenLists/whitelist.json
 
       - name: Deploy (Test folder)
         if: ${{ inputs.environment == 'Test' }}
