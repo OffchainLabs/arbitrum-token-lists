@@ -89,15 +89,16 @@ jobs:
 
       - name: Configure AWS credentials
         id: aws-credentials-setup
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          aws-region: 'us-west-2'
-          aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: exit 1
+        # uses: aws-actions/configure-aws-credentials@v1-node16
+        # with:
+        #   aws-region: 'us-west-2'
+        #   aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
+        #   aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Fetch whitelist
         if: ${{ matrix.commands.name == 'Arb1 Update Whitelist' }}
-        run: aws s3 cp s3://${{ secrets.AWS_BUCKET }}/ArbTokenLists/arbed_arb_whitelist_era.json ./src/ArbTokenLists/whitelist.json
+        run: aws s3 cp s3://${{ secrets.AWS_BUCKET }}/ArbTokenListus/arbed_arb_whitelist_era.json ./src/ArbTokenLists/whitelist.json
 
       - name: ${{ matrix.commands.name }}
         if: ${{ steps.aws-credentials-setup.conclusion == 'success' }}
