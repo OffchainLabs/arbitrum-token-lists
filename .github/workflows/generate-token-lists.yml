@@ -96,7 +96,8 @@ jobs:
 
       - name: Fetch whitelist
         if: ${{ matrix.commands.name == 'Arb1 Update Whitelist' }}
-        run: aws s3 cp s3://${{ secrets.AWS_BUCKET }}/ArbTokenLists/arbed_arb_whitelist_era.json ./src/ArbTokenLists/whitelist.json
+        # run: aws s3 cp s3://${{ secrets.AWS_BUCKET }}/ArbTokenLists/arbed_arb_whitelist_era.json ./src/ArbTokenLists/whitelist.json
+        run: exit 1
 
       - name: ${{ matrix.commands.name }}
         if: success() || failure() # Always would allow manually canceled workflow to run
@@ -108,11 +109,11 @@ jobs:
 
       - name: Deploy (Test folder)
         if: ${{ inputs.environment == 'Test' }}
-        run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --exclude "ArbTokenLists/whitelist.json" --include "FullList/*.json" --include "ArbTokenLists/*.json"'
+        run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"'
 
       - name: Deploy
         if: ${{ inputs.environment == 'CI' }}
-        run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --exclude "ArbTokenLists/whitelist.json" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"'
+        run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"'
 
   error-alerts:
     runs-on: ubuntu-latest
