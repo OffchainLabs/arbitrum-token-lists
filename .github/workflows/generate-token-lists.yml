@@ -88,6 +88,7 @@ jobs:
       - uses: ./.github/actions/restore-cache
 
       - name: Configure AWS credentials
+        id: aws-credentials-setup
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           aws-region: 'us-west-2'
@@ -95,14 +96,17 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Fetch whitelist
+        if: ${{ matrix.commands.name == 'Arb1 Update Whitelist' && steps.aws-credentials-setup.conclusion == 'success' }}
         run: aws s3 cp s3://${{ secrets.AWS_BUCKET }}/ArbTokenLists/arbed_arb_whitelist_era.json ./src/ArbTokenLists/whitelist.json
 
       - name: ${{ matrix.commands.name }}
-        if: success() || failure() # Always would allow manually canceled workflow to run
+        id: matrix-command
+        if: success()
         run: ${{ matrix.commands.command }}
 
       - name: Cleanup whitelist
-        run: rm -f ./src/ArbTokenLists/whitelist.json
+        if: ${{ matrix.commands.name == 'Arb1 Update Whitelist' && (steps.matrix-command.conclusion == 'success' || steps.matrix-command.conclusion == 'failure') }}
+        run: rm ./src/ArbTokenLists/whitelist.json
 
       - name: Deploy (Test folder)
         if: ${{ inputs.environment == 'Test' }}
