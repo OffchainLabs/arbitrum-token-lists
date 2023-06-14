@@ -42,36 +42,11 @@ jobs:
           path: '**/node_modules'
           key: ${{ steps.cache.outputs.primary-key }}
 
-  fetchWhitelist:
-    name: 'Fetch whitelist'
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    needs: install
-    permissions:
-      id-token: write # need this for OIDC
-      contents: read # This is required for actions/checkout@v2
-    steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          aws-region: 'us-west-2'
-          aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-      - name: 'Fetch'
-        run: aws s3 cp s3://${{ secrets.AWS_BUCKET }}/ArbTokenLists/arbed_arb_whitelist_era.json ./src/ArbTokenLists/arbed_arb_whitelist_era.json
-
-      - uses: actions/cache@v3
-        id: cache-whitelist
-        with:
-          path: ./src/ArbTokenLists/arbed_arb_whitelist_era.json
-          key: ${{ github.sha }}
-
   generate-token-lists:
     name: 'Generate'
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    needs: [install, fetchWhitelist]
+    needs: [install]
     permissions:
       id-token: write # need this for OIDC
       contents: read # This is required for actions/checkout@v2
@@ -89,7 +64,7 @@ jobs:
           - name: Arb1 Arbify CMC
             command: yarn arbify --l2NetworkID 42161 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/arbed_coinmarketcap.json
           - name: Arb1 Update Whitelist
-            command: yarn update --l2NetworkID 42161 --tokenList ./src/ArbTokenLists/arbed_arb_whitelist_era.json --includeOldDataFields true --newArbifiedList ./src/ArbTokenLists/arbed_arb_whitelist_era.json
+            command: yarn update --l2NetworkID 42161 --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_arb_whitelist_era.json --includeOldDataFields true --newArbifiedList ./src/ArbTokenLists/arbed_arb_whitelist_era.json
 
           - name: ArbNova Arbify Uniswap
             command: yarn arbify --l2NetworkID 42170 --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/42170_arbed_uniswap_labs.json && cp ./src/ArbTokenLists/42170_arbed_uniswap_labs.json ./src/ArbTokenLists/42170_arbed_uniswap_labs_default.json
@@ -112,13 +87,6 @@ jobs:
 
       - uses: ./.github/actions/restore-cache
 
-      - name: Use whitelist list cache
-        uses: actions/cache@v3
-        id: restore-whitelist
-        with:
-          path: ./src/ArbTokenLists/arbed_arb_whitelist_era.json
-          key: ${{ github.sha }}
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
@@ -127,13 +95,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: ${{ matrix.commands.name }}
-        id: run_command
-        if: success() || failure() # Always would allow manually canceled workflow to run
+        if: success()
         run: ${{ matrix.commands.command }}
 
       - name: Deploy (Test folder)
         if: ${{ inputs.environment == 'Test' }}
-        run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder/ --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"'
+        run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"'
 
       - name: Deploy
         if: ${{ inputs.environment == 'CI' }}
@@ -142,7 +109,7 @@ jobs:
   error-alerts:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    needs: [install, fetchWhitelist, generate-token-lists]
+    needs: [install, generate-token-lists]
     # Run this job if any of the job in needs array failed
     if: ${{ always() && contains(needs.*.result, 'failure') }}
     steps:
