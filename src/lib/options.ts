@@ -54,7 +54,7 @@ const options = {
   },
   prevArbifiedList: {
     type: 'string',
-    default: null,
+    demandOption: true,
   },
 } as const;
 

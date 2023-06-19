@@ -1,9 +1,4 @@
-import {
-  minVersionBump,
-  nextVersion,
-  VersionUpgrade,
-  TokenList,
-} from '@uniswap/token-lists';
+import { minVersionBump, nextVersion, TokenList } from '@uniswap/token-lists';
 import { getAllTokens } from './graph';
 import { constants, utils } from 'ethers';
 
@@ -325,24 +320,46 @@ export const generateTokenList = async (
   }
 
   const version = (() => {
-    if (prevArbTokenList) {
-      let versionBump = minVersionBump(
-        prevArbTokenList.tokens,
-        arbifiedTokenList,
-      );
-
-      // tmp: library doesn't nicely handle patches (for extensions object)
-      if (versionBump === VersionUpgrade.PATCH) {
-        versionBump = VersionUpgrade.NONE;
-      }
-      return nextVersion(prevArbTokenList.version, versionBump);
+    if (!prevArbTokenList) {
+      return {
+        major: 1,
+        minor: 0,
+        patch: 0,
+      };
     }
-    return {
-      major: 1,
-      minor: 0,
-      patch: 0,
+
+    const removeExtensions = ({
+      symbol,
+      name,
+      decimals,
+      chainId,
+      address,
+      logoURI,
+      tags,
+    }: ArbTokenInfo) => {
+      return {
+        symbol,
+        name,
+        decimals,
+        chainId,
+        address,
+        logoURI,
+        tags,
+      };
     };
+    // Uniswap consider extensions to be patch even if nothing changed
+    const listsWithoutExtensions =
+      prevArbTokenList.tokens.map(removeExtensions);
+    const arbifiedTokenListWithoutExtensions =
+      arbifiedTokenList.map(removeExtensions);
+    const versionBump = minVersionBump(
+      listsWithoutExtensions,
+      arbifiedTokenListWithoutExtensions,
+    );
+
+    return nextVersion(prevArbTokenList.version, versionBump);
   })();
+
   const sourceListURL = getFormattedSourceURL(options?.sourceListURL);
   const arbTokenList: ArbTokenList = {
     name:
@@ -402,7 +419,11 @@ export const arbifyL1List = async (
 
   const prevArbTokenList = ignorePreviousList
     ? null
-    : getPrevList(prevArbifiedList);
+    : await getPrevList(prevArbifiedList);
+
+  if (!ignorePreviousList && !prevArbTokenList) {
+    throw new Error('prevArbifiedList wasn`t found.');
+  }
 
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
     includeAllL1Tokens: true,
