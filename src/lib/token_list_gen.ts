@@ -352,6 +352,7 @@ export const generateTokenList = async (
       prevArbTokenList.tokens.map(removeExtensions);
     const arbifiedTokenListWithoutExtensions =
       arbifiedTokenList.map(removeExtensions);
+
     const versionBump = minVersionBump(
       listsWithoutExtensions,
       arbifiedTokenListWithoutExtensions,
@@ -405,7 +406,7 @@ export const arbifyL1List = async (
   }: {
     includeOldDataFields: boolean;
     ignorePreviousList: boolean;
-    prevArbifiedList: string | null;
+    prevArbifiedList: string | undefined;
   },
 ): Promise<{
   newList: ArbTokenList;
@@ -446,7 +447,7 @@ export const updateArbifiedList = async (
   }: {
     includeOldDataFields: boolean;
     ignorePreviousList: boolean;
-    prevArbifiedList: string | null;
+    prevArbifiedList: string | undefined;
   },
 ) => {
   const arbTokenList = await getTokenListObj(pathOrUrl);

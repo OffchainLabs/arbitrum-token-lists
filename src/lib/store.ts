@@ -13,7 +13,7 @@ const isValidUrl = (url: string) => {
 };
 
 export const getPrevList = async (
-  arbifiedList: string | null,
+  arbifiedList: string | undefined,
 ): Promise<ArbTokenList | undefined> => {
   const path = arbifiedList ?? '';
   // If the path is an URL to a list

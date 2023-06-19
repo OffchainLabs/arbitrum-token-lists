@@ -52,13 +52,25 @@ const options = {
     type: 'boolean',
     default: false,
   },
+  // This is required, but setting required here would disallow setting it to false when `ignorePreviousList` is true
   prevArbifiedList: {
     type: 'string',
-    demandOption: true,
   },
 } as const;
 
-const yargsInstance = yargs(hideBin(process.argv)).options(options);
+const yargsInstance = yargs(hideBin(process.argv))
+  .options(options)
+  .check(({ ignorePreviousList, prevArbifiedList }) => {
+    if (ignorePreviousList && !prevArbifiedList) {
+      return true;
+    }
+
+    if (prevArbifiedList && !ignorePreviousList) {
+      return true;
+    }
+
+    return false;
+  });
 
 type Args = Arguments<InferredOptionTypes<typeof options>>;
 
