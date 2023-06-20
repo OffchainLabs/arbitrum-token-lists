@@ -126,7 +126,7 @@ jobs:
       - name: Get online version
         id: onlineVersion
         run: |
-          version=$(curl s3://${{ secrets.AWS_BUCKET }}/${{ matrix.commands.path[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
+          version=$(curl https://tokenlist.arbitrum.io/${{ matrix.commands.path[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
           echo "onlineVersion=$version" >> $GITHUB_OUTPUT
 
       - name: Get new version
@@ -142,13 +142,11 @@ jobs:
 
       - name: Deploy (Test folder)
         if: ${{ inputs.environment == 'Test' }}
-        run: |
-
-          'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"'
+        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"
 
       - name: Deploy
         if: ${{ inputs.environment == 'CI' }}
-        run: 'aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"'
+        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"
 
   error-alerts:
     runs-on: ubuntu-latest
