@@ -56,8 +56,8 @@ jobs:
       matrix:
         commands:
           - name: Arb1 FullList
-            path: [ArbTokenLists/arbed_full]
-            command: yarn fullList --l2NetworkID 42161 --newArbifiedList ./src/ArbTokenLists/arbed_full.json --skipValidation --ignorePreviousList
+            path: [ArbTokenLists/arbed_full.json]
+            command: yarn fullList --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_full.json --newArbifiedList ./src/ArbTokenLists/arbed_full.json --skipValidation
 
           - name: Arb1 Arbify Uniswap
             path:
@@ -101,7 +101,7 @@ jobs:
 
           - name: ArbGoerli FullList
             path: [ArbTokenLists/421613_arbed_full.json]
-            command: yarn fullList --l2NetworkID 421613 --newArbifiedList ./src/ArbTokenLists/421613_arbed_full.json --skipValidation --ignorePreviousList
+            command: yarn fullList --l2NetworkID 421613 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_full.json  --newArbifiedList ./src/ArbTokenLists/421613_arbed_full.json --skipValidation
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
       MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
@@ -135,10 +135,9 @@ jobs:
           version=$(cat ./src/${{ matrix.commands.path[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
           echo "newVersion=$version" >> $GITHUB_OUTPUT
 
-      - name: Display versions
-        run: |
-          echo ${{ steps.newVersion.outputs.newVersion }}
-          echo ${{ steps.onlineVersion.outputs.onlineVersion }}
+      - name: Backup (Test folder)
+        if: ${{ inputs.environment == 'Test' }}
+        run: aws s3 cp s3://${{ secrets.AWS_BUCKET }}/TestFolder/${{ matrix.commands.path[0] }} s3://${{ secrets.AWS_BUCKET }}/TestFolder/${{ steps.onlineVersion.outputs.onlineVersion }}
 
       - name: Deploy (Test folder)
         if: ${{ inputs.environment == 'Test' }}
