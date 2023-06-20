@@ -137,7 +137,7 @@ jobs:
 
       - name: Backup (Test folder)
         if: ${{ inputs.environment == 'Test' }}
-        run: aws s3 cp s3://${{ secrets.AWS_BUCKET }}/TestFolder/${{ matrix.commands.path[0] }} s3://${{ secrets.AWS_BUCKET }}/TestFolder/${{ steps.onlineVersion.outputs.onlineVersion }}
+        run: aws s3 cp s3://${{ secrets.AWS_BUCKET }}/TestFolder/${{ matrix.commands.path[0] }} s3://${{ secrets.AWS_BUCKET }}/TestFolder/${{ steps.onlineVersion.outputs.onlineVersion }}/
 
       - name: Deploy (Test folder)
         if: ${{ inputs.environment == 'Test' }}
