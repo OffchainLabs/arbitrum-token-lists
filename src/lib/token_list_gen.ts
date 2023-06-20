@@ -1,4 +1,4 @@
-import { minVersionBump, nextVersion, TokenList } from '@uniswap/token-lists';
+import { TokenList } from '@uniswap/token-lists';
 import { getAllTokens } from './graph';
 import { constants, utils } from 'ethers';
 
@@ -33,6 +33,7 @@ import { getNetworkConfig } from './instantiate_bridge';
 import { getPrevList } from './store';
 import { getArgvs } from './options';
 import { BridgedUSDCContractAddressArb1 } from './constants';
+import { getVersion } from './getVersion';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -319,47 +320,7 @@ export const generateTokenList = async (
     arbifiedTokenList = arbifiedTokenList.concat(unbridgedTokens);
   }
 
-  const version = (() => {
-    if (!prevArbTokenList) {
-      return {
-        major: 1,
-        minor: 0,
-        patch: 0,
-      };
-    }
-
-    const removeExtensions = ({
-      symbol,
-      name,
-      decimals,
-      chainId,
-      address,
-      logoURI,
-      tags,
-    }: ArbTokenInfo) => {
-      return {
-        symbol,
-        name,
-        decimals,
-        chainId,
-        address,
-        logoURI,
-        tags,
-      };
-    };
-    // Uniswap consider extensions to be patch even if nothing changed
-    const listsWithoutExtensions =
-      prevArbTokenList.tokens.map(removeExtensions);
-    const arbifiedTokenListWithoutExtensions =
-      arbifiedTokenList.map(removeExtensions);
-
-    const versionBump = minVersionBump(
-      listsWithoutExtensions,
-      arbifiedTokenListWithoutExtensions,
-    );
-
-    return nextVersion(prevArbTokenList.version, versionBump);
-  })();
+  const version = getVersion(prevArbTokenList, arbifiedTokenList);
 
   const sourceListURL = getFormattedSourceURL(options?.sourceListURL);
   const arbTokenList: ArbTokenList = {
