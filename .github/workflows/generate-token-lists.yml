@@ -126,13 +126,13 @@ jobs:
       - name: Get online version
         id: onlineVersion
         run: |
-          version=${curl s3://${{ secrets.AWS_BUCKET }}/${{ matrix.commands.path[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}'}
+          version=$(curl s3://${{ secrets.AWS_BUCKET }}/${{ matrix.commands.path[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
           echo "onlineVersion=$version" >> $GITHUB_OUTPUT
 
       - name: Get new version
         id: newVersion
         run: |
-          version=${cat ./src/${{ matrix.commands.path[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}'}
+          version=$(cat ./src/${{ matrix.commands.path[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
           echo "newVersion=$version" >> $GITHUB_OUTPUT
 
       - name: Display versions
