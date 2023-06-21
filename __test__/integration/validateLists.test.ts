@@ -70,7 +70,7 @@ describe('Token Lists', () => {
         runCommand(Action.Arbify, [
           '--l2NetworkID=42161',
           '--tokenList=https://tokens.uniswap.org',
-          '--ignorePreviousList=true',
+          '--prevArbifiedList=https://tokens.uniswap.org',
           '--newArbifiedList=./src/ArbTokenLists/arbed_uniswap_labs.json',
         ]),
         fetch(
@@ -88,7 +88,7 @@ describe('Token Lists', () => {
         runCommand(Action.Arbify, [
           '--l2NetworkID=42161',
           '--tokenList=https://www.gemini.com/uniswap/manifest.json',
-          '--ignorePreviousList=true',
+          '--prevArbifiedList=https://www.gemini.com/uniswap/manifest.json',
           '--newArbifiedList=./src/ArbTokenLists/arbed_gemini_token_list.json',
         ]),
         fetch(
@@ -124,7 +124,7 @@ describe('Token Lists', () => {
         runCommand(Action.Arbify, [
           '--l2NetworkID=42170',
           '--tokenList=https://tokens.uniswap.org',
-          '--ignorePreviousList=true',
+          '--prevArbifiedList=https://tokens.uniswap.org',
           '--newArbifiedList=./src/ArbTokenLists/42170_arbed_uniswap_labs.json',
         ]),
         fetch(
@@ -142,7 +142,7 @@ describe('Token Lists', () => {
         runCommand(Action.Arbify, [
           '--l2NetworkID=42170',
           '--tokenList=https://www.gemini.com/uniswap/manifest.json',
-          '--ignorePreviousList=true',
+          '--prevArbifiedList=https://www.gemini.com/uniswap/manifest.json',
           '--newArbifiedList=./src/ArbTokenLists/42170_arbed_gemini_token_list.json',
         ]),
         fetch(
@@ -160,7 +160,7 @@ describe('Token Lists', () => {
         runCommand(Action.Arbify, [
           '--l2NetworkID=42170',
           '--tokenList=https://api.coinmarketcap.com/data-api/v3/uniswap/all.json',
-          '--ignorePreviousList=true',
+          '--prevArbifiedList=https://api.coinmarketcap.com/data-api/v3/uniswap/all.json',
           '--newArbifiedList=./src/ArbTokenLists/42170_arbed_coinmarketcap.json',
         ]),
         fetch(
@@ -178,7 +178,7 @@ describe('Token Lists', () => {
         runCommand(Action.Arbify, [
           '--l2NetworkID=421613',
           '--tokenList=https://api.coinmarketcap.com/data-api/v3/uniswap/all.json',
-          '--ignorePreviousList=true',
+          '--prevArbifiedList=https://api.coinmarketcap.com/data-api/v3/uniswap/all.json',
           '--newArbifiedList=./src/ArbTokenLists/421613_arbed_coinmarketcap.json',
         ]),
         fetch(
@@ -199,6 +199,7 @@ describe('Token Lists', () => {
           '--l2NetworkID=42161',
           '--tokenList=https://tokenlist.arbitrum.io/ArbTokenLists/arbed_arb_whitelist_era.json',
           '--includeOldDataFields=true',
+          '--prevArbifiedList=https://tokenlist.arbitrum.io/ArbTokenLists/arbed_arb_whitelist_era.json',
           '--newArbifiedList=./src/ArbTokenLists/arbed_arb_whitelist_era.json',
         ]),
         fetch(
