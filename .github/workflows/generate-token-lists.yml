@@ -141,7 +141,7 @@ jobs:
         id: onlineVersion
         if: ${{ matrix.commands.version == true && matrix.commands.version == true  }}
         run: |
-          version=$(curl https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }} | jq .version | jq 'join(".")'
+          version=$(curl https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }} | jq .version | jq 'join(".")')
           if [[ -n $version ]]; then
             echo "onlineVersion=$version" >> $GITHUB_OUTPUT
           else
@@ -153,7 +153,7 @@ jobs:
         id: newVersion
         if: ${{ matrix.commands.version == true && matrix.commands.version == true }}
         run: |
-          version=$(cat ./src/${{ matrix.commands.paths[0] }} | jq .version | jq 'join(".")'
+          version=$(cat ./src/${{ matrix.commands.paths[0] }} | jq .version | jq 'join(".")')
           if [[ -n $version ]]; then
             echo "newVersion=$version" >> $GITHUB_OUTPUT
           else
