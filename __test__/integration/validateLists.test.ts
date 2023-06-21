@@ -100,7 +100,7 @@ describe('Token Lists', () => {
       compareLists(localList, onlineList);
     });
 
-    it.only('Arb1 CMC', async () => {
+    it('Arb1 CMC', async () => {
       expect.assertions(2);
       const [localList, onlineList] = await Promise.all([
         runCommand(Action.Arbify, [

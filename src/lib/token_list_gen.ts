@@ -321,11 +321,6 @@ export const generateTokenList = async (
   }
 
   const version = getVersion(prevArbTokenList, arbifiedTokenList);
-  // const version = {
-  //   major: 1,
-  //   minor: 0,
-  //   patch: 0,
-  // };
 
   const sourceListURL = getFormattedSourceURL(options?.sourceListURL);
   const arbTokenList: ArbTokenList = {
