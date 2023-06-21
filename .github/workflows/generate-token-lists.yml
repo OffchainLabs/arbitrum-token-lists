@@ -62,9 +62,10 @@ jobs:
 
           - name: Arb1 Arbify Uniswap
             paths: |
-              {
-                \"paths\": [ArbTokenLists/arbed_uniswap_labs.json, ArbTokenLists/arbed_uniswap_labs_default.json]
-              }
+              (
+                ArbTokenLists/arbed_uniswap_labs.json
+                ArbTokenLists/arbed_uniswap_labs_default.json
+              )
             version: true
             command: yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/arbed_uniswap_labs.json && cp ./src/ArbTokenLists/arbed_uniswap_labs.json ./src/ArbTokenLists/arbed_uniswap_labs_default.json
 
@@ -136,20 +137,20 @@ jobs:
         id: onlineVersion
         if: ${{ matrix.commands.version == true && matrix.commands.version == true  }}
         run: |
-          version=$(curl https://tokenlist.arbitrum.io/${{ fromJson(matrix.commands.paths).paths[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
+          version=$(curl https://tokenlist.arbitrum.io/${{ matrix.commands.path[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
           echo "onlineVersion=$version" >> $GITHUB_OUTPUT
 
       - name: Get new version
         id: newVersion
         if: ${{ matrix.commands.version == true && matrix.commands.version == true }}
         run: |
-          version=$(cat ./src/${{ fromJson(matrix.commands.paths).paths[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
+          version=$(cat ./src/${{ matrix.commands.paths[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
           echo "newVersion=$version" >> $GITHUB_OUTPUT
 
       - name: Backup (Test folder)
         if: ${{ inputs.environment == 'Test' && matrix.commands.version == true }}
         run: |
-          paths=${{ fromJson(matrix.commands.paths).paths }}
+          paths=${{ matrix.commands.path }}
           for path in ${paths[*]}
           do
             aws s3 cp s3://${{ secrets.AWS_BUCKET }}/TestFolder/$path s3://${{ secrets.AWS_BUCKET }}/TestFolder/${{ steps.onlineVersion.outputs.onlineVersion }}/
