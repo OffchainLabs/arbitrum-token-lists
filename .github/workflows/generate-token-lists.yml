@@ -61,7 +61,7 @@ jobs:
           #   command: yarn fullList --l2NetworkID 42161 --newArbifiedList ./src/ArbTokenLists/arbed_full.json --skipValidation --ignorePreviousList
 
           - name: Arb1 Arbify Uniswap
-            paths: |
+            paths:
               - ArbTokenLists/arbed_uniswap_labs.json
               - ArbTokenLists/arbed_uniswap_labs_default.json
             version: true
