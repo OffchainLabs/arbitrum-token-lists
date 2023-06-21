@@ -106,7 +106,7 @@ describe('Token Lists', () => {
         runCommand(Action.Arbify, [
           '--l2NetworkID=42161',
           '--tokenList=https://api.coinmarketcap.com/data-api/v3/uniswap/all.json',
-          '--ignorePreviousList=true',
+          '--prevArbifiedList=https://api.coinmarketcap.com/data-api/v3/uniswap/all.json',
           '--newArbifiedList=./src/ArbTokenLists/arbed_coinmarketcap.json',
         ]),
         fetch(
