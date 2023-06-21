@@ -141,15 +141,25 @@ jobs:
         id: onlineVersion
         if: ${{ matrix.commands.version == true && matrix.commands.version == true  }}
         run: |
-          version=$(curl https://tokenlist.arbitrum.io/ | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
-          echo "onlineVersion=$version" >> $GITHUB_OUTPUT
+          version=$(curl https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
+          if [[ -n $version ]]; then
+            echo "onlineVersion=$version" >> $GITHUB_OUTPUT
+          else
+            # Make sure failure from curl, jq or awk fails the generation
+            exit 1
+          fi
 
       - name: Get new version
         id: newVersion
         if: ${{ matrix.commands.version == true && matrix.commands.version == true }}
         run: |
           version=$(cat ./src/${{ matrix.commands.paths[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
-          echo "newVersion=$version" >> $GITHUB_OUTPUT
+          if [[ -n $version ]]; then
+            echo "newVersion=$version" >> $GITHUB_OUTPUT
+          else
+            # Make sure failure from curl, jq or awk fails the generation
+            exit 1
+          fi
 
       - name: Backup (Test folder)
         if: ${{ inputs.environment == 'Test' && matrix.commands.version == true }}
