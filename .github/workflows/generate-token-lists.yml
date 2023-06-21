@@ -153,7 +153,7 @@ jobs:
         id: newVersion
         if: ${{ matrix.commands.version == true && matrix.commands.version == true }}
         run: |
-          version=$(cat ./src/${{ matrix.commands.paths[2] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
+          version=$(cat ./src/${{ matrix.commands.paths[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
           if [[ -n $version ]]; then
             echo "newVersion=$version" >> $GITHUB_OUTPUT
           else
@@ -164,7 +164,7 @@ jobs:
       - name: Backup (Test folder)
         if: ${{ inputs.environment == 'Test' && matrix.commands.version == true }}
         run: |
-          paths=(${{ join(matrix.commands.paths, ' ') }})
+          paths=(${{ 'a' }})
           for path in ${paths[*]}
           do
             aws s3 cp s3://${{ secrets.AWS_BUCKET }}/TestFolder/$path s3://${{ secrets.AWS_BUCKET }}/TestFolder/${{ steps.onlineVersion.outputs.onlineVersion }}/
