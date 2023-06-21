@@ -28,9 +28,10 @@ function getVersion(
     };
   }
 
+  console.time('getVersion');
   let versionBump = minVersionBump(prevArbTokenList.tokens, arbifiedTokenList);
   const diff = diffTokenLists(prevArbTokenList.tokens, arbifiedTokenList);
-
+  console.timeLog('getVersion', 'after diff');
   // Uniswap report changes if a token has extensions property
   const changedDiffKeys = Object.keys(diff.changed);
   const isOnlyExtensionsDiff =
@@ -40,14 +41,14 @@ function getVersion(
         isDeepStrictEqual(change, ['extensions']),
       );
     });
-
+  console.timeLog('getVersion', 'after isOnlyExtensionsDiff');
   if (!isOnlyExtensionsDiff || versionBump !== VersionUpgrade.PATCH) {
     return nextVersion(prevArbTokenList.version, versionBump);
   }
 
   const prevTokens = createTokensMap(prevArbTokenList.tokens);
   const newTokens = createTokensMap(arbifiedTokenList);
-
+  console.timeLog('getVersion', 'after createMap');
   if (newTokens.size > prevTokens.size) {
     return nextVersion(prevArbTokenList.version, VersionUpgrade.MINOR);
   }
@@ -57,6 +58,7 @@ function getVersion(
   }
 
   versionBump = VersionUpgrade.NONE;
+  console.timeLog('getVersion', 'before forLoop');
   for (const [key] of prevTokens) {
     const prevExtension = prevTokens.get(key);
     const newExtensions = newTokens.get(key);
@@ -79,7 +81,7 @@ function getVersion(
           : VersionUpgrade.PATCH;
     }
   }
-
+  console.timeLog('getVersion', 'after loop');
   return nextVersion(prevArbTokenList.version, versionBump);
 }
 

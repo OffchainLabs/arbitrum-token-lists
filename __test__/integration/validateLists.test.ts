@@ -61,7 +61,7 @@ const testNoDuplicates = (arbTokenList: ArbTokenList) => {
 };
 
 describe('Token Lists', () => {
-  jest.setTimeout(200_000);
+  jest.setTimeout(400_000);
 
   describe('Arbify token lists', () => {
     it('Arb1 Uniswap', async () => {

@@ -320,12 +320,12 @@ export const generateTokenList = async (
     arbifiedTokenList = arbifiedTokenList.concat(unbridgedTokens);
   }
 
-  // const version = getVersion(prevArbTokenList, arbifiedTokenList);
-  const version = {
-    major: 1,
-    minor: 0,
-    patch: 0,
-  };
+  const version = getVersion(prevArbTokenList, arbifiedTokenList);
+  // const version = {
+  //   major: 1,
+  //   minor: 0,
+  //   patch: 0,
+  // };
 
   const sourceListURL = getFormattedSourceURL(options?.sourceListURL);
   const arbTokenList: ArbTokenList = {
