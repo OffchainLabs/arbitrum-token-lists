@@ -56,7 +56,7 @@ jobs:
       matrix:
         commands:
           - name: Arb1 FullList
-            path:
+            paths:
               - ArbTokenLists/arbed_full.json
             version: false
             command: yarn fullList --l2NetworkID 42161 --newArbifiedList ./src/ArbTokenLists/arbed_full.json --skipValidation --ignorePreviousList
@@ -69,50 +69,50 @@ jobs:
             command: yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/arbed_uniswap_labs.json && cp ./src/ArbTokenLists/arbed_uniswap_labs.json ./src/ArbTokenLists/arbed_uniswap_labs_default.json
 
           - name: Arb1 Arbify Gemini
-            path: |
+            paths:
               - ArbTokenLists/arbed_gemini_token_list.json
             version: true
             command: yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_gemini_token_list.json --tokenList https://www.gemini.com/uniswap/manifest.json --newArbifiedList ./src/ArbTokenLists/arbed_gemini_token_list.json
 
           - name: Arb1 Arbify CMC
-            path:
+            paths:
               - ArbTokenLists/arbed_coinmarketcap.json
             version: true
             command: yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_coinmarketcap.json --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/arbed_coinmarketcap.json
 
           - name: Arb1 Update Whitelist
-            path:
+            paths:
               - ArbTokenLists/arbed_arb_whitelist_era.json
             version: true
             command: yarn update --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_arb_whitelist_era.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_arb_whitelist_era.json --includeOldDataFields true --newArbifiedList ./src/ArbTokenLists/arbed_arb_whitelist_era.json
 
           - name: ArbNova Arbify Uniswap
-            path:
+            paths:
               - ArbTokenLists/42170_arbed_uniswap_labs.json
               - ArbTokenLists/42170_arbed_uniswap_labs_default.json
             version: true
             command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs_default.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org && cp ./src/ArbTokenLists/42170_arbed_uniswap_labs.json ./src/ArbTokenLists/42170_arbed_uniswap_labs_default.json
 
           - name: ArbNova Arbify Gemini
-            path:
+            paths:
               - ArbTokenLists/42170_arbed_gemini_token_list.json
             version: true
             command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_gemini_token_list.json  --tokenList https://www.gemini.com/uniswap/manifest.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_gemini_token_list.json
 
           - name: ArbNova Arbify CMC
-            path:
+            paths:
               - ArbTokenLists/42170_arbed_coinmarketcap.json
             version: true
             command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_coinmarketcap.json --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_coinmarketcap.json
 
           - name: ArbGoerli Arbify CMC
-            path:
+            paths:
               - ArbTokenLists/421613_arbed_coinmarketcap.json
             version: true
             command: yarn arbify --l2NetworkID 421613 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coinmarketcap.json --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421613_arbed_coinmarketcap.json
 
           - name: ArbGoerli FullList
-            path:
+            paths:
               - ArbTokenLists/421613_arbed_full.json
             version: false
             command: yarn fullList --l2NetworkID 421613 --newArbifiedList ./src/ArbTokenLists/421613_arbed_full.json --skipValidation --ignorePreviousList
