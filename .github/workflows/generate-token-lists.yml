@@ -141,7 +141,8 @@ jobs:
         id: onlineVersion
         if: ${{ matrix.commands.version == true && matrix.commands.version == true  }}
         run: |
-          version=$(curl https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
+          # version=$(curl https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
+          version=$(exit 1)
           echo "onlineVersion=$version" >> $GITHUB_OUTPUT
 
       - name: Get new version
