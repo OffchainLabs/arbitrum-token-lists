@@ -63,8 +63,8 @@ jobs:
           - name: Arb1 Arbify Uniswap
             path: |
               (
-                ArbTokenLists/arbed_uniswap_labs.json,
-                ArbTokenLists/arbed_uniswap_labs_default.json,
+                ArbTokenLists/arbed_uniswap_labs.json
+                ArbTokenLists/arbed_uniswap_labs_default.json
               )
             version: true
             command: yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/arbed_uniswap_labs.json && cp ./src/ArbTokenLists/arbed_uniswap_labs.json ./src/ArbTokenLists/arbed_uniswap_labs_default.json
@@ -87,8 +87,8 @@ jobs:
           - name: ArbNova Arbify Uniswap
             path: |
               (
-                ArbTokenLists/42170_arbed_uniswap_labs.json,
-                ArbTokenLists/42170_arbed_uniswap_labs_default.json,
+                ArbTokenLists/42170_arbed_uniswap_labs.json
+                ArbTokenLists/42170_arbed_uniswap_labs_default.json
               )
             version: true
             command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs_default.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org && cp ./src/ArbTokenLists/42170_arbed_uniswap_labs.json ./src/ArbTokenLists/42170_arbed_uniswap_labs_default.json
