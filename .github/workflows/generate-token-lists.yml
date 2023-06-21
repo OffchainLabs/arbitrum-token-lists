@@ -148,7 +148,7 @@ jobs:
       - name: Backup (Test folder)
         if: ${{ inputs.environment == 'Test' && matrix.commands.version == true }}
         run: |
-          paths=${{ matrix.commands.paths }}
+          paths=${{ fromJson(matrix.commands.paths) }}
           for path in ${paths[*]}
           do
             aws s3 cp s3://${{ secrets.AWS_BUCKET }}/TestFolder/$path s3://${{ secrets.AWS_BUCKET }}/TestFolder/${{ steps.onlineVersion.outputs.onlineVersion }}/
