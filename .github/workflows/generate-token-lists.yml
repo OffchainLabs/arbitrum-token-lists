@@ -136,20 +136,20 @@ jobs:
         id: onlineVersion
         if: ${{ matrix.commands.version == true && matrix.commands.version == true  }}
         run: |
-          version=$(curl https://tokenlist.arbitrum.io/${{ toJson(matrix.commands.paths).paths[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
+          version=$(curl https://tokenlist.arbitrum.io/${{ fromJson(matrix.commands.paths).paths[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
           echo "onlineVersion=$version" >> $GITHUB_OUTPUT
 
       - name: Get new version
         id: newVersion
         if: ${{ matrix.commands.version == true && matrix.commands.version == true }}
         run: |
-          version=$(cat ./src/${{ toJson(matrix.commands.paths).paths[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
+          version=$(cat ./src/${{ fromJson(matrix.commands.paths).paths[0] }} | jq .version[] | awk 'NR > 1 { printf(".") } {printf "%s",$0}')
           echo "newVersion=$version" >> $GITHUB_OUTPUT
 
       - name: Backup (Test folder)
         if: ${{ inputs.environment == 'Test' && matrix.commands.version == true }}
         run: |
-          paths=${{ toJson(matrix.commands.paths).paths }}
+          paths=${{ fromJson(matrix.commands.paths).paths }}
           for path in ${paths[*]}
           do
             aws s3 cp s3://${{ secrets.AWS_BUCKET }}/TestFolder/$path s3://${{ secrets.AWS_BUCKET }}/TestFolder/${{ steps.onlineVersion.outputs.onlineVersion }}/
