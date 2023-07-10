@@ -65,7 +65,7 @@ const yargsInstance = yargs(hideBin(process.argv))
       return true;
     }
 
-    if (prevArbifiedList && !ignorePreviousList) {
+    if (!ignorePreviousList && prevArbifiedList) {
       return true;
     }
 

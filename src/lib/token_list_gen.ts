@@ -17,7 +17,6 @@ import {
   sanitizeSymbolString,
   isNetwork,
   listNameToArbifiedListName,
-  isArbTokenList,
   removeInvalidTokensFromList,
   isValidHttpUrl,
   getFormattedSourceURL,
@@ -28,7 +27,6 @@ import {
 } from './utils';
 import { validateTokenListWithErrorThrowing } from './validateTokenList';
 import { constants as arbConstants } from '@arbitrum/sdk';
-import { readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
 import { getPrevList } from './store';
 import { getArgvs } from './options';
@@ -383,10 +381,6 @@ export const arbifyL1List = async (
     ? null
     : await getPrevList(prevArbifiedList);
 
-  if (!ignorePreviousList && !prevArbTokenList) {
-    throw new Error('prevArbifiedList wasn`t found.');
-  }
-
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
     includeAllL1Tokens: true,
     includeOldDataFields,
@@ -413,18 +407,9 @@ export const updateArbifiedList = async (
 ) => {
   const arbTokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(arbTokenList);
-  const oldPath = prevArbifiedList ?? '';
-  let prevArbTokenList: ArbTokenList | undefined;
-
-  if (existsSync(oldPath)) {
-    const data = readFileSync(oldPath);
-    console.log('Prev version of Arb List found');
-
-    if (!ignorePreviousList) {
-      prevArbTokenList = JSON.parse(data.toString()) as ArbTokenList;
-      isArbTokenList(prevArbTokenList);
-    }
-  }
+  const prevArbTokenList = ignorePreviousList
+    ? null
+    : await getPrevList(prevArbifiedList);
 
   const newList = await generateTokenList(arbTokenList, prevArbTokenList, {
     includeAllL1Tokens: true,

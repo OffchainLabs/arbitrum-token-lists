@@ -59,7 +59,7 @@ jobs:
             paths:
               - ArbTokenLists/arbed_full.json
             version: false
-            command: yarn fullList --l2NetworkID 42161 --newArbifiedList ./src/ArbTokenLists/arbed_full.json --skipValidation --ignorePreviousList
+            command: yarn fullList --l2NetworkID 42161 --newArbifiedList ./src/ArbTokenLists/arbed_full.json --skipValidation
 
           - name: Arb1 Arbify Uniswap
             paths:
@@ -115,7 +115,7 @@ jobs:
             paths:
               - ArbTokenLists/421613_arbed_full.json
             version: false
-            command: yarn fullList --l2NetworkID 421613 --newArbifiedList ./src/ArbTokenLists/421613_arbed_full.json --skipValidation --ignorePreviousList
+            command: yarn fullList --l2NetworkID 421613 --newArbifiedList ./src/ArbTokenLists/421613_arbed_full.json --skipValidation
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
       MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
@@ -145,7 +145,7 @@ jobs:
           if [[ -n $version ]]; then
             echo "onlineVersion=$version" >> $GITHUB_OUTPUT
           else
-            # Make sure failure from curl, jq or awk fails the generation
+            # Make sure failure from curl or jq fails the generation
             exit 1
           fi
 
@@ -157,7 +157,7 @@ jobs:
           if [[ -n $version ]]; then
             echo "newVersion=$version" >> $GITHUB_OUTPUT
           else
-            # Make sure failure from curl, jq or awk fails the generation
+            # Make sure failure from curl or jq fails the generation
             exit 1
           fi
 
