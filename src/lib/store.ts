@@ -1,11 +1,30 @@
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
+import axios from 'axios';
+
 import { ArbTokenList, EtherscanList } from './types';
 import { isArbTokenList } from './utils';
 
-export const getPrevList = (
-  arbifiedList: string | null,
-): ArbTokenList | undefined => {
+const isValidUrl = (url: string) => {
+  try {
+    return Boolean(new URL(url));
+  } catch (e) {
+    return false;
+  }
+};
+
+export const getPrevList = async (
+  arbifiedList: string | undefined,
+): Promise<ArbTokenList | undefined> => {
   const path = arbifiedList ?? '';
+  // If the path is an URL to a list
+  if (isValidUrl(path)) {
+    const list = await axios.get(path).then((response) => response.data);
+    console.log('Prev version of Arb List found');
+
+    isArbTokenList(list);
+    return list as ArbTokenList;
+  }
+
   if (!existsSync(path)) {
     console.log("Doesn't exist an arbified list.");
     return undefined;

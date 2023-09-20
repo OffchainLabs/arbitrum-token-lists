@@ -1,9 +1,4 @@
-import {
-  minVersionBump,
-  nextVersion,
-  VersionUpgrade,
-  TokenList,
-} from '@uniswap/token-lists';
+import { TokenList } from '@uniswap/token-lists';
 import { getAllTokens } from './graph';
 import { constants, utils } from 'ethers';
 
@@ -22,7 +17,6 @@ import {
   sanitizeSymbolString,
   isNetwork,
   listNameToArbifiedListName,
-  isArbTokenList,
   removeInvalidTokensFromList,
   isValidHttpUrl,
   getFormattedSourceURL,
@@ -33,11 +27,11 @@ import {
 } from './utils';
 import { validateTokenListWithErrorThrowing } from './validateTokenList';
 import { constants as arbConstants } from '@arbitrum/sdk';
-import { readFileSync, existsSync } from 'fs';
 import { getNetworkConfig } from './instantiate_bridge';
 import { getPrevList } from './store';
 import { getArgvs } from './options';
 import { BridgedUSDCContractAddressArb1 } from './constants';
+import { getVersion } from './getVersion';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -324,25 +318,8 @@ export const generateTokenList = async (
     arbifiedTokenList = arbifiedTokenList.concat(unbridgedTokens);
   }
 
-  const version = (() => {
-    if (prevArbTokenList) {
-      let versionBump = minVersionBump(
-        prevArbTokenList.tokens,
-        arbifiedTokenList,
-      );
+  const version = getVersion(prevArbTokenList, arbifiedTokenList);
 
-      // tmp: library doesn't nicely handle patches (for extensions object)
-      if (versionBump === VersionUpgrade.PATCH) {
-        versionBump = VersionUpgrade.NONE;
-      }
-      return nextVersion(prevArbTokenList.version, versionBump);
-    }
-    return {
-      major: 1,
-      minor: 0,
-      patch: 0,
-    };
-  })();
   const sourceListURL = getFormattedSourceURL(options?.sourceListURL);
   const arbTokenList: ArbTokenList = {
     name:
@@ -388,7 +365,7 @@ export const arbifyL1List = async (
   }: {
     includeOldDataFields: boolean;
     ignorePreviousList: boolean;
-    prevArbifiedList: string | null;
+    prevArbifiedList: string | undefined;
   },
 ): Promise<{
   newList: ArbTokenList;
@@ -402,7 +379,7 @@ export const arbifyL1List = async (
 
   const prevArbTokenList = ignorePreviousList
     ? null
-    : getPrevList(prevArbifiedList);
+    : await getPrevList(prevArbifiedList);
 
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
     includeAllL1Tokens: true,
@@ -425,23 +402,14 @@ export const updateArbifiedList = async (
   }: {
     includeOldDataFields: boolean;
     ignorePreviousList: boolean;
-    prevArbifiedList: string | null;
+    prevArbifiedList: string | undefined;
   },
 ) => {
   const arbTokenList = await getTokenListObj(pathOrUrl);
   removeInvalidTokensFromList(arbTokenList);
-  const oldPath = prevArbifiedList ?? '';
-  let prevArbTokenList: ArbTokenList | undefined;
-
-  if (existsSync(oldPath)) {
-    const data = readFileSync(oldPath);
-    console.log('Prev version of Arb List found');
-
-    if (!ignorePreviousList) {
-      prevArbTokenList = JSON.parse(data.toString()) as ArbTokenList;
-      isArbTokenList(prevArbTokenList);
-    }
-  }
+  const prevArbTokenList = ignorePreviousList
+    ? null
+    : await getPrevList(prevArbifiedList);
 
   const newList = await generateTokenList(arbTokenList, prevArbTokenList, {
     includeAllL1Tokens: true,
