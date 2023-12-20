@@ -119,9 +119,9 @@ jobs:
 
           - name: ArbSepolia Arbify Uniswap
             paths:
-              - ArbTokenLists/421614_arbed_coinmarketcap.json
+              - ArbTokenLists/421614_arbed_uniswap_labs.json
             version: true
-            command: yarn arbify --l2NetworkID 421614  --ignorePreviousList 421614_arbed_uniswap_labs_default.json --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/421614_arbed_uniswap_labs_default.json
+            command: yarn arbify --l2NetworkID 421614 --ignorePreviousList 421614_arbed_uniswap_labs_default.json --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/421614_arbed_uniswap_labs_default.json
 
           - name: ArbSepolia FullList
             paths:
