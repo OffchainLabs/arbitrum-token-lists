@@ -9,7 +9,7 @@ fi
 
 # arb1
 yarn fullList --l2NetworkID 42161
-yarn arbify --l2NetworkID 42161 --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/arbed_uniswap_labs.json && cp ./src/ArbTokenLists/arbed_uniswap_labs.json ./src/ArbTokenLists/arbed_uniswap_labs_default.json
+yarn arbify --l2NetworkID 42161 --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/arbed_uniswap_labs.json && cp ./src/ArbTokenLists/arbed_uniswap_labs.json ./src/ArbTokenLists/arbed_uniswap_labs_default.json
 yarn arbify --l2NetworkID 42161 --tokenList https://www.gemini.com/uniswap/manifest.json --newArbifiedList ./src/ArbTokenLists/arbed_gemini_token_list.json
 yarn arbify --l2NetworkID 42161 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/arbed_coinmarketcap.json
 
@@ -19,7 +19,7 @@ yarn update --l2NetworkID 42161 --tokenList ./src/ArbTokenLists/arbed_arb_whitel
 
 # nova
 # yarn fullList --l2NetworkID 42170
-yarn arbify --l2NetworkID 42170 --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/42170_arbed_uniswap_labs.json && cp ./src/ArbTokenLists/42170_arbed_uniswap_labs.json ./src/ArbTokenLists/42170_arbed_uniswap_labs_default.json
+yarn arbify --l2NetworkID 42170 --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/42170_arbed_uniswap_labs.json && cp ./src/ArbTokenLists/42170_arbed_uniswap_labs.json ./src/ArbTokenLists/42170_arbed_uniswap_labs_default.json
 yarn arbify --l2NetworkID 42170 --tokenList https://www.gemini.com/uniswap/manifest.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_gemini_token_list.json
 yarn arbify --l2NetworkID 42170 --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_coinmarketcap.json
 
