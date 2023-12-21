@@ -123,11 +123,6 @@ jobs:
             version: true
             command: yarn arbify --l2NetworkID 421614 --ignorePreviousList 421614_arbed_uniswap_labs_default.json --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/421614_arbed_uniswap_labs_default.json
 
-          - name: ArbSepolia FullList
-            paths:
-              - ArbTokenLists/421614_arbed_full.json
-            version: false
-            command: yarn fullList --l2NetworkID 421614 --newArbifiedList ./src/ArbTokenLists/421614_arbed_full.json --skipValidation
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
       MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
