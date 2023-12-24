@@ -10,7 +10,13 @@ export const tokenListIsValid = (tokenList: ArbTokenList | TokenList) => {
   const { tokens, ...properties } = schema.properties;
   const schemaWithoutTokensProperty = {
     ...schema,
-    properties,
+    properties: {
+      ...properties,
+      tokens: {
+        ...tokens,
+        maxItems: 15_000,
+      },
+    },
   };
   const validate = ajv.compile(schemaWithoutTokensProperty);
 
