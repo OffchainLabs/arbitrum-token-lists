@@ -21,6 +21,8 @@ export const tokenListIsValid = (tokenList: ArbTokenList | TokenList) => {
     console.log(output);
   }
 
+  console.log('RRRRRR', res);
+
   return res;
 };
 
