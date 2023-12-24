@@ -11,7 +11,6 @@ export const tokenListIsValid = (tokenList: ArbTokenList | TokenList) => {
   const validate = ajv.compile(schema);
 
   const res = validate(tokenList);
-
   if (validate.errors) {
     const output = betterAjvErrors(schema, tokenList, validate.errors, {
       indent: 2,
