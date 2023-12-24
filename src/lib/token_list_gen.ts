@@ -347,11 +347,7 @@ export const generateTokenList = async (
 
   const argvs = getArgvs();
   if (!argvs.skipValidation) {
-    try {
-      validateTokenListWithErrorThrowing(validationTokenList);
-    } catch (e) {
-      console.log('ERROR', e);
-    }
+    validateTokenListWithErrorThrowing(validationTokenList);
   }
 
   console.log(`Generated list with total ${arbTokenList.tokens.length} tokens`);

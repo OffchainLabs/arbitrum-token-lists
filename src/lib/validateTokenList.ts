@@ -10,9 +10,12 @@ export const tokenListIsValid = (tokenList: ArbTokenList | TokenList) => {
   const validate = ajv.compile(schema);
 
   const res = validate(tokenList);
+
   if (validate.errors) {
-    console.log('VALIDATE', validate.errors);
-    const output = betterAjvErrors(schema, tokenList, validate.errors, {
+    const errors = validate.errors.filter(
+      (e) => e.message !== 'must NOT have more than 10000 items',
+    );
+    const output = betterAjvErrors(schema, tokenList, errors, {
       indent: 2,
     });
     console.log(output);
