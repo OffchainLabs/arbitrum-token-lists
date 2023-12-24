@@ -7,30 +7,15 @@ import { ArbTokenList } from './types';
 export const tokenListIsValid = (tokenList: ArbTokenList | TokenList) => {
   const ajv = new Ajv();
   addFormats(ajv);
-  const { tokens, ...properties } = schema.properties;
-  const schemaWithoutTokensProperty = {
-    ...schema,
-    properties: {
-      ...properties,
-      tokens: {
-        ...tokens,
-        maxItems: 15_000,
-      },
-    },
-  };
-  const validate = ajv.compile(schemaWithoutTokensProperty);
+  schema.properties.tokens.maxItems = 15_000;
+  const validate = ajv.compile(schema);
 
   const res = validate(tokenList);
 
   if (validate.errors) {
-    const output = betterAjvErrors(
-      schemaWithoutTokensProperty,
-      tokenList,
-      validate.errors,
-      {
-        indent: 2,
-      },
-    );
+    const output = betterAjvErrors(schema, tokenList, validate.errors, {
+      indent: 2,
+    });
     console.log(output);
   }
 
