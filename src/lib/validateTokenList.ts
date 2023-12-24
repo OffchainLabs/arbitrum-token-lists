@@ -11,6 +11,7 @@ export const tokenListIsValid = (tokenList: ArbTokenList | TokenList) => {
 
   const res = validate(tokenList);
   if (validate.errors) {
+    console.log('VALIDATE', validate.errors);
     const output = betterAjvErrors(schema, tokenList, validate.errors, {
       indent: 2,
     });
