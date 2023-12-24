@@ -7,21 +7,17 @@ import { ArbTokenList } from './types';
 export const tokenListIsValid = (tokenList: ArbTokenList | TokenList) => {
   const ajv = new Ajv();
   addFormats(ajv);
+  delete schema.properties.tokens;
   const validate = ajv.compile(schema);
 
   const res = validate(tokenList);
 
   if (validate.errors) {
-    const errors = validate.errors.filter(
-      (e) => e.message !== 'must NOT have more than 10000 items',
-    );
-    const output = betterAjvErrors(schema, tokenList, errors, {
+    const output = betterAjvErrors(schema, tokenList, validate.errors, {
       indent: 2,
     });
     console.log(output);
   }
-
-  console.log('RRRRRR', res);
 
   return res;
 };
