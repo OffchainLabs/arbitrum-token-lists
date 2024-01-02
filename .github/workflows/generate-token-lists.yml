@@ -163,7 +163,7 @@ jobs:
           paths=(${{ join(matrix.commands.paths, ' ') }})
           for path in ${paths[*]}
           do
-            if "${{ inputs.environment }}" == 'Test'
+            if (( "${{ inputs.environment }}" == 'Test' ))
             then
               additionalPath='TestFolder/'
             else
