@@ -20,6 +20,11 @@ axiosRetry(axios, {
   retries: 5,
   retryCondition: () => true,
   retryDelay: (retryCount) => 65_000 + retryCount * 10_000, // (milliseconds)
+  onRetry(retryCount, error) {
+    console.log(
+      `Request failed with ${error.code}. Retrying ${retryCount} times.`,
+    );
+  },
 });
 
 export const isNetwork = () => {
