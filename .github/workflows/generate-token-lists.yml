@@ -172,7 +172,7 @@ jobs:
           paths=(${{ join(matrix.commands.paths, ' ') }})
           for path in ${paths[*]}
           do
-            if aws s3 ls s3://${{ secrets.AWS_BUCKET }}/TestFolder/$path | wc -l
+            if aws s3 ls s3://${{ secrets.AWS_BUCKET }}/TestFolder/$path | wc -l; then
               aws s3 cp s3://${{ secrets.AWS_BUCKET }}/TestFolder/$path s3://${{ secrets.AWS_BUCKET }}/TestFolder/${{ steps.onlineVersion.outputs.onlineVersion }}/
             fi
           done
@@ -187,7 +187,7 @@ jobs:
           paths=(${{ join(matrix.commands.paths, ' ') }})
           for path in ${paths[*]}
           do
-            if aws s3 ls s3://${{ secrets.AWS_BUCKET }}/$path | wc -l
+            if aws s3 ls s3://${{ secrets.AWS_BUCKET }}/$path | wc -l; then
               aws s3 cp s3://${{ secrets.AWS_BUCKET }}/$path s3://${{ secrets.AWS_BUCKET }}/${{ steps.onlineVersion.outputs.onlineVersion }}/
             fi
           done
