@@ -145,18 +145,9 @@ jobs:
         if: success()
         run: ${{ matrix.commands.command }}
 
-      - name: Check if online list exist
-        id: listExist
-        run: |
-          if aws s3api head-object --bucket ${{ secrets.AWS_BUCKET }} --key ${{ matrix.commands.paths[0] }}; then
-            echo "listExist=true" >> $GITHUB_OUTPUT
-          else
-            echo "listExist=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Get online version
         id: onlineVersion
-        if: ${{ matrix.commands.version == true && matrix.commands.version == true && steps.listExist.outputs.listExist == 'true' }}
+        if: ${{ matrix.commands.version == true && matrix.commands.version == true }}
         run: |
           version=$(curl https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }} | jq .version | jq 'join(".")')
           if [[ -n $version ]]; then
@@ -182,7 +173,7 @@ jobs:
         run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"
 
       - name: Backup
-        if: ${{ inputs.environment == 'CI' && matrix.commands.version == true && steps.listExist.outputs.listExist == 'true' }}
+        if: ${{ inputs.environment == 'CI' && matrix.commands.version == true }}
         run: |
           paths=(${{ join(matrix.commands.paths, ' ') }})
           for path in ${paths[*]}
