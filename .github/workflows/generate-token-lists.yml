@@ -148,7 +148,7 @@ jobs:
       - name: Check if online list exist
         id: listExist
         run: |
-          if aws s3api head-object --bucket ${{ secrets.AWS_BUCKET }} --key ${{ matrix.commands.paths[0] }}
+          if aws s3api head-object --bucket ${{ secrets.AWS_BUCKET }} --key ${{ matrix.commands.paths[0] }}; then
             echo "listExist=true" >> $GITHUB_OUTPUT
           else
             echo "listExist=false" >> $GITHUB_OUTPUT
