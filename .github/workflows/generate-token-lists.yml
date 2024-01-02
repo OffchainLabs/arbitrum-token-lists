@@ -171,7 +171,7 @@ jobs:
             fi
             lines=$(aws s3 ls s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path | wc -l)
             if (( $lines > 0 )); then
-              aws s3 cp s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path s3://${{ secrets.AWS_BUCKET }}/$additionalPath${{ steps.onlineVersion.outputs.onlineVersion }}/ --dryrun
+              aws s3 cp s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path s3://${{ secrets.AWS_BUCKET }}/$additionalPath${{ steps.onlineVersion.outputs.onlineVersion }}/
             fi
           done
 
