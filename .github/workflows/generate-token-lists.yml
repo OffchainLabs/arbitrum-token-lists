@@ -157,33 +157,27 @@ jobs:
             exit 1
           fi
 
-      - name: Backup (Test folder)
-        if: ${{ inputs.environment == 'Test' && matrix.commands.version == true }}
+      - name: Backup
+        if: ${{ matrix.commands.version == true }}
         run: |
           paths=(${{ join(matrix.commands.paths, ' ') }})
           for path in ${paths[*]}
           do
-            lines=$(aws s3 ls s3://${{ secrets.AWS_BUCKET }}/TestFolder/$path | wc -l)
+            if ${{ inputs.environment }} == 'Test'
+            then
+              additionalPath='TestFolder/'
+            else
+              additionalPath='/'
+            fi
+            lines=$(aws s3 ls s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path | wc -l)
             if (( $lines > 0 )); then
-              aws s3 cp s3://${{ secrets.AWS_BUCKET }}/TestFolder/$path s3://${{ secrets.AWS_BUCKET }}/TestFolder/${{ steps.onlineVersion.outputs.onlineVersion }}/
+              aws s3 cp s3://${{ secrets.AWS_BUCKET }}/TestFolder/$path s3://${{ secrets.AWS_BUCKET }}/$additionalPath/${{ steps.onlineVersion.outputs.onlineVersion }}/ --dryrun
             fi
           done
 
       - name: Deploy (Test folder)
         if: ${{ inputs.environment == 'Test' }}
         run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"
-
-      - name: Backup
-        if: ${{ inputs.environment == 'CI' && matrix.commands.version == true }}
-        run: |
-          paths=(${{ join(matrix.commands.paths, ' ') }})
-          for path in ${paths[*]}
-          do
-            lines=$(aws s3 ls s3://${{ secrets.AWS_BUCKET }}/$path | wc -l)
-            if (( $lines > 0 )); then
-              aws s3 cp s3://${{ secrets.AWS_BUCKET }}/$path s3://${{ secrets.AWS_BUCKET }}/${{ steps.onlineVersion.outputs.onlineVersion }}/
-            fi
-          done
 
       - name: Deploy
         if: ${{ inputs.environment == 'CI' }}
