@@ -20,6 +20,11 @@ axiosRetry(axios, {
   retries: 5,
   retryCondition: () => true,
   retryDelay: (retryCount) => 65_000 + retryCount * 10_000, // (milliseconds)
+  onRetry(retryCount, error) {
+    console.log(
+      `Request failed with ${error.code}. Retrying ${retryCount} times.`,
+    );
+  },
 });
 
 export const isNetwork = () => {
@@ -28,6 +33,7 @@ export const isNetwork = () => {
     isArbOne: argv.l2NetworkID === 42161,
     isNova: argv.l2NetworkID === 42170,
     isGoerliRollup: argv.l2NetworkID === 421613,
+    isSepoliaRollup: argv.l2NetworkID === 421614,
   };
 };
 
