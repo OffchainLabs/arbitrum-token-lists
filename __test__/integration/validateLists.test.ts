@@ -256,8 +256,26 @@ describe('Token Lists', () => {
         const [localList, onlineList] = await Promise.all([
           runCommand(Action.Arbify, [
             '--l2NetworkID=421614',
+            '--tokenList=https://gateway.ipfs.io/ipns/tokens.uniswap.org',
+            '--prevArbifiedList=https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_uniswap_labs.json',
+            '--newArbifiedList=./src/ArbTokenLists/421614_arbed_uniswap_labs.json',
+          ]),
+          fetch(
+            'https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_uniswap_labs.json',
+          ).then((response) => response.json()),
+        ]);
+
+        testNoDuplicates(localList as ArbTokenList);
+        compareLists(localList, onlineList);
+      });
+
+      it('CoinGecko', async () => {
+        expect.assertions(2);
+        const [localList, onlineList] = await Promise.all([
+          runCommand(Action.Arbify, [
+            '--l2NetworkID=421614',
             '--tokenList=https://tokens.coingecko.com/uniswap/all.json',
-            '--prevArbifiedList=https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coingecko.json',
+            '--prevArbifiedList=https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_coingecko.json',
             '--newArbifiedList=./src/ArbTokenLists/421614_arbed_coingecko.json',
           ]),
           fetch(
