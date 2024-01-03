@@ -85,7 +85,7 @@ jobs:
             paths:
               - ArbTokenLists/arbed_coingecko.json
             version: true
-            command: yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/ArbTokenLists/arbed_coingecko.json --tokenList https://tokens.coingecko.com/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/arbed_coingecko.json
+            command: yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_coingecko.json --tokenList https://tokens.coingecko.com/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/arbed_coingecko.json
 
           - name: Arb1 Update Whitelist
             paths:
@@ -117,7 +117,7 @@ jobs:
             paths:
               - ArbTokenLists/42170_arbed_coingecko.json
             version: true
-            command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/ArbTokenLists/42170_arbed_coingecko.json --tokenList https://tokens.coingecko.com/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_coingecko.json
+            command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_coingecko.json --tokenList https://tokens.coingecko.com/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_coingecko.json
 
           # ArbGoerli
           - name: ArbGoerli Arbify CMC
@@ -130,7 +130,7 @@ jobs:
             paths:
               - ArbTokenLists/421613_arbed_coingecko.json
             version: true
-            command: yarn arbify --l2NetworkID 421613 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/ArbTokenLists/421613_arbed_coingecko.json  --tokenList https://tokens.coingecko.com/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421613_arbed_coingecko.json
+            command: yarn arbify --l2NetworkID 421613 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coingecko.json  --tokenList https://tokens.coingecko.com/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421613_arbed_coingecko.json
 
           - name: ArbGoerli FullList
             paths:
