@@ -382,7 +382,7 @@ export const arbifyL1List = async (
     : await getPrevList(prevArbifiedList);
 
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
-    includeAllL1Tokens: true,
+    includeAllL1Tokens: false,
     includeOldDataFields,
     sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl : undefined,
   });
