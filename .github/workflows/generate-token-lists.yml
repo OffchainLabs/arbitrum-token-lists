@@ -167,7 +167,7 @@ jobs:
             then
               additionalPath='TestFolder/'
             else
-              additionalPath='/'
+              additionalPath=''
             fi
             lines=$(aws s3 ls s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path | wc -l)
             if (( $lines > 0 )); then
