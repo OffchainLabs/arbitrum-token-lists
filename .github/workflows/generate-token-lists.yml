@@ -137,10 +137,18 @@ jobs:
               - ArbTokenLists/421613_arbed_full.json
             version: false
             command: yarn fullList --l2NetworkID 421613 --newArbifiedList ./src/ArbTokenLists/421613_arbed_full.json --skipValidation
+
+          - name: ArbSepolia Arbify Uniswap
+            paths:
+              - ArbTokenLists/421614_arbed_uniswap_labs.json
+            version: true
+            command: yarn arbify --l2NetworkID 421614 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_uniswap_labs.json --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/421614_arbed_uniswap_labs.json
+
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
       MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
       GOERLI_RPC: 'https://goerli.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      SEPOLIA_RPC: 'https://sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
 
     steps:
       - uses: actions/checkout@v3
@@ -160,7 +168,7 @@ jobs:
 
       - name: Get online version
         id: onlineVersion
-        if: ${{ matrix.commands.version == true && matrix.commands.version == true  }}
+        if: ${{ matrix.commands.version == true && matrix.commands.version == true }}
         run: |
           version=$(curl https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }} | jq .version | jq 'join(".")')
           if [[ -n $version ]]; then
@@ -170,39 +178,27 @@ jobs:
             exit 1
           fi
 
-      - name: Get new version
-        id: newVersion
-        if: ${{ matrix.commands.version == true && matrix.commands.version == true }}
-        run: |
-          version=$(cat ./src/${{ matrix.commands.paths[0] }} | jq .version | jq 'join(".")')
-          if [[ -n $version ]]; then
-            echo "newVersion=$version" >> $GITHUB_OUTPUT
-          else
-            # Make sure failure from curl or jq fails the generation
-            exit 1
-          fi
-
-      - name: Backup (Test folder)
-        if: ${{ inputs.environment == 'Test' && matrix.commands.version == true }}
+      - name: Backup
+        if: ${{ matrix.commands.version == true }}
         run: |
           paths=(${{ join(matrix.commands.paths, ' ') }})
           for path in ${paths[*]}
           do
-            aws s3 cp s3://${{ secrets.AWS_BUCKET }}/TestFolder/$path s3://${{ secrets.AWS_BUCKET }}/TestFolder/${{ steps.onlineVersion.outputs.onlineVersion }}/
+            if [[ "${{ inputs.environment }}" == "Test" ]]
+            then
+              additionalPath='TestFolder/'
+            else
+              additionalPath=''
+            fi
+            lines=$(aws s3 ls s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path | wc -l)
+            if (( $lines > 0 )); then
+              aws s3 cp s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path s3://${{ secrets.AWS_BUCKET }}/$additionalPath${{ steps.onlineVersion.outputs.onlineVersion }}/
+            fi
           done
 
       - name: Deploy (Test folder)
         if: ${{ inputs.environment == 'Test' }}
         run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"
-
-      - name: Backup
-        if: ${{ inputs.environment == 'CI' && matrix.commands.version == true }}
-        run: |
-          paths=(${{ join(matrix.commands.paths, ' ') }})
-          for path in ${paths[*]}
-          do
-            aws s3 cp s3://${{ secrets.AWS_BUCKET }}/$path s3://${{ secrets.AWS_BUCKET }}/${{ steps.onlineVersion.outputs.onlineVersion }}/
-          done
 
       - name: Deploy
         if: ${{ inputs.environment == 'CI' }}
