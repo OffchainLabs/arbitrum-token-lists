@@ -370,18 +370,14 @@ export const arbifyL1List = async (
   newList: ArbTokenList;
   l1ListName: string;
 }> => {
-  console.time('t');
   const l1TokenList = await promiseErrorMultiplier(
     getTokenListObj(pathOrUrl),
     () => getTokenListObj(pathOrUrl),
   );
-  console.timeLog('t', 'after l1tokenlist');
   removeInvalidTokensFromList(l1TokenList);
-  console.timeLog('t', 'after removeInvalid');
   const prevArbTokenList = ignorePreviousList
     ? null
     : await getPrevList(prevArbifiedList);
-  console.timeLog('t', 'after getPrevList');
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
     includeAllL1Tokens: false,
     includeOldDataFields,
