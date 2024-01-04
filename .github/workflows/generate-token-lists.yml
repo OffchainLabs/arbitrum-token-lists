@@ -105,6 +105,12 @@ jobs:
             version: true
             command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_coinmarketcap.json --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_coinmarketcap.json
 
+          - name: ArbGoerli Arbify CMC
+            paths:
+              - ArbTokenLists/421613_arbed_coinmarketcap.json
+            version: true
+            command: yarn arbify --l2NetworkID 421613 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coinmarketcap.json --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421613_arbed_coinmarketcap.json
+
           - name: ArbGoerli FullList
             paths:
               - ArbTokenLists/421613_arbed_full.json

@@ -171,6 +171,24 @@ describe('Token Lists', () => {
       testNoDuplicates(localList as ArbTokenList);
       compareLists(localList, onlineList);
     });
+
+    it('Arb Goerli CMC', async () => {
+      expect.assertions(2);
+      const [localList, onlineList] = await Promise.all([
+        runCommand(Action.Arbify, [
+          '--l2NetworkID=421613',
+          '--tokenList=https://api.coinmarketcap.com/data-api/v3/uniswap/all.json',
+          '--prevArbifiedList=https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coinmarketcap.json',
+          '--newArbifiedList=./src/ArbTokenLists/421613_arbed_coinmarketcap.json',
+        ]),
+        fetch(
+          'https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coinmarketcap.json',
+        ).then((response) => response.json()),
+      ]);
+
+      testNoDuplicates(localList as ArbTokenList);
+      compareLists(localList, onlineList);
+    });
   });
 
   describe('Update token lists', () => {
