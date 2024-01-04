@@ -99,7 +99,7 @@ export const promiseErrorMultiplier = <T>(
   });
 };
 
-export const getL1GatewayAddress = async (l2GatewayAddress: string) => {
+export const getL1GatewayAddress = (l2GatewayAddress: string) => {
   const { isNova } = isNetwork();
   const l2Gateway = isNova
     ? l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()]

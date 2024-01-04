@@ -192,11 +192,10 @@ export const generateTokenList = async (
       (t): t is typeof t & { l2Address: string } =>
         t.l2Address != undefined && t.l2Address !== constants.AddressZero,
     )
-    .map(async (token) => {
+    .map((token) => {
       const l2GatewayAddress =
         token.token.joinTableEntry[0].gateway.gatewayAddr;
-      const l1GatewayAddress =
-        (await getL1GatewayAddress(l2GatewayAddress)) ?? 'N/A';
+      const l1GatewayAddress = getL1GatewayAddress(l2GatewayAddress) ?? 'N/A';
 
       let { name: _name, decimals, symbol: _symbol } = token.tokenDatum;
 
@@ -376,13 +375,11 @@ export const arbifyL1List = async (
     () => getTokenListObj(pathOrUrl),
   );
   removeInvalidTokensFromList(l1TokenList);
-
   const prevArbTokenList = ignorePreviousList
     ? null
     : await getPrevList(prevArbifiedList);
-
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
-    includeAllL1Tokens: true,
+    includeAllL1Tokens: false,
     includeOldDataFields,
     sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl : undefined,
   });

@@ -7,11 +7,12 @@ const apolloL2GatewaysRinkebyClient =
   'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-rinkeby';
 const apolloL2GatewaysClient =
   'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway';
-
 const apolloL2GatewaysGoerliRollupClient =
   'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-nitro-goerli';
+const apolloL2GatewaysSepoliaClient =
+  'https://api.thegraph.com/subgraphs/name/fionnachan/layer2-token-gateway-sepolia';
 
-const chaidIdToGraphClientUrl = (chainID: string) => {
+const chainIdToGraphClientUrl = (chainID: string) => {
   switch (chainID) {
     case '42161':
       return apolloL2GatewaysClient;
@@ -19,6 +20,8 @@ const chaidIdToGraphClientUrl = (chainID: string) => {
       return apolloL2GatewaysRinkebyClient;
     case '421613':
       return apolloL2GatewaysGoerliRollupClient;
+    case '421614':
+      return apolloL2GatewaysSepoliaClient;
     default:
       throw new Error('Unsupported chain');
   }
@@ -59,7 +62,7 @@ export const getTokens = async (
   }
   const networkID =
     typeof _networkID === 'number' ? _networkID.toString() : _networkID;
-  const clientUrl = chaidIdToGraphClientUrl(networkID);
+  const clientUrl = chainIdToGraphClientUrl(networkID);
   // lazy solution for big lists for now; we'll have to paginate once we have > 500 tokens registed
   if (tokenList.length > 500) {
     const allTokens = await getAllTokens(networkID);
@@ -113,7 +116,7 @@ export const getAllTokens = async (
 ): Promise<Array<GraphTokenResult>> => {
   const networkID =
     typeof _networkID === 'number' ? _networkID.toString() : _networkID;
-  const clientUrl = chaidIdToGraphClientUrl(networkID);
+  const clientUrl = chainIdToGraphClientUrl(networkID);
   const blockNumber = graphGatewayBlockNumField(_networkID);
   const query = gql`
     {
