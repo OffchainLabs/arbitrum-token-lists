@@ -23,6 +23,7 @@ axiosRetry(axios, {
   onRetry(retryCount, error) {
     console.log(
       `Request failed with ${error.code}. Retrying ${retryCount} times.`,
+      error,
     );
   },
 });
@@ -279,6 +280,7 @@ export const getTokenListObj = async (pathOrUrl: string) => {
       throw new Error('Could not find token list');
     }
   })(pathOrUrl);
+  console.log('LLL', tokenList);
   isTokenList(tokenList);
   return tokenList;
 };
