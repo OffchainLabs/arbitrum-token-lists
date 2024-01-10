@@ -151,6 +151,13 @@ jobs:
             version: true
             command: yarn arbify --l2NetworkID 421614 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_coingecko.json  --tokenList https://tokens.coingecko.com/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421614_arbed_coingecko.json
 
+          # Orbit Chains
+          - name: Xai Arbify Uniswap
+            paths:
+              - ArbTokenLists/660279_arbed_uniswap_labs.json
+            version: true
+            command: yarn arbify --l2NetworkID 660279 --ignore-previous-list --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/660279_arbed_uniswap_labs.json
+
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
       MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
