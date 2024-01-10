@@ -184,12 +184,17 @@ jobs:
         id: onlineVersion
         if: ${{ matrix.commands.version == true && matrix.commands.version == true }}
         run: |
-          version=$(curl https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }} | jq .version | jq 'join(".")')
-          if [[ -n $version ]]; then
-            echo "onlineVersion=$version" >> $GITHUB_OUTPUT
+          if curl --silent --head --fail "https://tokenlist.arbitrum.io/ArbTokenLists/${{ matrix.commands.paths[0] }}"; then
+            version=$(curl https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }} | jq .version | jq 'join(".")')
+            if [[ -n $version ]]; then
+              echo "onlineVersion=$version" >> $GITHUB_OUTPUT
+            else
+              # Make sure failure from curl or jq fails the generation
+              exit 1
+            fi
           else
-            # Make sure failure from curl or jq fails the generation
-            exit 1
+            # Only applies when a new list is added
+            echo "onlineVersion=1.0.0" >> $GITHUB_OUTPUT
           fi
 
       - name: Backup
