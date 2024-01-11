@@ -151,12 +151,19 @@ jobs:
             version: true
             command: yarn arbify --l2NetworkID 421614 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_coingecko.json  --tokenList https://tokens.coingecko.com/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421614_arbed_coingecko.json
 
+          # Orbit Chains
+          - name: Xai Arbify Uniswap
+            paths:
+              - ArbTokenLists/660279_arbed_uniswap_labs.json
+            version: true
+            command: yarn arbify --l2NetworkID 660279 --ignore-previous-list --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/660279_arbed_uniswap_labs.json
+
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
       MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
       GOERLI_RPC: 'https://goerli.infura.io/v3/${{ secrets.INFURA_KEY }}'
       SEPOLIA_RPC: 'https://sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
-
+      ARB_ONE_RPC: 'https://arbitrum-mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
     steps:
       - uses: actions/checkout@v3
 
@@ -177,12 +184,19 @@ jobs:
         id: onlineVersion
         if: ${{ matrix.commands.version == true && matrix.commands.version == true }}
         run: |
-          version=$(curl https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }} | jq .version | jq 'join(".")')
-          if [[ -n $version ]]; then
-            echo "onlineVersion=$version" >> $GITHUB_OUTPUT
+          # Check if the list exists online (it will not exist on the first run)
+          if curl --silent --head --fail "https://tokenlist.arbitrum.io/ArbTokenLists/${{ matrix.commands.paths[0] }}"; then
+            # Get the version from the online list (formatted to major.minor.patch)
+            version=$(curl https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }} | jq .version | jq 'join(".")')
+            if [[ -n $version ]]; then
+              echo "onlineVersion=$version" >> $GITHUB_OUTPUT
+            else
+              # Make sure failure from curl or jq fails the generation
+              exit 1
+            fi
           else
-            # Make sure failure from curl or jq fails the generation
-            exit 1
+            # Only applies when a new list is added
+            echo "onlineVersion=1.0.0" >> $GITHUB_OUTPUT
           fi
 
       - name: Backup
@@ -197,6 +211,8 @@ jobs:
             else
               additionalPath=''
             fi
+
+            # Backup online list to {version}/{path} before deploying a new one
             lines=$(aws s3 ls s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path | wc -l)
             if (( $lines > 0 )); then
               aws s3 cp s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path s3://${{ secrets.AWS_BUCKET }}/$additionalPath${{ steps.onlineVersion.outputs.onlineVersion }}/

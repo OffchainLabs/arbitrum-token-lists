@@ -7,41 +7,45 @@ export const getNetworkConfig = async () => {
   const networkID = argv.l2NetworkID;
   console.log('Using L2 networkID:', networkID);
 
-  const l2Rpc = (() => {
-    if (networkID === 42161) return 'https://arb1.arbitrum.io/rpc';
-    else if (networkID === 42170) return 'https://nova.arbitrum.io/rpc';
-    else if (networkID === 421613)
-      return 'https://goerli-rollup.arbitrum.io/rpc';
-    else if (networkID === 421614)
-      return 'https://sepolia-rollup.arbitrum.io/rpc';
-    throw new Error('No L2 RPC detected');
-  })();
-  const arbProvider = new providers.JsonRpcProvider(l2Rpc);
-  const l2Network = await getL2Network(arbProvider);
+  const childRpc = {
+    42161: 'https://arb1.arbitrum.io/rpc',
+    42170: 'https://nova.arbitrum.io/rpc',
+    421613: 'https://goerli-rollup.arbitrum.io/rpc',
+    421614: 'https://sepolia-rollup.arbitrum.io/rpc',
+    660279: 'https://xai-chain.net/rpc',
+  }[networkID];
+
+  if (!childRpc) {
+    throw new Error('No child chain RPC detected');
+  }
+
+  const childProvider = new providers.JsonRpcProvider(childRpc);
+  const childNetwork = await getL2Network(childProvider);
 
   const expectedEnv = (() => {
-    if (l2Network.partnerChainID === 1) return 'MAINNET_RPC';
-    else if (l2Network.partnerChainID === 5) return 'GOERLI_RPC';
-    else if (l2Network.partnerChainID === 11155111) return 'SEPOLIA_RPC';
-    throw new Error('No L1 RPC detected');
+    if (childNetwork.partnerChainID === 1) return 'MAINNET_RPC';
+    else if (childNetwork.partnerChainID === 5) return 'GOERLI_RPC';
+    else if (childNetwork.partnerChainID === 11155111) return 'SEPOLIA_RPC';
+    else if (childNetwork.partnerChainID === 42161) return 'ARB_ONE_RPC';
+    throw new Error('No parent chain RPC detected');
   })();
-  const l1Rpc = process.env[expectedEnv];
-  if (!l1Rpc) throw new Error(`Please set ${expectedEnv}`);
+  const parentRpc = process.env[expectedEnv];
+  if (!parentRpc) throw new Error(`Please set ${expectedEnv}`);
 
-  const ethProvider = new providers.JsonRpcProvider(l1Rpc);
+  const parentProvider = new providers.JsonRpcProvider(parentRpc);
 
-  const l1MultiCaller = await MultiCaller.fromProvider(ethProvider);
-  const l2MultiCaller = await MultiCaller.fromProvider(arbProvider);
+  const parentMultiCaller = await MultiCaller.fromProvider(parentProvider);
+  const childMulticaller = await MultiCaller.fromProvider(childProvider);
 
   return {
     l1: {
-      provider: ethProvider,
-      multiCaller: l1MultiCaller,
+      provider: parentProvider,
+      multiCaller: parentMultiCaller,
     },
     l2: {
-      network: l2Network,
-      provider: arbProvider,
-      multiCaller: l2MultiCaller,
+      network: childNetwork,
+      provider: childProvider,
+      multiCaller: childMulticaller,
     },
   };
 };
