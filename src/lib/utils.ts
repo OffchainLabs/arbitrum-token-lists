@@ -298,7 +298,7 @@ export function isValidHttpUrl(urlString: string) {
 
 export const getFormattedSourceURL = (sourceUrl?: string) => {
   if (!sourceUrl) return null;
-  const urlReplaceForwardSlashes = sourceUrl.replace(/\//g, '?');
+  const urlReplaceForwardSlashes = sourceUrl.replace(/\//g, '^');
   return /^[ \w\.,:]+$/.test(urlReplaceForwardSlashes)
     ? urlReplaceForwardSlashes
     : null;
