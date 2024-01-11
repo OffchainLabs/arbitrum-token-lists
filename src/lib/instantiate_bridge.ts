@@ -27,25 +27,25 @@ export const getNetworkConfig = async () => {
     else if (childNetwork.partnerChainID === 5) return 'GOERLI_RPC';
     else if (childNetwork.partnerChainID === 11155111) return 'SEPOLIA_RPC';
     else if (childNetwork.partnerChainID === 42161) return 'ARB_ONE_RPC';
-    throw new Error('No L1 RPC detected');
+    throw new Error('No parent chain RPC detected');
   })();
   const parentRpc = process.env[expectedEnv];
   if (!parentRpc) throw new Error(`Please set ${expectedEnv}`);
 
   const parentProvider = new providers.JsonRpcProvider(parentRpc);
 
-  const l1MultiCaller = await MultiCaller.fromProvider(parentProvider);
-  const l2MultiCaller = await MultiCaller.fromProvider(childProvider);
+  const parentMultiCaller = await MultiCaller.fromProvider(parentProvider);
+  const childMulticaller = await MultiCaller.fromProvider(childProvider);
 
   return {
     l1: {
       provider: parentProvider,
-      multiCaller: l1MultiCaller,
+      multiCaller: parentMultiCaller,
     },
     l2: {
       network: childNetwork,
       provider: childProvider,
-      multiCaller: l2MultiCaller,
+      multiCaller: childMulticaller,
     },
   };
 };
