@@ -16,7 +16,7 @@ export const getNetworkConfig = async () => {
   }[networkID];
 
   if (!childRpc) {
-    throw new Error('No L2 RPC detected');
+    throw new Error('No child chain RPC detected');
   }
 
   const childProvider = new providers.JsonRpcProvider(childRpc);
