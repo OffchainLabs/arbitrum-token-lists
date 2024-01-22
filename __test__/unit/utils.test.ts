@@ -28,9 +28,7 @@ describe('utils Test', () => {
       ) as typeof arblistWrongVersion;
       expect(() => {
         removeInvalidTokensFromList(listToBeFixed);
-      }).toThrowError(
-        'Data does not confirm to token list schema; not sure why',
-      );
+      }).toThrow('Data does not confirm to token list schema; not sure why');
     });
   });
 });
