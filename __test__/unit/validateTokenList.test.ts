@@ -58,34 +58,34 @@ describe('validateTokenList Test', () => {
     it('Should return false when list is invalid (Decimals not right)', () => {
       expect(() => {
         validateTokenListWithErrorThrowing(arblistDecimalsTooLow);
-      }).toThrowError(errorCode);
+      }).toThrow(errorCode);
       expect(() => {
         validateTokenListWithErrorThrowing(arblistDecimalsTooHigh);
-      }).toThrowError(errorCode);
+      }).toThrow(errorCode);
     });
 
     it('Should return false when list is invalid (Name too long)', () => {
       expect(() => {
         validateTokenListWithErrorThrowing(arblistNameTooLong);
-      }).toThrowError(errorCode);
+      }).toThrow(errorCode);
     });
 
     it('Should return false when list is invalid (Address not right)', () => {
       expect(() => {
         validateTokenListWithErrorThrowing(arblistSymbolTooLong);
-      }).toThrowError(errorCode);
+      }).toThrow(errorCode);
     });
 
     it('Should return false when list is invalid (Symbol too long)', () => {
       expect(() => {
         validateTokenListWithErrorThrowing(arblistWrongAddress);
-      }).toThrowError(errorCode);
+      }).toThrow(errorCode);
     });
 
     it('Should return false when list is invalid (Wrong chainId)', () => {
       expect(() => {
         validateTokenListWithErrorThrowing(arblistWrongChainId);
-      }).toThrowError(errorCode);
+      }).toThrow(errorCode);
     });
   });
 });
