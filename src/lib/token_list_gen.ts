@@ -163,7 +163,7 @@ export const generateTokenList = async (
   l2AddressesFromL2 = filteredL2AddressesFromL1;
 
   const intermediateTokenData = [];
-  for (const addrs of getChunks(l2AddressesFromL1)) {
+  for (const addrs of getChunks(l2AddressesFromL1, 100)) {
     const tokenDataTemp = await promiseErrorMultiplier(
       l2.multiCaller.getTokenData(
         addrs.map((t) => t || constants.AddressZero),
