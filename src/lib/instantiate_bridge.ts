@@ -13,6 +13,7 @@ export const getNetworkConfig = async () => {
     421613: 'https://goerli-rollup.arbitrum.io/rpc',
     421614: 'https://sepolia-rollup.arbitrum.io/rpc',
     660279: 'https://xai-chain.net/rpc',
+    1380012617: 'https://mainnet.rpc.rarichain.org/http',
   }[networkID];
 
   if (!childRpc) {
