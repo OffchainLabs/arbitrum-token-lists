@@ -1,10 +1,7 @@
 import { providers } from 'ethers';
 import { getL2Network, MultiCaller } from '@arbitrum/sdk';
-import { getArgvs } from './options';
 
-export const getNetworkConfig = async () => {
-  const argv = getArgvs();
-  const networkID = argv.l2NetworkID;
+export const getNetworkConfig = async (networkID: number) => {
   console.log('Using L2 networkID:', networkID);
 
   const childRpc = {

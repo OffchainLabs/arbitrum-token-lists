@@ -152,9 +152,10 @@ enum PermitTypes {
 
 export const addPermitTags = async (
   tokenList: ArbTokenList,
+  l2ChainId: number,
 ): Promise<ArbTokenList> => {
   console.log('Adding permit tags');
-  const { l1, l2 } = await getNetworkConfig();
+  const { l1, l2 } = await getNetworkConfig(l2ChainId);
 
   const value = utils.parseUnits('1.0', 18);
   const deadline = constants.MaxUint256;

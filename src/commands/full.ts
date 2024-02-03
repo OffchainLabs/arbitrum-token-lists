@@ -11,7 +11,7 @@ export const handler = async (argvs: Args) => {
     throw new Error("expected --tokenList 'full'");
   if (argvs.includePermitTags)
     throw new Error('full list mode does not support permit tagging');
-  const tokenList = await generateFullList();
+  const tokenList = await generateFullList(argvs.l2NetworkID);
   writeToFile(tokenList, argvs.newArbifiedList);
   return tokenList;
 };
