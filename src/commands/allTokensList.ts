@@ -9,8 +9,12 @@ export const command = Action.AllTokensList;
 export const describe = 'All tokens list';
 
 export const handler = async (argvs: Args) => {
-  let tokenList: ArbTokenList = await generateFullListFormatted();
-  if (argvs.includePermitTags) tokenList = await addPermitTags(tokenList);
+  let tokenList: ArbTokenList = await generateFullListFormatted(
+    argvs.l2NetworkID,
+  );
+  if (argvs.includePermitTags) {
+    tokenList = await addPermitTags(tokenList, argvs.l2NetworkID);
+  }
   writeToFile(tokenList, argvs.newArbifiedList);
   return tokenList;
 };

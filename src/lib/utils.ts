@@ -13,7 +13,6 @@ import {
   l2ToL1GatewayAddresses,
   l2ToL1GatewayAddressesNova,
 } from './constants';
-import { getArgvs } from './options';
 
 // On failed request, retry with exponential back-off
 axiosRetry(axios, {
@@ -27,13 +26,12 @@ axiosRetry(axios, {
   },
 });
 
-export const isNetwork = () => {
-  const argv = getArgvs();
+export const isNetwork = (l2NetworkID: number) => {
   return {
-    isArbOne: argv.l2NetworkID === 42161,
-    isNova: argv.l2NetworkID === 42170,
-    isGoerliRollup: argv.l2NetworkID === 421613,
-    isSepoliaRollup: argv.l2NetworkID === 421614,
+    isArbOne: l2NetworkID === 42161,
+    isNova: l2NetworkID === 42170,
+    isGoerliRollup: l2NetworkID === 421613,
+    isSepoliaRollup: l2NetworkID === 421614,
   };
 };
 
@@ -99,8 +97,11 @@ export const promiseErrorMultiplier = <T>(
   });
 };
 
-export const getL1GatewayAddress = (l2GatewayAddress: string) => {
-  const { isNova } = isNetwork();
+export const getL1GatewayAddress = (
+  l2GatewayAddress: string,
+  l2NetworkID: number,
+) => {
+  const { isNova } = isNetwork(l2NetworkID);
   const l2Gateway = isNova
     ? l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()]
     : l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()];

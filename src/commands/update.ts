@@ -10,14 +10,20 @@ export const describe = 'Update';
 
 export const handler = async (argvs: Args) => {
   const includeOldDataFields = !!argvs.includeOldDataFields;
-  const { newList } = await updateArbifiedList(argvs.tokenList, {
-    includeOldDataFields,
-    ignorePreviousList: argvs.ignorePreviousList,
-    prevArbifiedList: argvs.prevArbifiedList,
-  });
+  const { newList } = await updateArbifiedList(
+    argvs.tokenList,
+    argvs.l2NetworkID,
+    {
+      includeOldDataFields,
+      ignorePreviousList: argvs.ignorePreviousList,
+      prevArbifiedList: argvs.prevArbifiedList,
+    },
+  );
   let tokenList: ArbTokenList = newList;
 
-  if (argvs.includePermitTags) tokenList = await addPermitTags(tokenList);
+  if (argvs.includePermitTags) {
+    tokenList = await addPermitTags(tokenList, argvs.l2NetworkID);
+  }
   writeToFile(tokenList, argvs.newArbifiedList);
   return tokenList;
 };
