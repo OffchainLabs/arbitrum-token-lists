@@ -22,7 +22,7 @@
     "test:unit": "yarn test --ci __test__/unit"
   },
   "dependencies": {
-    "@arbitrum/sdk": "^3.1.13-orbit-custom-fee-token.1",
+    "@arbitrum/sdk": "^3.2.0",
     "@types/jest": "^29.2.5",
     "@uniswap/token-lists": "^1.0.0-beta.33",
     "ajv": "^8.12.0",
