@@ -1,16 +1,19 @@
 import { providers } from 'ethers';
 import { getL2Network, MultiCaller } from '@arbitrum/sdk';
+import { ChainId } from './constants';
 
 export const getNetworkConfig = async (networkID: number) => {
   console.log('Using L2 networkID:', networkID);
 
   const childRpc = {
-    42161: 'https://arb1.arbitrum.io/rpc',
-    42170: 'https://nova.arbitrum.io/rpc',
-    421613: 'https://goerli-rollup.arbitrum.io/rpc',
-    421614: 'https://sepolia-rollup.arbitrum.io/rpc',
-    660279: 'https://xai-chain.net/rpc',
-    1380012617: 'https://mainnet.rpc.rarichain.org/http',
+    [ChainId.ArbitrumOne]: 'https://arb1.arbitrum.io/rpc',
+    [ChainId.ArbitrumNova]: 'https://nova.arbitrum.io/rpc',
+    [ChainId.ArbitrumGoerli]: 'https://goerli-rollup.arbitrum.io/rpc',
+    [ChainId.ArbitrumSepolia]: 'https://sepolia-rollup.arbitrum.io/rpc',
+    [ChainId.Xai]: 'https://xai-chain.net/rpc',
+    [ChainId.XaiTestnet]: 'https://testnet.xai-chain.net/rpc',
+    [ChainId.Rari]: 'https://mainnet.rpc.rarichain.org/http',
+    [ChainId.StylusTestnet]: 'https://stylus-testnet.arbitrum.io/rpc',
   }[networkID];
 
   if (!childRpc) {

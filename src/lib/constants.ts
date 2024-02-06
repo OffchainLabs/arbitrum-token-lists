@@ -113,5 +113,6 @@ export enum ChainId {
   // Orbit Testnets
   XaiTestnet = 47279324479,
   Xai = 660279,
+  Rari = 1380012617,
   StylusTestnet = 23011913,
 }
