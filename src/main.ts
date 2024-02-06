@@ -28,6 +28,11 @@ import {
   describe as describeAllTokensList,
   handler as handlerAllTokensList,
 } from './commands/allTokensList';
+import {
+  command as commandCrossChainList,
+  describe as describeCrossChainList,
+  handler as handlerCrossChainList,
+} from './commands/crossChain';
 
 const myEnv = dotenv.config();
 dotenvExpand.expand(myEnv);
@@ -61,12 +66,20 @@ const alltokenslist = yargsInstance.command(
   // @ts-ignore: handler returns list so we can compare the result in test, yargs expect handler to return void
   handlerAllTokensList,
 );
+const crossChainList = yargsInstance.command(
+  commandCrossChainList,
+  describeCrossChainList,
+  {},
+  // @ts-ignore: handler returns list so we can compare the result in test, yargs expect handler to return void
+  handlerCrossChainList,
+);
 
 if (process.env.NODE_ENV !== 'test') {
   update.parseAsync();
   arbify.parseAsync();
   full.parseAsync();
   alltokenslist.parseAsync();
+  crossChainList.parseAsync();
 }
 
 const xai: L2Network = {
@@ -190,4 +203,4 @@ addCustomNetwork({ customL2Network: xai });
 addCustomNetwork({ customL2Network: xaiTestnet });
 addCustomNetwork({ customL2Network: rari });
 
-export { update, yargsInstance };
+export { yargsInstance };
