@@ -37,24 +37,25 @@ export interface ArbificationOptions {
   overwriteCurrentList: boolean;
 }
 
+type GenerateTokenListOptions = {
+  /**
+   * Append all tokens from the original l1TokenList to the output list.
+   */
+  includeAllL1Tokens?: boolean;
+  /**
+   * Append all unbridged tokens from original l1TokenList to the output list.
+   */
+  includeUnbridgedL1Tokens?: boolean;
+  getAllTokensInNetwork?: boolean;
+  includeOldDataFields?: boolean;
+  sourceListURL?: string;
+  preserveListName?: boolean;
+};
 export const generateTokenList = async (
   l1TokenList: TokenList,
   l2ChainId: number,
   prevArbTokenList?: ArbTokenList | null,
-  options?: {
-    /**
-     * Append all tokens from the original l1TokenList to the output list.
-     */
-    includeAllL1Tokens?: boolean;
-    /**
-     * Append all unbridged tokens from original l1TokenList to the output list.
-     */
-    includeUnbridgedL1Tokens?: boolean;
-    getAllTokensInNetwork?: boolean;
-    includeOldDataFields?: boolean;
-    sourceListURL?: string;
-    preserveListName?: boolean;
-  },
+  options?: GenerateTokenListOptions,
 ) => {
   if (options?.includeAllL1Tokens && options.includeUnbridgedL1Tokens) {
     throw new Error(
@@ -366,8 +367,8 @@ export const arbifyL1List = async (
     includeOldDataFields,
     ignorePreviousList,
     prevArbifiedList,
-  }: {
-    includeOldDataFields: boolean;
+    ...options
+  }: GenerateTokenListOptions & {
     ignorePreviousList: boolean;
     prevArbifiedList: string | undefined;
   },
@@ -383,6 +384,7 @@ export const arbifyL1List = async (
       includeAllL1Tokens: false,
       includeOldDataFields,
       sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl : undefined,
+      ...options,
     },
   );
 

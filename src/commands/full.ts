@@ -6,12 +6,19 @@ export const command = Action.Full;
 
 export const describe = 'Full';
 
-export const handler = async (argvs: Args) => {
-  if (argvs.tokenList !== 'full')
-    throw new Error("expected --tokenList 'full'");
-  if (argvs.includePermitTags)
+export const handler = async ({
+  includePermitTags,
+  l2NetworkID,
+  newArbifiedList,
+  tokenList: tokenListPath,
+}: Args) => {
+  if (tokenListPath !== 'full') throw new Error("expected --tokenList 'full'");
+  if (includePermitTags)
     throw new Error('full list mode does not support permit tagging');
-  const tokenList = await generateFullList(argvs.l2NetworkID);
-  writeToFile(tokenList, argvs.newArbifiedList);
+  if (!l2NetworkID) {
+    throw new Error('l2NetworkID is required');
+  }
+  const tokenList = await generateFullList(l2NetworkID);
+  writeToFile(tokenList, newArbifiedList);
   return tokenList;
 };
