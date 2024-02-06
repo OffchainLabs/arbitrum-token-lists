@@ -146,25 +146,23 @@ export const handler = async (argvs: Args) => {
   );
 
   await Promise.all(
-    [ChainId.Xai, ChainId.XaiTestnet, ChainId.StylusTestnet].map(
-      async (l3ChainId) => {
-        const newList = await arbifyL1List(
-          argvs.tokenList,
-          l1TokenList,
-          l3ChainId,
-          {
-            includeOldDataFields,
-            ignorePreviousList: argvs.ignorePreviousList,
-            prevArbifiedList: argvs.prevArbifiedList,
-          },
-        );
-        // Update L1 and L2 bridgeInfo for each L3 tokens
-        updateTokensMap(newList.tokens, tokensMap, l3ChainId);
-        newList.tokens.forEach((token) => {
-          tokensMap.set(getMapKey(l3ChainId, token.address), token);
-        });
-      },
-    ),
+    [ChainId.Xai, ChainId.XaiTestnet, ChainId.Rari].map(async (l3ChainId) => {
+      const newList = await arbifyL1List(
+        argvs.tokenList,
+        l1TokenList,
+        l3ChainId,
+        {
+          includeOldDataFields,
+          ignorePreviousList: argvs.ignorePreviousList,
+          prevArbifiedList: argvs.prevArbifiedList,
+        },
+      );
+      // Update L1 and L2 bridgeInfo for each L3 tokens
+      updateTokensMap(newList.tokens, tokensMap, l3ChainId);
+      newList.tokens.forEach((token) => {
+        tokensMap.set(getMapKey(l3ChainId, token.address), token);
+      });
+    }),
   );
 
   let tokenList: ArbTokenList = {

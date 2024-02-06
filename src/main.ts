@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import {
-  addCustomChain,
-  constants as arbitrumSdkConstants,
+  L2Network,
+  addCustomNetwork,
+  constants as arbConstants,
 } from '@arbitrum/sdk';
-import { Chain } from '@arbitrum/sdk/dist/lib/dataEntities/networks';
 
 import { yargsInstance } from './lib/options';
 import * as dotenv from 'dotenv';
@@ -69,7 +69,7 @@ if (process.env.NODE_ENV !== 'test') {
   alltokenslist.parseAsync();
 }
 
-const xai: Chain = {
+const xai: L2Network = {
   chainID: 660279,
   confirmPeriodBlocks: 45818,
   ethBridge: {
@@ -84,6 +84,7 @@ const xai: Chain = {
   isCustom: true,
   name: 'Xai',
   partnerChainID: 42161,
+  partnerChainIDs: [],
   retryableLifetimeSeconds: 604800,
   tokenBridge: {
     l1CustomGateway: '0xb15A0826d65bE4c2fDd961b72636168ee70Af030',
@@ -104,8 +105,10 @@ const xai: Chain = {
   nitroGenesisBlock: 0,
   nitroGenesisL1Block: 0,
   depositTimeout: 1800000,
+  blockTime: arbConstants.ARB_MINIMUM_BLOCK_TIME_IN_SECONDS,
 };
-export const xaiTestnet: Chain = {
+
+const xaiTestnet: L2Network = {
   chainID: 47279324479,
   confirmPeriodBlocks: 20,
   ethBridge: {
@@ -119,7 +122,6 @@ export const xaiTestnet: Chain = {
   isArbitrum: true,
   isCustom: true,
   name: 'Xai Orbit Testnet',
-  slug: 'xai-testnet',
   partnerChainID: 421613,
   partnerChainIDs: [],
   retryableLifetimeSeconds: 604800,
@@ -142,19 +144,10 @@ export const xaiTestnet: Chain = {
   nitroGenesisBlock: 0,
   nitroGenesisL1Block: 0,
   depositTimeout: 1800000,
-  blockTime: arbitrumSdkConstants.ARB_MINIMUM_BLOCK_TIME_IN_SECONDS,
-  bridgeUiConfig: {
-    color: {
-      primary: '#F30019',
-      secondary: '#87000E',
-    },
-    network: {
-      name: 'Xai Testnet',
-      logo: '/images/XaiLogo.svg',
-    },
-  },
+  blockTime: arbConstants.ARB_MINIMUM_BLOCK_TIME_IN_SECONDS,
 };
-const rari: Chain = {
+
+const rari: L2Network = {
   chainID: 1380012617,
   confirmPeriodBlocks: 45818,
   ethBridge: {
@@ -169,6 +162,7 @@ const rari: Chain = {
   isCustom: true,
   name: 'RARI Mainnet',
   partnerChainID: 42161,
+  partnerChainIDs: [],
   retryableLifetimeSeconds: 604800,
   tokenBridge: {
     l1CustomGateway: '0x8bE956aB42274056ef4471BEb211b33e258b7324',
@@ -189,9 +183,11 @@ const rari: Chain = {
   nitroGenesisBlock: 0,
   nitroGenesisL1Block: 0,
   depositTimeout: 1800000,
+  blockTime: arbConstants.ARB_MINIMUM_BLOCK_TIME_IN_SECONDS,
 };
-addCustomChain({ customChain: xai });
-addCustomChain({ customChain: xaiTestnet });
-addCustomChain({ customChain: rari });
+
+addCustomNetwork({ customL2Network: xai });
+addCustomNetwork({ customL2Network: xaiTestnet });
+addCustomNetwork({ customL2Network: rari });
 
 export { update, yargsInstance };
