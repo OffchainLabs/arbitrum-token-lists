@@ -33,51 +33,52 @@ function getL2ParentChain(chainId: number) {
     [ChainId.ArbitrumGoerli]: ChainId.Goerli,
   }[chainId];
 }
-type TokenMap = Map<string, ArbTokenInfo>;
+function getL3ParentChain(chainId: number) {
+  return {
+    [ChainId.Xai]: ChainId.ArbitrumOne,
+    [ChainId.XaiTestnet]: ChainId.ArbitrumGoerli,
+    [ChainId.Rari]: ChainId.ArbitrumOne,
+  }[chainId];
+}
+type TokensMap = Map<string, ArbTokenInfo>;
 function getMapKey(chainId: number | string, tokenAddress: string) {
-  // Adding the chainId means the same token on multiple L1 will be under a different key
   return `${chainId}_${tokenAddress.toLowerCase()}`;
 }
 
+// Update token in tokensMap with new bridgeInfo
 function updateBridgeInfo(
-  token: ArbTokenInfo,
-  tokensMap: TokenMap,
-  originChainId: number,
-  chainId: number,
+  mapKey: string,
+  tokensMap: TokensMap,
+  bridgeInfo: {
+    [chainId: number]: {
+      tokenAddress: string;
+      originBridgeAddress: string;
+      destBridgeAddress: string;
+    };
+  },
 ) {
-  const bridgeInfo = token.extensions?.bridgeInfo[originChainId];
-  if (!bridgeInfo) {
-    console.log('No bridge info found for token', token.address);
-    return;
-  }
-
-  const mapKey = getMapKey(originChainId, bridgeInfo.tokenAddress);
   const existingToken = tokensMap.get(mapKey);
-
   if (!existingToken) {
+    console.log('Token not found in TokensMap', mapKey);
     return;
   }
 
   const newToken: ArbTokenInfo = {
     ...existingToken,
     extensions: {
-      ...existingToken.extensions,
       bridgeInfo: {
         ...(existingToken.extensions?.bridgeInfo as object),
-        [chainId]: {
-          tokenAddress: token.address,
-          originBridgeAddress: bridgeInfo.destBridgeAddress,
-          destBridgeAddress: bridgeInfo.originBridgeAddress,
-        },
+        ...bridgeInfo,
       },
     },
   };
   tokensMap.set(mapKey, newToken);
+  return newToken;
 }
 
 function updateTokensMap(
   tokens: ArbTokenInfo[],
-  tokensMap: TokenMap,
+  tokensMap: TokensMap,
   chainId: number,
 ) {
   // For each L2/L3 tokens, update the parent chain list up to the L1
@@ -89,14 +90,51 @@ function updateTokensMap(
       return;
     }
 
-    updateBridgeInfo(token, tokensMap, Number(originChainId), chainId);
-    if (isValidL3(chainId)) {
+    // Update the parent chain bridgeInfo
+    const bridgeInfo = token.extensions?.bridgeInfo[originChainId];
+    if (!bridgeInfo) {
+      console.log('No bridge info found for token', token.address);
+      return;
+    }
+
+    const updatedToken = updateBridgeInfo(
+      getMapKey(originChainId, bridgeInfo.tokenAddress),
+      tokensMap,
+      {
+        [chainId]: {
+          tokenAddress: token.address,
+          destBridgeAddress: bridgeInfo.destBridgeAddress,
+          originBridgeAddress: bridgeInfo.originBridgeAddress,
+        },
+      },
+    );
+
+    if (updatedToken && isValidL3(chainId)) {
       const l1ChainId = getL2ParentChain(Number(originChainId));
       if (!l1ChainId) {
         // This should never happen
         throw new Error(`No L1 chain found for L3 token ${token.address}`);
       }
-      updateBridgeInfo(token, tokensMap, l1ChainId, chainId);
+
+      const l1Address =
+        updatedToken.extensions!.bridgeInfo[l1ChainId].tokenAddress;
+      // Update the L1 bridgeInfo with L3 information
+      updateBridgeInfo(getMapKey(l1ChainId, l1Address), tokensMap, {
+        [chainId]: {
+          tokenAddress: token.address,
+          destBridgeAddress: 'N/A',
+          originBridgeAddress: 'N/A',
+        },
+      });
+
+      // Update the L3 bridgeInfo with L1 information
+      updateBridgeInfo(getMapKey(chainId, token.address), tokensMap, {
+        [l1ChainId]: {
+          tokenAddress: l1Address,
+          destBridgeAddress: 'N/A',
+          originBridgeAddress: 'N/A',
+        },
+      });
     }
   });
 }
@@ -123,6 +161,7 @@ export const handler = async (argvs: Args) => {
       ]),
   );
 
+  const l2Lists = new Map<number, ArbTokenList>();
   await Promise.all(
     L2_CHAIN_IDS.map(async (l2ChainId) => {
       const newList = await arbifyL1List(
@@ -142,14 +181,22 @@ export const handler = async (argvs: Args) => {
       newList.tokens.forEach((token) => {
         tokensMap.set(getMapKey(l2ChainId, token.address), token);
       });
+
+      l2Lists.set(l2ChainId, newList);
     }),
   );
 
   await Promise.all(
     [ChainId.Xai, ChainId.XaiTestnet, ChainId.Rari].map(async (l3ChainId) => {
+      const parentChain = getL3ParentChain(l3ChainId)!;
+      const l2TokenList = l2Lists.get(parentChain);
+      if (!l2TokenList) {
+        throw new Error(`No L2 list to arbify for L3 chain: ${l3ChainId}`);
+      }
+
       const newList = await arbifyL1List(
         argvs.tokenList,
-        l1TokenList,
+        l2TokenList,
         l3ChainId,
         {
           includeOldDataFields,
@@ -157,11 +204,11 @@ export const handler = async (argvs: Args) => {
           prevArbifiedList: argvs.prevArbifiedList,
         },
       );
-      // Update L1 and L2 bridgeInfo for each L3 tokens
-      updateTokensMap(newList.tokens, tokensMap, l3ChainId);
       newList.tokens.forEach((token) => {
         tokensMap.set(getMapKey(l3ChainId, token.address), token);
       });
+      // Update L1 and L2 bridgeInfo for each L3 tokens
+      updateTokensMap(newList.tokens, tokensMap, l3ChainId);
     }),
   );
 
