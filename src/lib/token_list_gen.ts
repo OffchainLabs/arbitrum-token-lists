@@ -65,6 +65,7 @@ export const generateTokenList = async (
 
   const name = l1TokenList.name;
   const mainLogoUri = l1TokenList.logoURI;
+  const increment = l2ChainId === ChainId.Rari ? 100 : 500;
 
   const { l1, l2 } = await promiseErrorMultiplier(
     getNetworkConfig(l2ChainId),
@@ -92,6 +93,7 @@ export const generateTokenList = async (
             })),
             l2.multiCaller,
             l2.network,
+            increment,
           ),
           () =>
             getL1TokenAndL2Gateway(
@@ -101,6 +103,7 @@ export const generateTokenList = async (
               })),
               l2.multiCaller,
               l2.network,
+              increment,
             ),
         );
 
@@ -111,7 +114,7 @@ export const generateTokenList = async (
 
   const intermediatel2AddressesFromL1 = [];
   const intermediatel2AddressesFromL2 = [];
-  for (const addrs of getChunks(l1TokenAddresses)) {
+  for (const addrs of getChunks(l1TokenAddresses, increment)) {
     const l2AddressesFromL1Temp = await promiseErrorMultiplier(
       getL2TokenAddressesFromL1(
         addrs,
@@ -166,7 +169,6 @@ export const generateTokenList = async (
   l2AddressesFromL2 = filteredL2AddressesFromL1;
 
   const intermediateTokenData = [];
-  const increment = l2ChainId === ChainId.Rari ? 100 : 500;
   for (const addrs of getChunks(l2AddressesFromL1, increment)) {
     const tokenDataTemp = await promiseErrorMultiplier(
       l2.multiCaller.getTokenData(
