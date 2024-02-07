@@ -30,7 +30,7 @@ import { constants as arbConstants } from '@arbitrum/sdk';
 import { getNetworkConfig } from './instantiate_bridge';
 import { getPrevList } from './store';
 import { getArgvs } from './options';
-import { BridgedUSDCContractAddressArb1 } from './constants';
+import { BridgedUSDCContractAddressArb1, ChainId } from './constants';
 import { getVersion } from './getVersion';
 
 export interface ArbificationOptions {
@@ -166,7 +166,8 @@ export const generateTokenList = async (
   l2AddressesFromL2 = filteredL2AddressesFromL1;
 
   const intermediateTokenData = [];
-  for (const addrs of getChunks(l2AddressesFromL1, 100)) {
+  const increment = l2ChainId === ChainId.Rari ? 100 : 500;
+  for (const addrs of getChunks(l2AddressesFromL1, increment)) {
     const tokenDataTemp = await promiseErrorMultiplier(
       l2.multiCaller.getTokenData(
         addrs.map((t) => t || constants.AddressZero),

@@ -10,6 +10,7 @@ import { ArbTokenList, GraphTokenResult } from './types';
 import path from 'path';
 import { tokenListIsValid } from './validateTokenList';
 import {
+  ChainId,
   l2ToL1GatewayAddresses,
   l2ToL1GatewayAddressesNova,
 } from './constants';
@@ -118,7 +119,7 @@ export const getL2GatewayAddressesFromL1Token = async (
 ): Promise<string[]> => {
   const iFace = L1GatewayRouter__factory.createInterface();
 
-  const INC = 500;
+  const INC = l2Network.chainID === ChainId.Rari ? 100 : 500;
   let index = 0;
   console.info(
     'getL2GatewayAddressesFromL1Token for',
