@@ -10,7 +10,6 @@ import { ArbTokenList, GraphTokenResult } from './types';
 import path from 'path';
 import { tokenListIsValid } from './validateTokenList';
 import {
-  ChainId,
   l2ToL1GatewayAddresses,
   l2ToL1GatewayAddressesNova,
 } from './constants';
