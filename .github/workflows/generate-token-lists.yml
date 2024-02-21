@@ -221,7 +221,9 @@ jobs:
             # Backup online list to {version}/{path} before deploying a new one
             lines=$(aws s3 ls s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path | wc -l)
             if (( $lines > 0 )); then
-              aws s3 cp s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path s3://${{ secrets.AWS_BUCKET }}/$additionalPath${{ steps.onlineVersion.outputs.onlineVersion }}/
+              backupCommand=aws s3 cp s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path s3://${{ secrets.AWS_BUCKET }}/$additionalPath
+              backupCommand+=${{ steps.onlineVersion.outputs.onlineVersion }}/
+              backupCommand
             fi
           done
 
