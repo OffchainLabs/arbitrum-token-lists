@@ -164,6 +164,12 @@ jobs:
             version: true
             command: yarn arbify --l2NetworkID 1380012617 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/1380012617_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/1380012617_arbed_uniswap_labs.json
 
+          - name: Muster Arbify Uniswap
+            paths:
+              - ArbTokenLists/4078_arbed_uniswap_labs.json
+            version: true
+            command: yarn arbify --l2NetworkID 4078 --ignorePreviousList --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/4078_arbed_uniswap_labs.json
+
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
       MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
