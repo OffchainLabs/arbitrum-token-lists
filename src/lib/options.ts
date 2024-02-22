@@ -24,11 +24,16 @@ enum Action {
   Full = 'full',
   Permit = 'permit',
   Update = 'update',
+  CrossChain = 'crosschain',
 }
 const options = {
   l2NetworkID: {
     type: 'number',
-    demandOption: true,
+    demandOption: false, // Only optional for cross-chain lists
+  },
+  crossChain: {
+    type: 'boolean',
+    demandOption: false,
   },
   tokenList: {
     type: 'string',
@@ -66,6 +71,17 @@ const yargsInstance = yargs(hideBin(process.argv))
     }
 
     if (!ignorePreviousList && prevArbifiedList) {
+      return true;
+    }
+
+    return false;
+  })
+  .check(({ l2NetworkID, crossChain }) => {
+    if (l2NetworkID && !crossChain) {
+      return true;
+    }
+
+    if (!l2NetworkID && crossChain) {
       return true;
     }
 

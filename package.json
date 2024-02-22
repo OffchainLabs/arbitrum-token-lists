@@ -12,6 +12,7 @@
     "update": "yarn ts-node src/main.ts update",
     "arbify": "yarn ts-node src/main.ts arbify",
     "permit": "yarn ts-node src/main.ts permit",
+    "crossChain": "yarn ts-node src/main.ts crosschain --crossChain",
     "fullList": "yarn ts-node src/main.ts full --tokenList full --ignorePreviousList",
     "allTokensList": "yarn ts-node src/main.ts alltokenslist --tokenList full",
     "updateNova": "yarn ts-node src/main.ts update --l2NetworkID 42170",
