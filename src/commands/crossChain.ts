@@ -215,7 +215,7 @@ export const handler = async (argvs: Args) => {
 
   const tokenList: ArbTokenList = {
     ...l1TokenList,
-    tokens: Array.from(tokensMap.values()),
+    tokens: Array.from(tokensMap.values()).filter((token) => token.extensions),
   };
 
   writeToFile(tokenList, argvs.newArbifiedList);
