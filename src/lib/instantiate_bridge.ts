@@ -14,6 +14,7 @@ export const getNetworkConfig = async () => {
     421614: 'https://sepolia-rollup.arbitrum.io/rpc',
     660279: 'https://xai-chain.net/rpc',
     1380012617: 'https://mainnet.rpc.rarichain.org/http',
+    4078: 'https://muster.alt.technology',
   }[networkID];
 
   if (!childRpc) {
