@@ -225,6 +225,7 @@ jobs:
               backupCommand="aws s3 cp s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path s3://${{ secrets.AWS_BUCKET }}/$additionalPath"
               backupCommand+=$(echo $pppp | awk -F'.json' '{print $1}') # Remove .json
               backupCommand+=${{ steps.onlineVersion.outputs.onlineVersion }}.json
+              echo $backupCommand
               $backupCommand
             fi
           done
