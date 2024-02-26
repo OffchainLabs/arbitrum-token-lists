@@ -221,11 +221,12 @@ jobs:
             # Backup online list to {version}/{path} before deploying a new one
             lines=$(aws s3 ls s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path | wc -l)
             if (( $lines > 0 )); then
-
+              debugVar=$(echo $pppp | awk -F'.json' '{print $1}') # Remove .json
               backupCommand="aws s3 cp s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path s3://${{ secrets.AWS_BUCKET }}/$additionalPath"
               backupCommand+=$(echo $pppp | awk -F'.json' '{print $1}') # Remove .json
               backupCommand+=${{ steps.onlineVersion.outputs.onlineVersion }}.json
               echo $backupCommand
+              echo $debugVar
               $backupCommand
             fi
           done
