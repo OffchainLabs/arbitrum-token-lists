@@ -168,7 +168,7 @@ jobs:
             paths:
               - ArbTokenLists/4078_arbed_uniswap_labs.json
             version: true
-            command: yarn arbify --l2NetworkID 4078 --ignorePreviousList --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/4078_arbed_uniswap_labs.json
+            command: yarn arbify --l2NetworkID 4078 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/4078_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/4078_arbed_uniswap_labs.json
 
           - name: Proof of Play Apex Arbify Uniswap
             paths:
