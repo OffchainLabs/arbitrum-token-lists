@@ -170,6 +170,12 @@ jobs:
             version: true
             command: yarn arbify --l2NetworkID 4078 --ignorePreviousList --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/4078_arbed_uniswap_labs.json
 
+          - name: Proof of Play Apex Arbify Uniswap
+            paths:
+              - ArbTokenLists/70700_arbed_uniswap_labs.json
+            version: true
+            command: yarn arbify --l2NetworkID 70700 --ignorePreviousList --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/70700_arbed_uniswap_labs.json
+
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
       MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'

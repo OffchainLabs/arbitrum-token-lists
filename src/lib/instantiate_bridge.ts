@@ -15,6 +15,7 @@ export const getNetworkConfig = async () => {
     660279: 'https://xai-chain.net/rpc',
     1380012617: 'https://mainnet.rpc.rarichain.org/http',
     4078: 'https://muster.alt.technology',
+    70700: 'https://rpc.apex.proofofplay.com',
   }[networkID];
 
   if (!childRpc) {
