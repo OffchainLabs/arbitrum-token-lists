@@ -70,7 +70,7 @@ describe('Token Lists', () => {
         const [localList, onlineList] = await Promise.all([
           runCommand(Action.Arbify, [
             '--l2NetworkID=42161',
-            '--tokenList=https://gateway.ipfs.io/ipns/tokens.uniswap.org',
+            '--tokenList=https://tokens.uniswap.org',
             '--prevArbifiedList=https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json',
             '--newArbifiedList=./src/ArbTokenLists/arbed_uniswap_labs.json',
           ]),
@@ -144,7 +144,7 @@ describe('Token Lists', () => {
         const [localList, onlineList] = await Promise.all([
           runCommand(Action.Arbify, [
             '--l2NetworkID=42170',
-            '--tokenList=https://gateway.ipfs.io/ipns/tokens.uniswap.org',
+            '--tokenList=https://tokens.uniswap.org',
             '--prevArbifiedList=https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs.json',
             '--newArbifiedList=./src/ArbTokenLists/42170_arbed_uniswap_labs.json',
           ]),
@@ -218,7 +218,7 @@ describe('Token Lists', () => {
         const [localList, onlineList] = await Promise.all([
           runCommand(Action.Arbify, [
             '--l2NetworkID=421614',
-            '--tokenList=https://gateway.ipfs.io/ipns/tokens.uniswap.org',
+            '--tokenList=https://tokens.uniswap.org',
             '--prevArbifiedList=https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_uniswap_labs.json',
             '--newArbifiedList=./src/ArbTokenLists/421614_arbed_uniswap_labs.json',
           ]),
