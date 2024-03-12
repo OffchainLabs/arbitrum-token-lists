@@ -119,25 +119,6 @@ jobs:
             version: true
             command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_coingecko.json --tokenList https://tokens.coingecko.com/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_coingecko.json
 
-          # ArbGoerli
-          - name: ArbGoerli Arbify CMC
-            paths:
-              - ArbTokenLists/421613_arbed_coinmarketcap.json
-            version: true
-            command: yarn arbify --l2NetworkID 421613 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coinmarketcap.json --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421613_arbed_coinmarketcap.json
-
-          - name: ArbGoerli Arbify CoinGecko
-            paths:
-              - ArbTokenLists/421613_arbed_coingecko.json
-            version: true
-            command: yarn arbify --l2NetworkID 421613 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coingecko.json  --tokenList https://tokens.coingecko.com/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421613_arbed_coingecko.json
-
-          - name: ArbGoerli FullList
-            paths:
-              - ArbTokenLists/421613_arbed_full.json
-            version: false
-            command: yarn fullList --l2NetworkID 421613 --newArbifiedList ./src/ArbTokenLists/421613_arbed_full.json --skipValidation
-
           # ArbSepolia
           - name: ArbSepolia Arbify Uniswap
             paths:
@@ -179,7 +160,6 @@ jobs:
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
       MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
-      GOERLI_RPC: 'https://goerli.infura.io/v3/${{ secrets.INFURA_KEY }}'
       SEPOLIA_RPC: 'https://sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
       ARB_ONE_RPC: 'https://arbitrum-mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
     steps:

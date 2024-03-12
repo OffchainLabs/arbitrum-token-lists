@@ -32,7 +32,6 @@ export const isNetwork = () => {
   return {
     isArbOne: argv.l2NetworkID === 42161,
     isNova: argv.l2NetworkID === 42170,
-    isGoerliRollup: argv.l2NetworkID === 421613,
     isSepoliaRollup: argv.l2NetworkID === 421614,
   };
 };
