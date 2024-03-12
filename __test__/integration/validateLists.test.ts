@@ -212,44 +212,6 @@ describe('Token Lists', () => {
       });
     });
 
-    describe('Arb Goerli', () => {
-      it('CMC', async () => {
-        expect.assertions(2);
-        const [localList, onlineList] = await Promise.all([
-          runCommand(Action.Arbify, [
-            '--l2NetworkID=421613',
-            '--tokenList=https://api.coinmarketcap.com/data-api/v3/uniswap/all.json',
-            '--prevArbifiedList=https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coinmarketcap.json',
-            '--newArbifiedList=./src/ArbTokenLists/421613_arbed_coinmarketcap.json',
-          ]),
-          fetch(
-            'https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coinmarketcap.json',
-          ).then((response) => response.json()),
-        ]);
-
-        testNoDuplicates(localList as ArbTokenList);
-        compareLists(localList, onlineList);
-      });
-
-      it('CoinGecko', async () => {
-        expect.assertions(2);
-        const [localList, onlineList] = await Promise.all([
-          runCommand(Action.Arbify, [
-            '--l2NetworkID=421613',
-            '--tokenList=https://tokens.coingecko.com/uniswap/all.json',
-            '--prevArbifiedList=https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coingecko.json',
-            '--newArbifiedList=./src/ArbTokenLists/421613_arbed_coingecko.json',
-          ]),
-          fetch(
-            'https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coingecko.json',
-          ).then((response) => response.json()),
-        ]);
-
-        testNoDuplicates(localList as ArbTokenList);
-        compareLists(localList, onlineList);
-      });
-    });
-
     describe('Arb Sepolia', () => {
       it('Uniswap', async () => {
         expect.assertions(2);

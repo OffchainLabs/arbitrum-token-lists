@@ -7,8 +7,6 @@ const apolloL2GatewaysRinkebyClient =
   'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-rinkeby';
 const apolloL2GatewaysClient =
   'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway';
-const apolloL2GatewaysGoerliRollupClient =
-  'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-nitro-goerli';
 const apolloL2GatewaysSepoliaClient =
   'https://api.thegraph.com/subgraphs/name/fionnachan/layer2-token-gateway-sepolia';
 
@@ -18,8 +16,6 @@ const chainIdToGraphClientUrl = (chainID: string) => {
       return apolloL2GatewaysClient;
     case '421611':
       return apolloL2GatewaysRinkebyClient;
-    case '421613':
-      return apolloL2GatewaysGoerliRollupClient;
     case '421614':
       return apolloL2GatewaysSepoliaClient;
     default:
