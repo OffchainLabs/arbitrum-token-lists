@@ -110,9 +110,11 @@ export enum ChainId {
   // L2 Testnets
   ArbitrumGoerli = 421613,
   ArbitrumSepolia = 421614,
-  // Orbit Testnets
+  // Orbit
   XaiTestnet = 47279324479,
   Xai = 660279,
   Rari = 1380012617,
   StylusTestnet = 23011913,
+  Muster = 4078,
+  ProofOfPlayApex = 70700,
 }

@@ -53,7 +53,6 @@ jobs:
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
       MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
-      GOERLI_RPC: 'https://goerli.infura.io/v3/${{ secrets.INFURA_KEY }}'
       SEPOLIA_RPC: 'https://sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
 
     steps:
@@ -72,7 +71,6 @@ jobs:
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
       MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
-      GOERLI_RPC: 'https://goerli.infura.io/v3/${{ secrets.INFURA_KEY }}'
       SEPOLIA_RPC: 'https://sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
 
     steps:

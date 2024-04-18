@@ -8,12 +8,13 @@ export const getNetworkConfig = async (networkID: number) => {
   const childRpc = {
     [ChainId.ArbitrumOne]: 'https://arb1.arbitrum.io/rpc',
     [ChainId.ArbitrumNova]: 'https://nova.arbitrum.io/rpc',
-    [ChainId.ArbitrumGoerli]: 'https://goerli-rollup.arbitrum.io/rpc',
     [ChainId.ArbitrumSepolia]: 'https://sepolia-rollup.arbitrum.io/rpc',
     [ChainId.Xai]: 'https://xai-chain.net/rpc',
     [ChainId.XaiTestnet]: 'https://testnet.xai-chain.net/rpc',
     [ChainId.Rari]: 'https://mainnet.rpc.rarichain.org/http',
     [ChainId.StylusTestnet]: 'https://stylus-testnet.arbitrum.io/rpc',
+    [ChainId.Muster]: 'https://muster.alt.technology',
+    [ChainId.ProofOfPlayApex]: 'https://rpc.apex.proofofplay.com',
   }[networkID];
 
   if (!childRpc) {
@@ -25,7 +26,6 @@ export const getNetworkConfig = async (networkID: number) => {
 
   const expectedEnv = (() => {
     if (childNetwork.partnerChainID === 1) return 'MAINNET_RPC';
-    else if (childNetwork.partnerChainID === 5) return 'GOERLI_RPC';
     else if (childNetwork.partnerChainID === 11155111) return 'SEPOLIA_RPC';
     else if (childNetwork.partnerChainID === 42161) return 'ARB_ONE_RPC';
     else if (childNetwork.partnerChainID === 421613) return 'ARB_SEPOLIA_RPC';

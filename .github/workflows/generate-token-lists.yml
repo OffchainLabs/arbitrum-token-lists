@@ -67,7 +67,7 @@ jobs:
               - ArbTokenLists/arbed_uniswap_labs.json
               - ArbTokenLists/arbed_uniswap_labs_default.json
             version: true
-            command: yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/arbed_uniswap_labs.json && cp ./src/ArbTokenLists/arbed_uniswap_labs.json ./src/ArbTokenLists/arbed_uniswap_labs_default.json
+            command: yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/arbed_uniswap_labs.json && cp ./src/ArbTokenLists/arbed_uniswap_labs.json ./src/ArbTokenLists/arbed_uniswap_labs_default.json
 
           - name: Arb1 Arbify Gemini
             paths:
@@ -99,7 +99,7 @@ jobs:
               - ArbTokenLists/42170_arbed_uniswap_labs.json
               - ArbTokenLists/42170_arbed_uniswap_labs_default.json
             version: true
-            command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs_default.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_uniswap_labs.json --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org && cp ./src/ArbTokenLists/42170_arbed_uniswap_labs.json ./src/ArbTokenLists/42170_arbed_uniswap_labs_default.json
+            command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs_default.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org && cp ./src/ArbTokenLists/42170_arbed_uniswap_labs.json ./src/ArbTokenLists/42170_arbed_uniswap_labs_default.json
 
           - name: ArbNova Arbify Gemini
             paths:
@@ -119,31 +119,12 @@ jobs:
             version: true
             command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_coingecko.json --tokenList https://tokens.coingecko.com/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_coingecko.json
 
-          # ArbGoerli
-          - name: ArbGoerli Arbify CMC
-            paths:
-              - ArbTokenLists/421613_arbed_coinmarketcap.json
-            version: true
-            command: yarn arbify --l2NetworkID 421613 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coinmarketcap.json --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421613_arbed_coinmarketcap.json
-
-          - name: ArbGoerli Arbify CoinGecko
-            paths:
-              - ArbTokenLists/421613_arbed_coingecko.json
-            version: true
-            command: yarn arbify --l2NetworkID 421613 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/421613_arbed_coingecko.json  --tokenList https://tokens.coingecko.com/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421613_arbed_coingecko.json
-
-          - name: ArbGoerli FullList
-            paths:
-              - ArbTokenLists/421613_arbed_full.json
-            version: false
-            command: yarn fullList --l2NetworkID 421613 --newArbifiedList ./src/ArbTokenLists/421613_arbed_full.json --skipValidation
-
           # ArbSepolia
           - name: ArbSepolia Arbify Uniswap
             paths:
               - ArbTokenLists/421614_arbed_uniswap_labs.json
             version: true
-            command: yarn arbify --l2NetworkID 421614 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_uniswap_labs.json --tokenList https://gateway.ipfs.io/ipns/tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/421614_arbed_uniswap_labs.json
+            command: yarn arbify --l2NetworkID 421614 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/421614_arbed_uniswap_labs.json
 
           - name: ArbSepolia Arbify CoinGecko
             paths:
@@ -164,10 +145,21 @@ jobs:
             version: true
             command: yarn arbify --l2NetworkID 1380012617 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/1380012617_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/1380012617_arbed_uniswap_labs.json
 
+          - name: Muster Arbify Uniswap
+            paths:
+              - ArbTokenLists/4078_arbed_uniswap_labs.json
+            version: true
+            command: yarn arbify --l2NetworkID 4078 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/4078_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/4078_arbed_uniswap_labs.json
+
+          - name: Proof of Play Apex Arbify Uniswap
+            paths:
+              - ArbTokenLists/70700_arbed_uniswap_labs.json
+            version: true
+            command: yarn arbify --l2NetworkID 70700 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/70700_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/70700_arbed_uniswap_labs.json
+
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
       MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
-      GOERLI_RPC: 'https://goerli.infura.io/v3/${{ secrets.INFURA_KEY }}'
       SEPOLIA_RPC: 'https://sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
       ARB_ONE_RPC: 'https://arbitrum-mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
     steps:
@@ -191,7 +183,7 @@ jobs:
         if: ${{ matrix.commands.version == true && matrix.commands.version == true }}
         run: |
           # Check if the list exists online (it will not exist on the first run)
-          if curl --silent --head --fail "https://tokenlist.arbitrum.io/ArbTokenLists/${{ matrix.commands.paths[0] }}"; then
+          if curl --silent --head --fail "https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }}"; then
             # Get the version from the online list (formatted to major.minor.patch)
             version=$(curl https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }} | jq .version | jq 'join(".")')
             if [[ -n $version ]]; then
@@ -221,7 +213,10 @@ jobs:
             # Backup online list to {version}/{path} before deploying a new one
             lines=$(aws s3 ls s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path | wc -l)
             if (( $lines > 0 )); then
-              aws s3 cp s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path s3://${{ secrets.AWS_BUCKET }}/$additionalPath${{ steps.onlineVersion.outputs.onlineVersion }}/
+              backupCommand="aws s3 cp s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path s3://${{ secrets.AWS_BUCKET }}/$additionalPath"
+              backupCommand+=$(echo $path | awk -F'.json' '{print $1}') # Remove .json
+              backupCommand+=/${{ steps.onlineVersion.outputs.onlineVersion }}.json
+              $backupCommand
             fi
           done
 
