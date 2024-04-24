@@ -8,6 +8,7 @@ export const tokenListIsValid = (tokenList: ArbTokenList | TokenList) => {
   const ajv = new Ajv();
   addFormats(ajv);
   schema.properties.tokens.minItems = 0;
+  schema.properties.tokens.maxItems = 15_000;
   const validate = ajv.compile(schema);
 
   const res = validate(tokenList);
