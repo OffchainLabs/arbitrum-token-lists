@@ -97,3 +97,24 @@ export const BridgedUSDCContractAddressArb1 =
   '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8';
 
 export const SEVEN_DAYS_IN_SECONDS = 7 * 24 * 60 * 60;
+
+export enum ChainId {
+  // L1
+  Ethereum = 1,
+  // L1 Testnets
+  Goerli = 5,
+  Sepolia = 11155111,
+  // L2
+  ArbitrumOne = 42161,
+  ArbitrumNova = 42170,
+  // L2 Testnets
+  ArbitrumGoerli = 421613,
+  ArbitrumSepolia = 421614,
+  // Orbit
+  XaiTestnet = 47279324479,
+  Xai = 660279,
+  Rari = 1380012617,
+  StylusTestnet = 23011913,
+  Muster = 4078,
+  ProofOfPlayApex = 70700,
+}

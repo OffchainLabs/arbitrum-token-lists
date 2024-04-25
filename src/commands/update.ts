@@ -8,16 +8,28 @@ export const command = Action.Update;
 
 export const describe = 'Update';
 
-export const handler = async (argvs: Args) => {
-  const includeOldDataFields = !!argvs.includeOldDataFields;
-  const { newList } = await updateArbifiedList(argvs.tokenList, {
-    includeOldDataFields,
-    ignorePreviousList: argvs.ignorePreviousList,
-    prevArbifiedList: argvs.prevArbifiedList,
+export const handler = async ({
+  ignorePreviousList,
+  includeOldDataFields,
+  includePermitTags,
+  l2NetworkID,
+  newArbifiedList,
+  prevArbifiedList,
+  tokenList: tokenListPath,
+}: Args) => {
+  if (!l2NetworkID) {
+    throw new Error('l2NetworkID is required');
+  }
+  const { newList } = await updateArbifiedList(tokenListPath, l2NetworkID, {
+    includeOldDataFields: !!includeOldDataFields,
+    ignorePreviousList,
+    prevArbifiedList,
   });
   let tokenList: ArbTokenList = newList;
 
-  if (argvs.includePermitTags) tokenList = await addPermitTags(tokenList);
-  writeToFile(tokenList, argvs.newArbifiedList);
+  if (includePermitTags) {
+    tokenList = await addPermitTags(tokenList, l2NetworkID);
+  }
+  writeToFile(tokenList, newArbifiedList);
   return tokenList;
 };

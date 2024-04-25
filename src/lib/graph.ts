@@ -49,9 +49,10 @@ const graphGatewayBlockNumField = (networkID: string | number) => {
 
 export const getTokens = async (
   tokenList: { addr: string; logo: string | undefined }[],
+  l2NetworkID: number,
   _networkID: string | number,
 ): Promise<Array<GraphTokenResult>> => {
-  const { isNova } = isNetwork();
+  const { isNova } = isNetwork(l2NetworkID);
   if (isNova) {
     console.warn('empty subgraph for nova');
     return [];

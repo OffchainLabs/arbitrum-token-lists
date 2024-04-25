@@ -1,20 +1,20 @@
 import { providers } from 'ethers';
 import { getL2Network, MultiCaller } from '@arbitrum/sdk';
-import { getArgvs } from './options';
+import { ChainId } from './constants';
 
-export const getNetworkConfig = async () => {
-  const argv = getArgvs();
-  const networkID = argv.l2NetworkID;
+export const getNetworkConfig = async (networkID: number) => {
   console.log('Using L2 networkID:', networkID);
 
   const childRpc = {
-    42161: 'https://arb1.arbitrum.io/rpc',
-    42170: 'https://nova.arbitrum.io/rpc',
-    421614: 'https://sepolia-rollup.arbitrum.io/rpc',
-    660279: 'https://xai-chain.net/rpc',
-    1380012617: 'https://mainnet.rpc.rarichain.org/http',
-    4078: 'https://muster.alt.technology',
-    70700: 'https://rpc.apex.proofofplay.com',
+    [ChainId.ArbitrumOne]: 'https://arb1.arbitrum.io/rpc',
+    [ChainId.ArbitrumNova]: 'https://nova.arbitrum.io/rpc',
+    [ChainId.ArbitrumSepolia]: 'https://sepolia-rollup.arbitrum.io/rpc',
+    [ChainId.Xai]: 'https://xai-chain.net/rpc',
+    [ChainId.XaiTestnet]: 'https://testnet.xai-chain.net/rpc',
+    [ChainId.Rari]: 'https://mainnet.rpc.rarichain.org/http',
+    [ChainId.StylusTestnet]: 'https://stylus-testnet.arbitrum.io/rpc',
+    [ChainId.Muster]: 'https://muster.alt.technology',
+    [ChainId.ProofOfPlayApex]: 'https://rpc.apex.proofofplay.com',
   }[networkID];
 
   if (!childRpc) {
@@ -28,6 +28,7 @@ export const getNetworkConfig = async () => {
     if (childNetwork.partnerChainID === 1) return 'MAINNET_RPC';
     else if (childNetwork.partnerChainID === 11155111) return 'SEPOLIA_RPC';
     else if (childNetwork.partnerChainID === 42161) return 'ARB_ONE_RPC';
+    else if (childNetwork.partnerChainID === 421613) return 'ARB_SEPOLIA_RPC';
     throw new Error('No parent chain RPC detected');
   })();
   const parentRpc = process.env[expectedEnv];

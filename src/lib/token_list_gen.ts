@@ -30,30 +30,32 @@ import { constants as arbConstants } from '@arbitrum/sdk';
 import { getNetworkConfig } from './instantiate_bridge';
 import { getPrevList } from './store';
 import { getArgvs } from './options';
-import { BridgedUSDCContractAddressArb1 } from './constants';
+import { BridgedUSDCContractAddressArb1, ChainId } from './constants';
 import { getVersion } from './getVersion';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
 }
 
+type GenerateTokenListOptions = {
+  /**
+   * Append all tokens from the original l1TokenList to the output list.
+   */
+  includeAllL1Tokens?: boolean;
+  /**
+   * Append all unbridged tokens from original l1TokenList to the output list.
+   */
+  includeUnbridgedL1Tokens?: boolean;
+  getAllTokensInNetwork?: boolean;
+  includeOldDataFields?: boolean;
+  sourceListURL?: string;
+  preserveListName?: boolean;
+};
 export const generateTokenList = async (
   l1TokenList: TokenList,
+  l2ChainId: number,
   prevArbTokenList?: ArbTokenList | null,
-  options?: {
-    /**
-     * Append all tokens from the original l1TokenList to the output list.
-     */
-    includeAllL1Tokens?: boolean;
-    /**
-     * Append all unbridged tokens from original l1TokenList to the output list.
-     */
-    includeUnbridgedL1Tokens?: boolean;
-    getAllTokensInNetwork?: boolean;
-    includeOldDataFields?: boolean;
-    sourceListURL?: string;
-    preserveListName?: boolean;
-  },
+  options?: GenerateTokenListOptions,
 ) => {
   if (options?.includeAllL1Tokens && options.includeUnbridgedL1Tokens) {
     throw new Error(
@@ -63,12 +65,14 @@ export const generateTokenList = async (
 
   const name = l1TokenList.name;
   const mainLogoUri = l1TokenList.logoURI;
+  const increment = l2ChainId === ChainId.Rari ? 100 : 500;
 
-  const { l1, l2 } = await promiseErrorMultiplier(getNetworkConfig(), () =>
-    getNetworkConfig(),
+  const { l1, l2 } = await promiseErrorMultiplier(
+    getNetworkConfig(l2ChainId),
+    () => getNetworkConfig(l2ChainId),
   );
 
-  const { isNova } = isNetwork();
+  const { isNova } = isNetwork(l2ChainId);
   if (options && options.getAllTokensInNetwork && isNova)
     throw new Error('Subgraph not enabled for nova');
 
@@ -89,6 +93,7 @@ export const generateTokenList = async (
             })),
             l2.multiCaller,
             l2.network,
+            increment,
           ),
           () =>
             getL1TokenAndL2Gateway(
@@ -98,6 +103,7 @@ export const generateTokenList = async (
               })),
               l2.multiCaller,
               l2.network,
+              increment,
             ),
         );
 
@@ -108,7 +114,7 @@ export const generateTokenList = async (
 
   const intermediatel2AddressesFromL1 = [];
   const intermediatel2AddressesFromL2 = [];
-  for (const addrs of getChunks(l1TokenAddresses)) {
+  for (const addrs of getChunks(l1TokenAddresses, increment)) {
     const l2AddressesFromL1Temp = await promiseErrorMultiplier(
       getL2TokenAddressesFromL1(
         addrs,
@@ -152,7 +158,7 @@ export const generateTokenList = async (
   const filteredL2AddressesFromL2: string[] = [];
   tokens.forEach((t, i) => {
     const l2AddressFromL1 = l2AddressesFromL1[i];
-    if (l2AddressFromL1 && l2AddressesFromL1[i] === l2AddressesFromL2[i]) {
+    if (l2AddressFromL1 && l2AddressFromL1 === l2AddressesFromL2[i]) {
       filteredTokens.push(t);
       filteredL2AddressesFromL1.push(l2AddressFromL1);
       filteredL2AddressesFromL2.push(l2AddressFromL1);
@@ -163,7 +169,7 @@ export const generateTokenList = async (
   l2AddressesFromL2 = filteredL2AddressesFromL1;
 
   const intermediateTokenData = [];
-  for (const addrs of getChunks(l2AddressesFromL1, 100)) {
+  for (const addrs of getChunks(l2AddressesFromL1, increment)) {
     const tokenDataTemp = await promiseErrorMultiplier(
       l2.multiCaller.getTokenData(
         addrs.map((t) => t || constants.AddressZero),
@@ -192,10 +198,11 @@ export const generateTokenList = async (
       (t): t is typeof t & { l2Address: string } =>
         t.l2Address != undefined && t.l2Address !== constants.AddressZero,
     )
-    .map((token) => {
+    .map(async (token) => {
       const l2GatewayAddress =
         token.token.joinTableEntry[0].gateway.gatewayAddr;
-      const l1GatewayAddress = getL1GatewayAddress(l2GatewayAddress) ?? 'N/A';
+      const l1GatewayAddress =
+        (await getL1GatewayAddress(l2GatewayAddress, l2ChainId)) ?? 'N/A';
 
       let { name: _name, decimals, symbol: _symbol } = token.tokenDatum;
 
@@ -286,7 +293,7 @@ export const generateTokenList = async (
   console.log(`List has ${arbifiedTokenList.length} bridged tokens`);
 
   const allOtherTokens = l1TokenList.tokens
-    .filter((l1TokenInfo) => l1TokenInfo.chainId !== l2.network.chainID)
+    .filter((l1TokenInfo) => l1TokenInfo.chainId === l2.network.partnerChainID)
     .map((l1TokenInfo) => {
       return {
         chainId: +l1TokenInfo.chainId,
@@ -357,39 +364,39 @@ export const generateTokenList = async (
 
 export const arbifyL1List = async (
   pathOrUrl: string,
+  l1TokenList: TokenList,
+  l2ChainId: number,
   {
     includeOldDataFields,
     ignorePreviousList,
     prevArbifiedList,
-  }: {
-    includeOldDataFields: boolean;
+    ...options
+  }: GenerateTokenListOptions & {
     ignorePreviousList: boolean;
     prevArbifiedList: string | undefined;
   },
-): Promise<{
-  newList: ArbTokenList;
-  l1ListName: string;
-}> => {
-  const l1TokenList = await getTokenListObj(pathOrUrl);
-
-  removeInvalidTokensFromList(l1TokenList);
+): Promise<ArbTokenList> => {
   const prevArbTokenList = ignorePreviousList
     ? null
     : await getPrevList(prevArbifiedList);
-  const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
-    includeAllL1Tokens: false,
-    includeOldDataFields,
-    sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl : undefined,
-  });
+  const newList = await generateTokenList(
+    l1TokenList,
+    l2ChainId,
+    prevArbTokenList,
+    {
+      includeAllL1Tokens: false,
+      includeOldDataFields,
+      sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl : undefined,
+      ...options,
+    },
+  );
 
-  return {
-    newList,
-    l1ListName: l1TokenList.name,
-  };
+  return newList;
 };
 
 export const updateArbifiedList = async (
   pathOrUrl: string,
+  l2ChainId: number,
   {
     includeOldDataFields,
     ignorePreviousList,
@@ -406,19 +413,24 @@ export const updateArbifiedList = async (
     ? null
     : await getPrevList(prevArbifiedList);
 
-  const newList = await generateTokenList(arbTokenList, prevArbTokenList, {
-    includeAllL1Tokens: true,
-    sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl : undefined,
-    includeOldDataFields,
-    preserveListName: true,
-  });
+  const newList = await generateTokenList(
+    arbTokenList,
+    l2ChainId,
+    prevArbTokenList,
+    {
+      includeAllL1Tokens: true,
+      sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl : undefined,
+      includeOldDataFields,
+      preserveListName: true,
+    },
+  );
 
   return {
     newList,
   };
 };
 
-export const generateFullList = async () => {
+export const generateFullList = async (l2ChainId: number) => {
   const mockList: TokenList = {
     name: 'Full',
     logoURI: 'ipfs://QmTvWJ4kmzq9koK74WJQ594ov8Es1HHurHZmMmhU8VY68y',
@@ -430,13 +442,13 @@ export const generateFullList = async () => {
     },
     tokens: [],
   };
-  const tokenData = await generateTokenList(mockList, undefined, {
+  const tokenData = await generateTokenList(mockList, l2ChainId, undefined, {
     getAllTokensInNetwork: true,
   });
 
   return arbListtoEtherscanList(tokenData);
 };
-export const generateFullListFormatted = async () => {
+export const generateFullListFormatted = async (l2ChainId: number) => {
   const mockList: TokenList = {
     name: 'Full',
     logoURI: 'ipfs://QmTvWJ4kmzq9koK74WJQ594ov8Es1HHurHZmMmhU8VY68y',
@@ -448,7 +460,7 @@ export const generateFullListFormatted = async () => {
     },
     tokens: [],
   };
-  const allTokenList = await generateTokenList(mockList, undefined, {
+  const allTokenList = await generateTokenList(mockList, l2ChainId, undefined, {
     getAllTokensInNetwork: true,
   });
   // log for human-readable check

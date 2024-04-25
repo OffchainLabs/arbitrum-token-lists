@@ -13,7 +13,6 @@ import {
   l2ToL1GatewayAddresses,
   l2ToL1GatewayAddressesNova,
 } from './constants';
-import { getArgvs } from './options';
 
 // On failed request, retry with exponential back-off
 axiosRetry(axios, {
@@ -27,12 +26,12 @@ axiosRetry(axios, {
   },
 });
 
-export const isNetwork = () => {
-  const argv = getArgvs();
+export const isNetwork = (l2NetworkID: number) => {
   return {
-    isArbOne: argv.l2NetworkID === 42161,
-    isNova: argv.l2NetworkID === 42170,
-    isSepoliaRollup: argv.l2NetworkID === 421614,
+    isArbOne: l2NetworkID === 42161,
+    isNova: l2NetworkID === 42170,
+    isGoerliRollup: l2NetworkID === 421613,
+    isSepoliaRollup: l2NetworkID === 421614,
   };
 };
 
@@ -63,11 +62,13 @@ export const getL1TokenAndL2Gateway = async (
   tokenList: { addr: string; logo: string | undefined }[],
   l2Multicaller: MultiCaller,
   l2Network: L2Network,
+  increment = 500,
 ): Promise<Array<GraphTokenResult>> => {
   const routerData = await getL2GatewayAddressesFromL1Token(
     tokenList.map((curr) => curr.addr),
     l2Multicaller,
     l2Network,
+    increment,
   );
 
   return tokenList.map((curr, i) => ({
@@ -98,8 +99,11 @@ export const promiseErrorMultiplier = <T>(
   });
 };
 
-export const getL1GatewayAddress = (l2GatewayAddress: string) => {
-  const { isNova } = isNetwork();
+export const getL1GatewayAddress = (
+  l2GatewayAddress: string,
+  l2NetworkID: number,
+) => {
+  const { isNova } = isNetwork(l2NetworkID);
   const l2Gateway = isNova
     ? l2ToL1GatewayAddressesNova[l2GatewayAddress.toLowerCase()]
     : l2ToL1GatewayAddresses[l2GatewayAddress.toLowerCase()];
@@ -113,10 +117,10 @@ export const getL2GatewayAddressesFromL1Token = async (
   l1TokenAddresses: string[],
   l2Multicaller: MultiCaller,
   l2Network: L2Network,
+  increment = 500,
 ): Promise<string[]> => {
   const iFace = L1GatewayRouter__factory.createInterface();
 
-  const INC = 500;
   let index = 0;
   console.info(
     'getL2GatewayAddressesFromL1Token for',
@@ -131,10 +135,13 @@ export const getL2GatewayAddressesFromL1Token = async (
       'Getting tokens',
       index,
       'through',
-      Math.min(index + INC, l1TokenAddresses.length),
+      Math.min(index + increment, l1TokenAddresses.length),
     );
 
-    const l1TokenAddressesSlice = l1TokenAddresses.slice(index, index + INC);
+    const l1TokenAddressesSlice = l1TokenAddresses.slice(
+      index,
+      index + increment,
+    );
     const result = await l2Multicaller.multiCall(
       l1TokenAddressesSlice.map((addr) => ({
         encoder: () => iFace.encodeFunctionData('getGateway', [addr]),
@@ -144,13 +151,14 @@ export const getL2GatewayAddressesFromL1Token = async (
       })),
     );
     gateways = gateways.concat(result);
-    index += INC;
+    index += increment;
   }
 
   for (const curr of gateways) {
     if (typeof curr === 'undefined') throw new Error('undefined gateway!');
   }
 
+  console.log('OK');
   return gateways as string[];
 };
 
