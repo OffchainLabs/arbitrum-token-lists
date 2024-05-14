@@ -16,6 +16,9 @@ export const getNetworkConfig = async () => {
     4078: 'https://muster.alt.technology',
     70700: 'https://rpc.apex.proofofplay.com',
     12324: 'https://rpc-mainnet.l3x.com',
+    37714555429: 'https://testnet-v2.xai-chain.net/rpc',
+    53457: 'https://dodochain-testnet.alt.technology',
+    12325: 'https://rpc-testnet.l3x.com',
   }[networkID];
 
   if (!childRpc) {
@@ -29,6 +32,7 @@ export const getNetworkConfig = async () => {
     if (childNetwork.partnerChainID === 1) return 'MAINNET_RPC';
     else if (childNetwork.partnerChainID === 11155111) return 'SEPOLIA_RPC';
     else if (childNetwork.partnerChainID === 42161) return 'ARB_ONE_RPC';
+    else if (childNetwork.partnerChainID === 421614) return 'ARB_SEPOLIA_RPC';
     throw new Error('No parent chain RPC detected');
   })();
   const parentRpc = process.env[expectedEnv];
