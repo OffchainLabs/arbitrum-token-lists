@@ -16,6 +16,9 @@ export const getNetworkConfig = async () => {
     4078: 'https://muster.alt.technology',
     70700: 'https://rpc.apex.proofofplay.com',
     12324: 'https://rpc-mainnet.l3x.com',
+    37714555429: 'https://testnet-v2.xai-chain.net/rpc',
+    53457: 'https://dodochain-testnet.alt.technology',
+    12325: 'https://rpc-testnet.l3x.com',
   }[networkID];
 
   if (!childRpc) {
