@@ -187,6 +187,7 @@ jobs:
       MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
       SEPOLIA_RPC: 'https://sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
       ARB_ONE_RPC: 'https://arbitrum-mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      ARB_SEPOLIA_RPC: 'https://arbitrum-sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
     steps:
       - uses: actions/checkout@v3
 

@@ -32,6 +32,7 @@ export const getNetworkConfig = async () => {
     if (childNetwork.partnerChainID === 1) return 'MAINNET_RPC';
     else if (childNetwork.partnerChainID === 11155111) return 'SEPOLIA_RPC';
     else if (childNetwork.partnerChainID === 42161) return 'ARB_ONE_RPC';
+    else if (childNetwork.partnerChainID === 421614) return 'ARB_SEPOLIA_RPC';
     throw new Error('No parent chain RPC detected');
   })();
   const parentRpc = process.env[expectedEnv];

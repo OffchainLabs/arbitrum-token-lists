@@ -42,7 +42,6 @@ const xai: L2Network = {
   depositTimeout: 1800000,
   blockTime: arbConstants.ARB_MINIMUM_BLOCK_TIME_IN_SECONDS,
 };
-
 const rari: L2Network = {
   chainID: 1380012617,
   confirmPeriodBlocks: 45818,
@@ -81,7 +80,6 @@ const rari: L2Network = {
   depositTimeout: 1800000,
   blockTime: arbConstants.ARB_MINIMUM_BLOCK_TIME_IN_SECONDS,
 };
-
 const muster: L2Network = {
   chainID: 4078,
   confirmPeriodBlocks: 7200,
@@ -236,7 +234,6 @@ const xaiTestnet: L2Network = {
   depositTimeout: 1800000,
   blockTime: arbConstants.ARB_MINIMUM_BLOCK_TIME_IN_SECONDS,
 };
-
 const dodochainTestnet: L2Network = {
   chainID: 53457,
   confirmPeriodBlocks: 150,
@@ -275,7 +272,6 @@ const dodochainTestnet: L2Network = {
   depositTimeout: 1800000,
   blockTime: arbConstants.ARB_MINIMUM_BLOCK_TIME_IN_SECONDS,
 };
-
 const l3xTestnet: L2Network = {
   chainID: 12325,
   confirmPeriodBlocks: 150,
