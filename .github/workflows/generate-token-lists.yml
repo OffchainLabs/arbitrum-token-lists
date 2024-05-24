@@ -69,11 +69,11 @@ jobs:
             version: true
             command: yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/arbed_uniswap_labs.json && cp ./src/ArbTokenLists/arbed_uniswap_labs.json ./src/ArbTokenLists/arbed_uniswap_labs_default.json
 
-          - name: Arb1 Arbify Gemini
-            paths:
-              - ArbTokenLists/arbed_gemini_token_list.json
-            version: true
-            command: yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_gemini_token_list.json --tokenList https://www.gemini.com/uniswap/manifest.json --newArbifiedList ./src/ArbTokenLists/arbed_gemini_token_list.json
+          # - name: Arb1 Arbify Gemini
+          #   paths:
+          #     - ArbTokenLists/arbed_gemini_token_list.json
+          #   version: true
+          #   command: yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_gemini_token_list.json --tokenList https://www.gemini.com/uniswap/manifest.json --newArbifiedList ./src/ArbTokenLists/arbed_gemini_token_list.json
 
           - name: Arb1 Arbify CMC
             paths:
@@ -101,11 +101,11 @@ jobs:
             version: true
             command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs_default.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org && cp ./src/ArbTokenLists/42170_arbed_uniswap_labs.json ./src/ArbTokenLists/42170_arbed_uniswap_labs_default.json
 
-          - name: ArbNova Arbify Gemini
-            paths:
-              - ArbTokenLists/42170_arbed_gemini_token_list.json
-            version: true
-            command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_gemini_token_list.json  --tokenList https://www.gemini.com/uniswap/manifest.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_gemini_token_list.json
+          # - name: ArbNova Arbify Gemini
+          #   paths:
+          #     - ArbTokenLists/42170_arbed_gemini_token_list.json
+          #   version: true
+          #   command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_gemini_token_list.json  --tokenList https://www.gemini.com/uniswap/manifest.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_gemini_token_list.json
 
           - name: ArbNova Arbify CMC
             paths:
