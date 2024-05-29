@@ -1,0 +1,36 @@
+{
+  "name": "Arbitrum One Native Token List",
+  "timestamp": "2024-05-29T09:32:20.831Z",
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "tokens": [
+    {
+      "chainId": 42161,
+      "address": "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
+      "name": "USD Coin",
+      "symbol": "USDC",
+      "decimals": 6,
+      "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/arbitrum/assets/0xaf88d065e77c8cC2239327C5EDb3A432268e5831/logo.png"
+    },
+    {
+      "chainId": 42161,
+      "address": "0x2416092f143378750bb29b79ed961ab195cceea5",
+      "name": "Renzo Restaked ETH",
+      "symbol": "ezETH",
+      "decimals": 18,
+      "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xbf5495Efe5DB9ce00f80364C8B423567e58d2110/logo.png"
+    },
+    {
+      "chainId": 42161,
+      "address": "0x4186BFC76E2E237523CBC30FD220FE055156b41F",
+      "name": "KelpDao Restaked ETH",
+      "symbol": "rsETH",
+      "decimals": 18,
+      "logoURI": "https://assets.coingecko.com/coins/images/33800/large/Icon___Dark.png"
+    }
+  ],
+  "logoURI": "https://arbitrum.foundation/logo.png"
+}
