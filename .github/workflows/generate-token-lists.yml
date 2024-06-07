@@ -194,33 +194,18 @@ jobs:
               - ArbTokenLists/37714555429_arbed_uniswap_labs.json
             version: true
             command: yarn arbify --l2NetworkID 37714555429 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/37714555429_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/37714555429_arbed_uniswap_labs.json
-          # - name: Xai Testnet Arbify Uniswap (L2 Native List)
-          #   paths:
-          #     - ArbTokenLists/37714555429_arbed_native_list.json
-          #   version: true
-          #   command: yarn arbify --l2NetworkID 37714555429 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/37714555429_arbed_native_list.json --tokenList ./src/Assets/42161_arbitrum_native_token_list.json --newArbifiedList ./src/ArbTokenLists/37714555429_arbed_native_list.json
 
           - name: Dodochain Testnet Arbify Uniswap
             paths:
               - ArbTokenLists/53457_arbed_uniswap_labs.json
             version: true
             command: yarn arbify --l2NetworkID 53457 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/53457_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/53457_arbed_uniswap_labs.json
-          # - name: Dodochain Testnet Arbify Uniswap (L2 Native List)
-          #   paths:
-          #     - ArbTokenLists/53457_arbed_native_list.json
-          #   version: true
-          #   command: yarn arbify --l2NetworkID 53457 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/53457_arbed_native_list.json --tokenList ./src/Assets/42161_arbitrum_native_token_list.json --newArbifiedList ./src/ArbTokenLists/53457_arbed_native_list.json
 
           - name: L3X Testnet Arbify Uniswap
             paths:
               - ArbTokenLists/12325_arbed_uniswap_labs.json
             version: true
             command: yarn arbify --l2NetworkID 12325 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/12325_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/12325_arbed_uniswap_labs.json
-          # - name: L3X Testnet Arbify Uniswap (L2 Native List)
-          #   paths:
-          #     - ArbTokenLists/12325_arbed_native_list.json
-          #   version: true
-          #   command: yarn arbify --l2NetworkID 12325 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/12325_arbed_native_list.json --tokenList ./src/Assets/42161_arbitrum_native_token_list.json --newArbifiedList ./src/ArbTokenLists/12325_arbed_native_list.json
 
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
