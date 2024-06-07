@@ -142,7 +142,7 @@ jobs:
             paths:
               - ArbTokenLists/660279_arbed_native_list.json
             version: true
-            command: yarn arbify --l2NetworkID 660279 --prevArbifiedList https://tokenlist.arbitrum.io/660279_arbed_native_list.json --tokenList ./src/Assets/42161_arbitrum_native_token_list.json --newArbifiedList ./src/ArbTokenLists/660279_arbed_native_list.json
+            command: yarn arbify --l2NetworkID 660279 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/660279_arbed_native_list.json --tokenList ./src/Assets/42161_arbitrum_native_token_list.json --newArbifiedList ./src/ArbTokenLists/660279_arbed_native_list.json
 
           - name: Rari Arbify Uniswap
             paths:
@@ -164,7 +164,7 @@ jobs:
             paths:
               - ArbTokenLists/4078_arbed_native_list.json
             version: true
-            command: yarn arbify --l2NetworkID 4078 --prevArbifiedList https://tokenlist.arbitrum.io/4078_arbed_native_list.json --tokenList ./src/Assets/42161_arbitrum_native_token_list.json --newArbifiedList ./src/ArbTokenLists/4078_arbed_native_list.json
+            command: yarn arbify --l2NetworkID 4078 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/4078_arbed_native_list.json --tokenList ./src/Assets/42161_arbitrum_native_token_list.json --newArbifiedList ./src/ArbTokenLists/4078_arbed_native_list.json
 
           - name: Proof of Play Apex Arbify Uniswap
             paths:
