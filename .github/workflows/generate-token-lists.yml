@@ -138,7 +138,7 @@ jobs:
               - ArbTokenLists/660279_arbed_uniswap_labs.json
             version: true
             command: yarn arbify --l2NetworkID 660279 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/660279_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/660279_arbed_uniswap_labs.json
-          - name: Xai Arbify Uniswap (L2 Native List)
+          - name: Xai Arbify L2 native list
             paths:
               - ArbTokenLists/660279_arbed_native_list.json
             version: true
@@ -149,7 +149,7 @@ jobs:
               - ArbTokenLists/1380012617_arbed_uniswap_labs.json
             version: true
             command: yarn arbify --l2NetworkID 1380012617 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/1380012617_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/1380012617_arbed_uniswap_labs.json
-          - name: Rari Arbify Uniswap (L2 Native List)
+          - name: Rari Arbify L2 native list
             paths:
               - ArbTokenLists/1380012617_arbed_native_list.json
             version: true
@@ -160,7 +160,7 @@ jobs:
               - ArbTokenLists/4078_arbed_uniswap_labs.json
             version: true
             command: yarn arbify --l2NetworkID 4078 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/4078_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/4078_arbed_uniswap_labs.json
-          - name: Muster Arbify Uniswap (L2 Native List)
+          - name: Muster Arbify L2 native list
             paths:
               - ArbTokenLists/4078_arbed_native_list.json
             version: true
@@ -171,7 +171,7 @@ jobs:
               - ArbTokenLists/70700_arbed_uniswap_labs.json
             version: true
             command: yarn arbify --l2NetworkID 70700 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/70700_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/70700_arbed_uniswap_labs.json
-          - name: Proof of Play Apex Arbify Uniswap (L2 Native List)
+          - name: Proof of Play Apex Arbify L2 native list
             paths:
               - ArbTokenLists/70700_arbed_native_list.json
             version: true
@@ -182,7 +182,7 @@ jobs:
               - ArbTokenLists/12324_arbed_uniswap_labs.json
             version: true
             command: yarn arbify --l2NetworkID 12324 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/12324_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/12324_arbed_uniswap_labs.json
-          - name: L3X Arbify Uniswap (L2 Native List)
+          - name: L3X Arbify L2 native list
             paths:
               - ArbTokenLists/12324_arbed_native_list.json
             version: true
