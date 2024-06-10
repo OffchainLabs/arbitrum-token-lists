@@ -3,19 +3,20 @@ import { isNetwork } from './utils';
 import { GraphTokenResult, GraphTokensResult } from './types';
 import { excludeList } from './constants';
 
-const apolloL2GatewaysRinkebyClient =
-  'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-rinkeby';
-const apolloL2GatewaysClient =
-  'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway';
-const apolloL2GatewaysSepoliaClient =
-  'https://api.thegraph.com/subgraphs/name/fionnachan/layer2-token-gateway-sepolia';
+if (!process.env.L2_GATEWAY_SUBGRAPH_URL) {
+  throw new Error('process.env.L2_GATEWAY_SUBGRAPH_URL is not defined');
+}
+const apolloL2GatewaysClient = process.env.L2_GATEWAY_SUBGRAPH_URL;
+
+if (!process.env.L2_GATEWAY_SEPOLIA_URL) {
+  throw new Error('process.env.L2_GATEWAY_SEPOLIA_URL is not defined');
+}
+const apolloL2GatewaysSepoliaClient = process.env.L2_GATEWAY_SEPOLIA_URL;
 
 const chainIdToGraphClientUrl = (chainID: string) => {
   switch (chainID) {
     case '42161':
       return apolloL2GatewaysClient;
-    case '421611':
-      return apolloL2GatewaysRinkebyClient;
     case '421614':
       return apolloL2GatewaysSepoliaClient;
     default:
