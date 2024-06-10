@@ -8,10 +8,11 @@ if (!process.env.L2_GATEWAY_SUBGRAPH_URL) {
 }
 const apolloL2GatewaysClient = process.env.L2_GATEWAY_SUBGRAPH_URL;
 
-if (!process.env.L2_GATEWAY_SEPOLIA_URL) {
-  throw new Error('process.env.L2_GATEWAY_SEPOLIA_URL is not defined');
+if (!process.env.L2_GATEWAY_SEPOLIA_SUBGRAPH_URL) {
+  throw new Error('process.env.L2_GATEWAY_SEPOLIA_SUBGRAPH_URL is not defined');
 }
-const apolloL2GatewaysSepoliaClient = process.env.L2_GATEWAY_SEPOLIA_URL;
+const apolloL2GatewaysSepoliaClient =
+  process.env.L2_GATEWAY_SEPOLIA_SUBGRAPH_URL;
 
 const chainIdToGraphClientUrl = (chainID: string) => {
   switch (chainID) {
