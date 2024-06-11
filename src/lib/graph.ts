@@ -3,19 +3,21 @@ import { isNetwork } from './utils';
 import { GraphTokenResult, GraphTokensResult } from './types';
 import { excludeList } from './constants';
 
-const apolloL2GatewaysRinkebyClient =
-  'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway-rinkeby';
-const apolloL2GatewaysClient =
-  'https://api.thegraph.com/subgraphs/name/fredlacs/layer2-token-gateway';
+if (!process.env.L2_GATEWAY_SUBGRAPH_URL) {
+  throw new Error('process.env.L2_GATEWAY_SUBGRAPH_URL is not defined');
+}
+const apolloL2GatewaysClient = process.env.L2_GATEWAY_SUBGRAPH_URL;
+
+if (!process.env.L2_GATEWAY_SEPOLIA_SUBGRAPH_URL) {
+  throw new Error('process.env.L2_GATEWAY_SEPOLIA_SUBGRAPH_URL is not defined');
+}
 const apolloL2GatewaysSepoliaClient =
-  'https://api.thegraph.com/subgraphs/name/fionnachan/layer2-token-gateway-sepolia';
+  process.env.L2_GATEWAY_SEPOLIA_SUBGRAPH_URL;
 
 const chainIdToGraphClientUrl = (chainID: string) => {
   switch (chainID) {
     case '42161':
       return apolloL2GatewaysClient;
-    case '421611':
-      return apolloL2GatewaysRinkebyClient;
     case '421614':
       return apolloL2GatewaysSepoliaClient;
     default:
@@ -40,11 +42,6 @@ const isGraphTokenResult = (obj: GraphTokenResult) => {
   if (!joinTableEntry.gateway.gatewayAddr) {
     throw new Error('Graph result: could not get gateway address');
   }
-};
-
-/**  421613 subgraph uses a different field name */
-const graphGatewayBlockNumField = (networkID: string | number) => {
-  return +networkID === 421613 ? 'l2BlockNum' : 'blockNum';
 };
 
 export const getTokens = async (
@@ -74,7 +71,6 @@ export const getTokens = async (
   const formattedAddresses = tokenList
     .map((token) => `"${token.addr}"`.toLowerCase())
     .join(',');
-  const blockNumber = graphGatewayBlockNumField(_networkID);
   const query = gql`
   {
     tokens(first: 500, skip: 0, where:{
@@ -83,11 +79,11 @@ export const getTokens = async (
       l1TokenAddr: id
       joinTableEntry: gateway(
         first: 1
-        orderBy: ${blockNumber}
+        orderBy: l2BlockNum
         orderDirection: desc
       ) {
         id
-        ${blockNumber}
+        l2BlockNum
         token {
           tokenAddr: id
         }
@@ -113,18 +109,17 @@ export const getAllTokens = async (
   const networkID =
     typeof _networkID === 'number' ? _networkID.toString() : _networkID;
   const clientUrl = chainIdToGraphClientUrl(networkID);
-  const blockNumber = graphGatewayBlockNumField(_networkID);
   const query = gql`
     {
       tokens(first: 500, skip: 0) {
         l1TokenAddr: id
         joinTableEntry: gateway(
           first: 1
-          orderBy: ${blockNumber}
+          orderBy: l2BlockNum
           orderDirection: desc
         ) {
           id
-          ${blockNumber}
+          l2BlockNum
           token {
             tokenAddr: id
           }

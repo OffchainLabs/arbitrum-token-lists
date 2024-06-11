@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { yargsInstance } from './lib/options';
-import * as dotenv from 'dotenv';
-import dotenvExpand from 'dotenv-expand';
+
+import './init';
 import {
   command as commandUpdate,
   describe as describeUpdate,
@@ -22,10 +22,6 @@ import {
   describe as describeAllTokensList,
   handler as handlerAllTokensList,
 } from './commands/allTokensList';
-import './customNetworks';
-
-const myEnv = dotenv.config();
-dotenvExpand.expand(myEnv);
 
 const update = yargsInstance.command(
   commandUpdate,
