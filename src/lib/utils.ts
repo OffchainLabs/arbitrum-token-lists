@@ -60,7 +60,7 @@ export const listNameToArbifiedListName = (
     fileName = prefix + fileName;
   }
 
-  const baseName = fileName.split(' ').slice(0, 2).join(' ').slice(0, 20);
+  const baseName = fileName.split(' ').slice(0, 3).join(' ').slice(0, 20);
   return `${baseName} ${childChainId}`;
 };
 
