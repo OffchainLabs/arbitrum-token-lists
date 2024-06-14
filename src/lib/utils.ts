@@ -49,14 +49,19 @@ for (const address of Object.keys(logoUris)) {
   logoUris[address.toLowerCase()] = logoUris[address];
 }
 
-export const listNameToArbifiedListName = (name: string) => {
+export const listNameToArbifiedListName = (
+  name: string,
+  childChainId: number,
+) => {
   const prefix = 'Arbed ';
 
   let fileName = sanitizeNameString(name);
   if (!fileName.startsWith(prefix)) {
     fileName = prefix + fileName;
   }
-  return fileName.split(' ').slice(0, 2).join(' ').slice(0, 20);
+
+  const baseName = fileName.split(' ').slice(0, 2).join(' ').slice(0, 20);
+  return `${baseName} ${childChainId}`;
 };
 
 export const getL1TokenAndL2Gateway = async (
