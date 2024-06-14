@@ -324,7 +324,7 @@ export const generateTokenList = async (
     name:
       options && options.preserveListName
         ? name
-        : listNameToArbifiedListName(name),
+        : listNameToArbifiedListName(name, l2.network.chainID),
     timestamp: new Date().toISOString(),
     version,
     tokens: arbifiedTokenList,
