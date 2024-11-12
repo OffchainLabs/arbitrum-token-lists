@@ -124,7 +124,7 @@ jobs:
             paths:
               - ArbTokenLists/4162_arbed_uniswap_labs.json
             version: true
-            command: yarn arbify --l2NetworkID 4162 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/4162_arbed_uniswap_labs_default.json --newArbifiedList ./src/ArbTokenLists/4162_arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org
+            command: yarn arbify --l2NetworkID 4162 --ignorePreviousList --newArbifiedList ./src/ArbTokenLists/4162_arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org
 
           # ArbSepolia
           - name: ArbSepolia Arbify Uniswap
