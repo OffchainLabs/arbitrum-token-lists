@@ -194,6 +194,44 @@ const l3x: L2Network = {
   depositTimeout: 1800000,
   blockTime: arbConstants.ARB_MINIMUM_BLOCK_TIME_IN_SECONDS,
 };
+const SXNetwork: L2Network = {
+  chainID: 4162,
+  confirmPeriodBlocks: 45818,
+  ethBridge: {
+    bridge: '0xa104C0426e95a5538e89131DbB4163d230C35f86',
+    inbox: '0xEa83E8907C89Bc0D9517632f0ba081972E328631',
+    outbox: '0xB360b2f57c645E847148d7C479b7468AbF6F707d',
+    rollup: '0x36c6C69A6186D4475fc5c21181CD980Bd6E5e11F',
+    sequencerInbox: '0xD80a805c86C14c879420eC6acb366D04D318fC0C',
+  },
+  explorerUrl: 'https://explorerl2.sx.technology',
+  isArbitrum: true,
+  isCustom: true,
+  name: 'SX',
+  partnerChainID: 1,
+  partnerChainIDs: [],
+  nitroGenesisBlock: 0,
+  nitroGenesisL1Block: 0,
+  depositTimeout: 1800000,
+  blockTime: arbConstants.ARB_MINIMUM_BLOCK_TIME_IN_SECONDS,
+  retryableLifetimeSeconds: 604800,
+  tokenBridge: {
+    l1CustomGateway: '0x54F4853fDfC80F6bA4e66a7946c2B9086B1dE45F',
+    l1ERC20Gateway: '0xB4968C66BECc8fb4f73b50354301c1aDb2Abaa91',
+    l1GatewayRouter: '0x5F00446D785421d65B50c192D7129e3C3906438A',
+    l1MultiCall: '0x7cdCB0Cc61f47B8Dd8f47C5A29edaDd84a1BDf5e',
+    l1ProxyAdmin: '0xe8606A55d105EF857F187C32Ae0E9a168aF8F497',
+    l1Weth: '0x0000000000000000000000000000000000000000',
+    l1WethGateway: '0x0000000000000000000000000000000000000000',
+    l2CustomGateway: '0xe52a0d0da09392fCD363457e8D719a32DB80A655',
+    l2ERC20Gateway: '0x214474E5399cc4C003A990E28a4379A1f1b64eE7',
+    l2GatewayRouter: '0xb77b85Bc59f7C48C21Aa32c6230CD4262Fa79f5b',
+    l2Multicall: '0x0bf69D86597181af32820dfEB30dea20263040Bb',
+    l2ProxyAdmin: '0x9B338812Fe3A88691D0378B995A01f062341BC38',
+    l2Weth: '0x0000000000000000000000000000000000000000',
+    l2WethGateway: '0x0000000000000000000000000000000000000000',
+  },
+};
 
 // Testnets
 const xaiTestnet: L2Network = {
@@ -316,6 +354,7 @@ addCustomNetwork({ customL2Network: rari });
 addCustomNetwork({ customL2Network: muster });
 addCustomNetwork({ customL2Network: proofOfPlayApex });
 addCustomNetwork({ customL2Network: l3x });
+addCustomNetwork({ customL2Network: SXNetwork });
 
 addCustomNetwork({ customL2Network: xaiTestnet });
 addCustomNetwork({ customL2Network: dodochainTestnet });

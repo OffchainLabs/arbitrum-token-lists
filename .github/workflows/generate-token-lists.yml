@@ -119,6 +119,13 @@ jobs:
             version: true
             command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_coingecko.json --tokenList https://tokens.coingecko.com/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_coingecko.json
 
+          # SX Network
+          - name: SX Network Arbify Uniswap
+            paths:
+              - ArbTokenLists/4162_arbed_uniswap_labs.json
+            version: true
+            command: yarn arbify --l2NetworkID 4162 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/4162_arbed_uniswap_labs_default.json --newArbifiedList ./src/ArbTokenLists/4162_arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org
+
           # ArbSepolia
           - name: ArbSepolia Arbify Uniswap
             paths:
@@ -187,6 +194,11 @@ jobs:
               - ArbTokenLists/12324_arbed_native_list.json
             version: true
             command: yarn arbify --l2NetworkID 12324 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/12324_arbed_native_list.json --tokenList ./src/Assets/42161_arbitrum_native_token_list.json --newArbifiedList ./src/ArbTokenLists/12324_arbed_native_list.json
+          - name: L3X Arbify Uniswap
+            paths:
+              - ArbTokenLists/12324_arbed_uniswap_labs.json
+            version: true
+            command: yarn arbify --l2NetworkID 12324 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/12324_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/12324_arbed_uniswap_labs.json
 
           # Orbit Chains testnet
           - name: Xai Testnet Arbify Uniswap

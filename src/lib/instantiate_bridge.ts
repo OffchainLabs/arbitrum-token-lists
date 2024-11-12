@@ -19,6 +19,7 @@ export const getNetworkConfig = async () => {
     37714555429: 'https://testnet-v2.xai-chain.net/rpc',
     53457: 'https://dodochain-testnet.alt.technology',
     12325: 'https://rpc-testnet.l3x.com',
+    4162: 'https://rpc-rollup.sx.technology',
   }[networkID];
 
   if (!childRpc) {
