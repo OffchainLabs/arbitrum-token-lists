@@ -15,10 +15,8 @@ export const getNetworkConfig = async () => {
     1380012617: 'https://mainnet.rpc.rarichain.org/http',
     4078: 'https://muster.alt.technology',
     70700: 'https://rpc.apex.proofofplay.com',
-    12324: 'https://rpc-mainnet.l3x.com',
     37714555429: 'https://testnet-v2.xai-chain.net/rpc',
     53457: 'https://dodochain-testnet.alt.technology',
-    12325: 'https://rpc-testnet.l3x.com',
     4162: 'https://rpc-rollup.sx.technology',
   }[networkID];
 
