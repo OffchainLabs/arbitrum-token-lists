@@ -190,4 +190,4 @@ jobs:
       - uses: ./.github/actions/restore-cache
       - name: generateTokenList
         run: |
-          echo "test=$(node .github/workflows/generateTokenList.js" >> $GITHUB_OUTPUT
+          echo "tttt=$(node .github/workflows/generateTokenList.js)" >> $GITHUB_OUTPUT
