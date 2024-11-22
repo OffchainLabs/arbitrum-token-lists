@@ -192,4 +192,4 @@ jobs:
 
       - name: generateTokenList
         run: |
-          echo "output=$(yarn --silent ts-node .github/workflows/generateTokenList.js)" >> $GITHUB_OUTPUT
+          echo "output=$(yarn --silent ts-node .github/workflows/generateTokenList.ts)" >> $GITHUB_OUTPUT
