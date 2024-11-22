@@ -1,0 +1,145 @@
+name: Token List Generation
+
+on:
+  workflow_call:
+    inputs:
+      name:
+        description: 'Name of the token list generation job'
+        type: string
+        required: true
+      paths:
+        description: 'Paths for generated token lists'
+        type: string
+        required: true
+      version:
+        description: 'Should token-list be versioned?'
+        type: boolean
+        default: true
+      commands:
+        description: 'Commands to execute for token list generation'
+        type: string
+        required: true
+      environment:
+        description: 'Environment to run generation'
+        type: string
+        default: 'Test'
+        required: true
+
+jobs:
+  generate-token-lists:
+    name: '${{ inputs.name }}'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      INFURA_KEY: '${{ secrets.INFURA_KEY }}'
+      MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      SEPOLIA_RPC: 'https://sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      ARB_ONE_RPC: 'https://arbitrum-mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      ARB_SEPOLIA_RPC: 'https://arbitrum-sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      L2_GATEWAY_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SUBGRAPH_URL }}'
+      L2_GATEWAY_SEPOLIA_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SEPOLIA_SUBGRAPH_URL }}'
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: ./.github/actions/restore-cache
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-region: 'us-west-2'
+          aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Run Token List Generation Command
+        run: ${{ inputs.commands }}
+
+      - name: Get online version
+        id: onlineVersion
+        if: ${{ inputs.version == true }}
+        run: |
+          # Check if the list exists online (it will not exist on the first run)
+          paths=(${{ inputs.paths }})
+          first_path=${paths[0]}
+          if curl --silent --head --fail "https://tokenlist.arbitrum.io/$first_path"; then
+            # Get the version from the online list (formatted to major.minor.patch)
+            version=$(curl https://tokenlist.arbitrum.io/$first_path | jq .version | jq 'join(".")')
+            if [[ -n $version ]]; then
+              echo "onlineVersion=$version" >> $GITHUB_OUTPUT
+            else
+              # Make sure failure from curl or jq fails the generation
+              exit 1
+            fi
+          else
+            # Only applies when a new list is added
+            echo "onlineVersion=1.0.0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Backup
+        if: ${{ inputs.version == true }}
+        run: |
+          paths=(${{ inputs.paths }})
+          for path in ${paths[*]}
+          do
+            if [[ "${{ inputs.environment }}" == "Test" ]]
+            then
+              additionalPath='TestFolder/'
+            else
+              additionalPath=''
+            fi
+
+            # Backup online list to {version}/{path} before deploying a new one
+            lines=$(aws s3 ls s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path | wc -l)
+            if (( $lines > 0 )); then
+              backupCommand="aws s3 cp s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path s3://${{ secrets.AWS_BUCKET }}/$additionalPath"
+              backupCommand+=$(echo $path | awk -F'.json' '{print $1}') # Remove .json
+              backupCommand+=/${{ steps.onlineVersion.outputs.onlineVersion }}.json
+              $backupCommand
+            fi
+          done
+
+      - name: Deploy (Test folder)
+        if: ${{ inputs.environment == 'Test' }}
+        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"
+
+      - name: Deploy
+        if: ${{ inputs.environment == 'CI' }}
+        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"
+
+  error-alerts:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    needs: [generate-token-lists]
+    # Run this job if generation job failed
+    if: ${{ always() && contains(needs.generate-token-lists.result, 'failure') }}
+    steps:
+      - name: Post errors to Slack channel
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Token list generation failed for ${{ inputs.name }}"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

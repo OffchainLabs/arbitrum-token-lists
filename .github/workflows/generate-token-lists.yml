@@ -69,12 +69,6 @@ jobs:
             version: true
             command: yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/arbed_uniswap_labs.json && cp ./src/ArbTokenLists/arbed_uniswap_labs.json ./src/ArbTokenLists/arbed_uniswap_labs_default.json
 
-          # - name: Arb1 Arbify Gemini
-          #   paths:
-          #     - ArbTokenLists/arbed_gemini_token_list.json
-          #   version: true
-          #   command: yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_gemini_token_list.json --tokenList https://www.gemini.com/uniswap/manifest.json --newArbifiedList ./src/ArbTokenLists/arbed_gemini_token_list.json
-
           - name: Arb1 Arbify CMC
             paths:
               - ArbTokenLists/arbed_coinmarketcap.json
@@ -100,12 +94,6 @@ jobs:
               - ArbTokenLists/42170_arbed_uniswap_labs_default.json
             version: true
             command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs_default.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org && cp ./src/ArbTokenLists/42170_arbed_uniswap_labs.json ./src/ArbTokenLists/42170_arbed_uniswap_labs_default.json
-
-          # - name: ArbNova Arbify Gemini
-          #   paths:
-          #     - ArbTokenLists/42170_arbed_gemini_token_list.json
-          #   version: true
-          #   command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_gemini_token_list.json  --tokenList https://www.gemini.com/uniswap/manifest.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_gemini_token_list.json
 
           - name: ArbNova Arbify CMC
             paths:
@@ -197,112 +185,12 @@ jobs:
             version: true
             command: yarn arbify --l2NetworkID 53457 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/53457_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/53457_arbed_uniswap_labs.json
 
-    env:
-      INFURA_KEY: '${{ secrets.INFURA_KEY }}'
-      MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
-      SEPOLIA_RPC: 'https://sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
-      ARB_ONE_RPC: 'https://arbitrum-mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
-      ARB_SEPOLIA_RPC: 'https://arbitrum-sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
-      L2_GATEWAY_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SUBGRAPH_URL }}'
-      L2_GATEWAY_SEPOLIA_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SEPOLIA_SUBGRAPH_URL }}'
     steps:
-      - uses: actions/checkout@v3
-
-      - uses: ./.github/actions/restore-cache
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          aws-region: 'us-west-2'
-          aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
       - name: ${{ matrix.commands.name }}
-        if: success()
-        run: ${{ matrix.commands.command }}
-
-      - name: Get online version
-        id: onlineVersion
-        if: ${{ matrix.commands.version == true && matrix.commands.version == true }}
-        run: |
-          # Check if the list exists online (it will not exist on the first run)
-          if curl --silent --head --fail "https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }}"; then
-            # Get the version from the online list (formatted to major.minor.patch)
-            version=$(curl https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }} | jq .version | jq 'join(".")')
-            if [[ -n $version ]]; then
-              echo "onlineVersion=$version" >> $GITHUB_OUTPUT
-            else
-              # Make sure failure from curl or jq fails the generation
-              exit 1
-            fi
-          else
-            # Only applies when a new list is added
-            echo "onlineVersion=1.0.0" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Backup
-        if: ${{ matrix.commands.version == true }}
-        run: |
-          paths=(${{ join(matrix.commands.paths, ' ') }})
-          for path in ${paths[*]}
-          do
-            if [[ "${{ inputs.environment }}" == "Test" ]]
-            then
-              additionalPath='TestFolder/'
-            else
-              additionalPath=''
-            fi
-
-            # Backup online list to {version}/{path} before deploying a new one
-            lines=$(aws s3 ls s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path | wc -l)
-            if (( $lines > 0 )); then
-              backupCommand="aws s3 cp s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path s3://${{ secrets.AWS_BUCKET }}/$additionalPath"
-              backupCommand+=$(echo $path | awk -F'.json' '{print $1}') # Remove .json
-              backupCommand+=/${{ steps.onlineVersion.outputs.onlineVersion }}.json
-              $backupCommand
-            fi
-          done
-
-      - name: Deploy (Test folder)
-        if: ${{ inputs.environment == 'Test' }}
-        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"
-
-      - name: Deploy
-        if: ${{ inputs.environment == 'CI' }}
-        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"
-
-  error-alerts:
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    needs: [install, generate-token-lists]
-    # Run this job if any of the job in needs array failed
-    if: ${{ always() && contains(needs.*.result, 'failure') }}
-    steps:
-      - name: Post errors to Slack channel
-        uses: slackapi/slack-github-action@v1.23.0
+        uses: ./.github/workflows/generate-token-list.yml
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
-          payload: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "Token list generation failed"
-                  }
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}"
-                  }
-                }
-              ]
-            }
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          name: ${{ matrix.commands.name }}
+          paths: ${{ matrix.commands.paths }}
+          version: ${{ matrix.commands.version }}
+          commands: ${{ matrix.commands.command }}
+          environment: ${{ inputs.environment }}
