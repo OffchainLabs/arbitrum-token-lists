@@ -184,6 +184,8 @@ jobs:
               - ArbTokenLists/53457_arbed_uniswap_labs.json
             version: true
             command: yarn arbify --l2NetworkID 53457 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/53457_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/53457_arbed_uniswap_labs.json
+    env:
+      MY_SECRET1: 'secret here'
 
     steps:
       - uses: actions/checkout@v4
@@ -192,4 +194,5 @@ jobs:
 
       - name: generateTokenList
         run: |
-          echo "output=$(yarn --silent ts-node .github/workflows/generateTokenList.ts)" >> $GITHUB_OUTPUT
+          # echo "output=$(yarn --silent ts-node .github/workflows/generateTokenList.ts)" >> $GITHUB_OUTPUT
+          yarn --silent ts-node .github/workflows/generateTokenList.ts
