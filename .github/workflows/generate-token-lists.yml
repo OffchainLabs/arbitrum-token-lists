@@ -186,11 +186,8 @@ jobs:
             command: yarn arbify --l2NetworkID 53457 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/53457_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/53457_arbed_uniswap_labs.json
 
     steps:
-      - name: ${{ matrix.commands.name }}
-        uses: ./.github/workflows/generate-token-list.yml
-        with:
-          name: ${{ matrix.commands.name }}
-          paths: ${{ matrix.commands.paths }}
-          version: ${{ matrix.commands.version }}
-          commands: ${{ matrix.commands.command }}
-          environment: ${{ inputs.environment }}
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/restore-cache
+      - name: generateTokenList
+        run: |
+          echo "test=$(node .github/workflows/generateTokenList.js" >> $GITHUB_OUTPUT

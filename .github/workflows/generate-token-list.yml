@@ -25,6 +25,15 @@ on:
         default: 'Test'
         required: true
 
+env:
+  INFURA_KEY: '${{ secrets.INFURA_KEY }}'
+  MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
+  SEPOLIA_RPC: 'https://sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
+  ARB_ONE_RPC: 'https://arbitrum-mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
+  ARB_SEPOLIA_RPC: 'https://arbitrum-sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
+  L2_GATEWAY_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SUBGRAPH_URL }}'
+  L2_GATEWAY_SEPOLIA_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SEPOLIA_SUBGRAPH_URL }}'
+
 jobs:
   generate-token-lists:
     name: '${{ inputs.name }}'
@@ -33,14 +42,6 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    env:
-      INFURA_KEY: '${{ secrets.INFURA_KEY }}'
-      MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
-      SEPOLIA_RPC: 'https://sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
-      ARB_ONE_RPC: 'https://arbitrum-mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
-      ARB_SEPOLIA_RPC: 'https://arbitrum-sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
-      L2_GATEWAY_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SUBGRAPH_URL }}'
-      L2_GATEWAY_SEPOLIA_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SEPOLIA_SUBGRAPH_URL }}'
     steps:
       - uses: actions/checkout@v3
 
