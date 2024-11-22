@@ -188,6 +188,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: ./.github/actions/restore-cache
+
       - name: generateTokenList
         run: |
-          echo "tttt=$(node .github/workflows/generateTokenList.js)" >> $GITHUB_OUTPUT
+          echo "tttt=$(yarn ts-node .github/workflows/generateTokenList.js)" >> $GITHUB_OUTPUT
