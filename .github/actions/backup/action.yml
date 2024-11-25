@@ -39,7 +39,7 @@ runs:
             backupCommand="aws s3 cp s3://${{ inputs.bucket }}/$additionalPath$path s3://${{ inputs.bucket }}/$additionalPath"
             backupCommand+=$(echo $path | awk -F'.json' '{print $1}') # Remove .json
             backupCommand+=/${{ inputs.version }}.json
-            backupCommand+=--dryrun
+            backupCommand+=" --dryrun"
             $backupCommand
           fi
         done
