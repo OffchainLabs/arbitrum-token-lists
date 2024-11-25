@@ -1,8 +1,7 @@
 name: 'Deploy'
 description: 'Deploy the token list to S3 bucket.'
 inputs:
-  url:
-    environment:
+  environment:
     description: 'Deployment environment (e.g., Test, CI).'
     required: true
     type: string
