@@ -1,0 +1,44 @@
+name: 'Backup Online List'
+description: 'Backs up the online list to S3 before deploying a new version.'
+inputs:
+  paths:
+    description: 'Paths to the token lists to back up.'
+    required: true
+    type: string
+  environment:
+    description: 'Deployment environment (e.g., Test, CI).'
+    required: true
+    type: string
+  bucket:
+    description: 'AWS S3 bucket for backups.'
+    required: true
+    type: string
+  version:
+    description: 'Version of the list being backed up.'
+    required: true
+    type: string
+runs:
+  using: 'composite'
+  steps:
+    - name: Backup
+      shell: bash
+      run: |
+        paths=(${{ inputs.paths }})
+        for path in ${paths[*]}
+        do
+          if [[ "${{ inputs.environment }}" == "Test" ]]
+          then
+            additionalPath='TestFolder/'
+          else
+            additionalPath=''
+          fi
+
+          # Backup online list to {version}/{path} before deploying a new one
+          lines=$(aws s3 ls s3://${{ inputs.bucket }}/$additionalPath$path | wc -l)
+          if (( $lines > 0 )); then
+            backupCommand="aws s3 cp s3://${{ inputs.bucket }}/$additionalPath$path s3://${{ inputs.bucket }}/$additionalPath"
+            backupCommand+=$(echo $path | awk -F'.json' '{print $1}') # Remove .json
+            backupCommand+=/${{ inputs.version }}.json
+            $backupCommand
+          fi
+        done

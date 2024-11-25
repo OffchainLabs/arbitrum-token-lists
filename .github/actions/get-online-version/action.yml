@@ -1,0 +1,26 @@
+name: 'Get Online Version'
+description: 'Checks if the list exists online and retrieves the current version.'
+inputs:
+  url:
+    description: 'The URL to check for the online version.'
+    required: true
+    type: string
+outputs:
+  onlineVersion:
+    description: 'The version retrieved from the online list or the fallback version.'
+runs:
+  using: 'composite'
+  steps:
+    - name: Get online version
+      shell: bash
+      run: |
+        if curl --silent --head --fail "${{ inputs.url }}"; then
+          # Get the version from the online list (formatted to major.minor.patch)
+          version=$(curl "${{ inputs.url }}" | jq .version | jq 'join(".")')
+          if [[ -n $version ]]; then
+            echo "onlineVersion=$version" >> $GITHUB_OUTPUT
+          else
+            exit 1
+          fi
+        else
+          echo "onlineVersion=1.0.0" >> $GITHUB_OUTPUT

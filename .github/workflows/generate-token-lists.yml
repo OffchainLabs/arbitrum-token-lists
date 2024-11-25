@@ -223,53 +223,23 @@ jobs:
 
       - name: Get online version
         id: onlineVersion
-        if: ${{ matrix.commands.version == true && matrix.commands.version == true }}
-        run: |
-          # Check if the list exists online (it will not exist on the first run)
-          if curl --silent --head --fail "https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }}"; then
-            # Get the version from the online list (formatted to major.minor.patch)
-            version=$(curl https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }} | jq .version | jq 'join(".")')
-            if [[ -n $version ]]; then
-              echo "onlineVersion=$version" >> $GITHUB_OUTPUT
-            else
-              # Make sure failure from curl or jq fails the generation
-              exit 1
-            fi
-          else
-            # Only applies when a new list is added
-            echo "onlineVersion=1.0.0" >> $GITHUB_OUTPUT
-          fi
+        uses: ./.github/actions/get-online-version
+        with:
+          url: 'https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }}'
 
       - name: Backup
-        if: ${{ matrix.commands.version == true }}
-        run: |
-          paths=(${{ join(matrix.commands.paths, ' ') }})
-          for path in ${paths[*]}
-          do
-            if [[ "${{ inputs.environment }}" == "Test" ]]
-            then
-              additionalPath='TestFolder/'
-            else
-              additionalPath=''
-            fi
-
-            # Backup online list to {version}/{path} before deploying a new one
-            lines=$(aws s3 ls s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path | wc -l)
-            if (( $lines > 0 )); then
-              backupCommand="aws s3 cp s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path s3://${{ secrets.AWS_BUCKET }}/$additionalPath"
-              backupCommand+=$(echo $path | awk -F'.json' '{print $1}') # Remove .json
-              backupCommand+=/${{ steps.onlineVersion.outputs.onlineVersion }}.json
-              $backupCommand
-            fi
-          done
-
-      - name: Deploy (Test folder)
-        if: ${{ inputs.environment == 'Test' }}
-        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"
+        uses: ./.github/actions/backup
+        with:
+          paths: ${{ join(matrix.commands.paths, ' ') }}
+          environment: ${{ inputs.environment }}
+          bucket: ${{ secrets.AWS_BUCKET }}
+          version: ${{ steps.onlineVersion.outputs.onlineVersion }}
 
       - name: Deploy
-        if: ${{ inputs.environment == 'CI' }}
-        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"
+        uses: ./.github/actions/deploy
+        with:
+          environment: ${{ inputs.environment }}
+          bucket: ${{ secrets.AWS_BUCKET }}
 
   error-alerts:
     runs-on: ubuntu-latest
