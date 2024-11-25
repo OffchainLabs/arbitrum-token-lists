@@ -13,9 +13,11 @@ runs:
   using: 'composite'
   steps:
     - name: Deploy (Test folder)
+      shell: bash
       if: ${{ inputs.environment == 'Test' }}
       run: aws s3 sync ./src/ s3://${{ inputs.bucket }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --dryrun
 
     - name: Deploy
+      shell: bash
       if: ${{ inputs.environment == 'CI' }}
       run: aws s3 sync ./src/ s3://${{ inputs.bucket }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read" --dryrun
