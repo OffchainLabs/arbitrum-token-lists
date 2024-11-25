@@ -24,3 +24,4 @@ runs:
           fi
         else
           echo "onlineVersion=1.0.0" >> $GITHUB_OUTPUT
+        fi
