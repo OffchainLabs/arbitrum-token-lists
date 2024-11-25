@@ -223,6 +223,7 @@ jobs:
 
       - name: Get online version
         id: onlineVersion
+        if: ${{ matrix.commands.version == true && matrix.commands.version == true }}
         uses: ./.github/actions/get-online-version
         with:
           url: 'https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }}'
