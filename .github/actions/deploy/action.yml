@@ -12,13 +12,10 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Deploy
-      shell: bash
-      run: |
-        - name: Deploy (Test folder)
-          if: ${{ inputs.environment == 'Test' }}
-          run: aws s3 sync ./src/ s3://${{ inputs.bucket }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --dryrun
+    - name: Deploy (Test folder)
+      if: ${{ inputs.environment == 'Test' }}
+      run: aws s3 sync ./src/ s3://${{ inputs.bucket }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --dryrun
 
-        - name: Deploy
-          if: ${{ inputs.environment == 'CI' }}
-          run: aws s3 sync ./src/ s3://${{ inputs.bucket }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read" --dryrun
+    - name: Deploy
+      if: ${{ inputs.environment == 'CI' }}
+      run: aws s3 sync ./src/ s3://${{ inputs.bucket }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read" --dryrun
