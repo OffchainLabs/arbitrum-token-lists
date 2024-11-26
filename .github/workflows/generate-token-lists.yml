@@ -59,7 +59,7 @@ jobs:
 
       - id: set-matrix
         run: |
-          matrix=$(npx ts-node ./scripts/generateMatrix.ts)
+          matrix=$(npx ts-node ./.github/scripts/generateMatrix.ts)
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
   generate-token-lists:
