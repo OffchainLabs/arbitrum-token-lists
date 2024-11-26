@@ -58,9 +58,7 @@ jobs:
         run: npm install ts-node typescript
 
       - id: set-matrix
-        run: |
-          matrix=$(npx ts-node ./.github/scripts/generateMatrix.ts)
-          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+        run: echo "matrix=$(npx ts-node .github/scripts/generateMatrix.ts)" >> $GITHUB_OUTPUT
 
   generate-token-lists:
     name: 'Generate'
