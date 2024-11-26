@@ -87,6 +87,12 @@ const arbitrumCommands: Command[] = [
     command:
       'yarn arbify --l2NetworkID 421614 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_coingecko.json  --tokenList https://tokens.coingecko.com/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421614_arbed_coingecko.json',
   },
+  {
+    name: 'With error',
+    paths: ['ArbTokenLists/421614_arbed_coingecko.json'],
+    version: true,
+    command: 'exit 1',
+  },
 ];
 
 const orbitCommands: Command[] = [];
