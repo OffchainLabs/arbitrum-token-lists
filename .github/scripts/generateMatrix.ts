@@ -114,8 +114,7 @@ Object.values(customNetworks).forEach(({ name, chainID, partnerChainID }) => {
     name: `${name} Arbify L2 native list`,
     paths: [`ArbTokenLists/${chainID}_arbed_native_list.json`],
     version: true,
-    command: `yarn arbify --l2NetworkID ${chainID} --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/${chainID}_arbed_native_list.json --tokenList ./src/Assets/42161_arbitrum_native_token_list.json --newArbifiedList ./src/ArbTokenLists/${chainID}_arbed_native_list.json
-`,
+    command: `yarn arbify --l2NetworkID ${chainID} --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/${chainID}_arbed_native_list.json --tokenList ./src/Assets/42161_arbitrum_native_token_list.json --newArbifiedList ./src/ArbTokenLists/${chainID}_arbed_native_list.json`,
   });
 });
 
