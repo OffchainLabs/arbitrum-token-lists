@@ -28,7 +28,7 @@ const arbitrumCommands: Command[] = [
   },
   {
     name: 'Arb1 Arbify CMC',
-    paths: ['ArbTokenLists / arbed_coinmarketcap.json'],
+    paths: ['ArbTokenLists/arbed_coinmarketcap.json'],
     version: true,
     command:
       'yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_coinmarketcap.json --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/arbed_coinmarketcap.json',
