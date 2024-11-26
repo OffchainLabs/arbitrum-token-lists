@@ -93,18 +93,18 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: ${{ matrix.commands.name }}
+      - name: ${{ matrix.name }}
         if: success()
-        run: ${{ matrix.commands.command }}
+        run: ${{ matrix.command }}
 
       - name: Get online version
         id: onlineVersion
-        if: ${{ matrix.commands.version == true && matrix.commands.version == true }}
+        if: ${{ matrix.version == true && matrix.version == true }}
         run: |
           # Check if the list exists online (it will not exist on the first run)
-          if curl --silent --head --fail "https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }}"; then
+          if curl --silent --head --fail "https://tokenlist.arbitrum.io/${{ matrix.paths[0] }}"; then
             # Get the version from the online list (formatted to major.minor.patch)
-            version=$(curl https://tokenlist.arbitrum.io/${{ matrix.commands.paths[0] }} | jq .version | jq 'join(".")')
+            version=$(curl https://tokenlist.arbitrum.io/${{ matrix.paths[0] }} | jq .version | jq 'join(".")')
             if [[ -n $version ]]; then
               echo "onlineVersion=$version" >> $GITHUB_OUTPUT
             else
@@ -117,9 +117,9 @@ jobs:
           fi
 
       - name: Backup
-        if: ${{ matrix.commands.version == true }}
+        if: ${{ matrix.version == true }}
         run: |
-          paths=(${{ join(matrix.commands.paths, ' ') }})
+          paths=(${{ join(matrix.paths, ' ') }})
           for path in ${paths[*]}
           do
             if [[ "${{ inputs.environment }}" == "Test" ]]
