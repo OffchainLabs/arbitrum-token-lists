@@ -42,160 +42,38 @@ jobs:
           path: '**/node_modules'
           key: ${{ steps.cache.outputs.primary-key }}
 
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install ts-node typescript
+
+      - id: set-matrix
+        run: |
+          matrix=$(npx ts-node ../scripts/generateMatrix.ts)
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+
   generate-token-lists:
     name: 'Generate'
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    needs: [install]
+    needs: [install, generate-matrix]
     permissions:
       id-token: write # need this for OIDC
       contents: read # This is required for actions/checkout@v2
     strategy:
       max-parallel: 5
       fail-fast: false
-      matrix:
-        commands:
-          # Arb1
-          - name: Arb1 FullList
-            paths:
-              - ArbTokenLists/arbed_full.json
-            version: false
-            command: yarn fullList --l2NetworkID 42161 --newArbifiedList ./src/ArbTokenLists/arbed_full.json --skipValidation
-
-          - name: Arb1 Arbify Uniswap
-            paths:
-              - ArbTokenLists/arbed_uniswap_labs.json
-              - ArbTokenLists/arbed_uniswap_labs_default.json
-            version: true
-            command: yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/arbed_uniswap_labs.json && cp ./src/ArbTokenLists/arbed_uniswap_labs.json ./src/ArbTokenLists/arbed_uniswap_labs_default.json
-
-          # - name: Arb1 Arbify Gemini
-          #   paths:
-          #     - ArbTokenLists/arbed_gemini_token_list.json
-          #   version: true
-          #   command: yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_gemini_token_list.json --tokenList https://www.gemini.com/uniswap/manifest.json --newArbifiedList ./src/ArbTokenLists/arbed_gemini_token_list.json
-
-          - name: Arb1 Arbify CMC
-            paths:
-              - ArbTokenLists/arbed_coinmarketcap.json
-            version: true
-            command: yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_coinmarketcap.json --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/arbed_coinmarketcap.json
-
-          - name: Arb1 Arbify CoinGecko
-            paths:
-              - ArbTokenLists/arbed_coingecko.json
-            version: true
-            command: yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_coingecko.json --tokenList https://tokens.coingecko.com/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/arbed_coingecko.json
-
-          - name: Arb1 Update Whitelist
-            paths:
-              - ArbTokenLists/arbed_arb_whitelist_era.json
-            version: true
-            command: yarn update --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_arb_whitelist_era.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_arb_whitelist_era.json --includeOldDataFields true --newArbifiedList ./src/ArbTokenLists/arbed_arb_whitelist_era.json
-
-          # ArbNova
-          - name: ArbNova Arbify Uniswap
-            paths:
-              - ArbTokenLists/42170_arbed_uniswap_labs.json
-              - ArbTokenLists/42170_arbed_uniswap_labs_default.json
-            version: true
-            command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs_default.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org && cp ./src/ArbTokenLists/42170_arbed_uniswap_labs.json ./src/ArbTokenLists/42170_arbed_uniswap_labs_default.json
-
-          # - name: ArbNova Arbify Gemini
-          #   paths:
-          #     - ArbTokenLists/42170_arbed_gemini_token_list.json
-          #   version: true
-          #   command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_gemini_token_list.json  --tokenList https://www.gemini.com/uniswap/manifest.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_gemini_token_list.json
-
-          - name: ArbNova Arbify CMC
-            paths:
-              - ArbTokenLists/42170_arbed_coinmarketcap.json
-            version: true
-            command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_coinmarketcap.json --tokenList https://api.coinmarketcap.com/data-api/v3/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_coinmarketcap.json
-
-          - name: ArbNova Arbify CoinGecko
-            paths:
-              - ArbTokenLists/42170_arbed_coingecko.json
-            version: true
-            command: yarn arbify --l2NetworkID 42170 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_coingecko.json --tokenList https://tokens.coingecko.com/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/42170_arbed_coingecko.json
-
-          # SX Network
-          - name: SX Network Arbify Uniswap
-            paths:
-              - ArbTokenLists/4162_arbed_uniswap_labs.json
-            version: true
-            command: yarn arbify --l2NetworkID 4162 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/4162_arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/4162_arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org
-
-          # ArbSepolia
-          - name: ArbSepolia Arbify Uniswap
-            paths:
-              - ArbTokenLists/421614_arbed_uniswap_labs.json
-            version: true
-            command: yarn arbify --l2NetworkID 421614 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/421614_arbed_uniswap_labs.json
-
-          - name: ArbSepolia Arbify CoinGecko
-            paths:
-              - ArbTokenLists/421614_arbed_coingecko.json
-            version: true
-            command: yarn arbify --l2NetworkID 421614 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_coingecko.json  --tokenList https://tokens.coingecko.com/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421614_arbed_coingecko.json
-
-          # Orbit Chains
-          - name: Xai Arbify Uniswap
-            paths:
-              - ArbTokenLists/660279_arbed_uniswap_labs.json
-            version: true
-            command: yarn arbify --l2NetworkID 660279 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/660279_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/660279_arbed_uniswap_labs.json
-          - name: Xai Arbify L2 native list
-            paths:
-              - ArbTokenLists/660279_arbed_native_list.json
-            version: true
-            command: yarn arbify --l2NetworkID 660279 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/660279_arbed_native_list.json --tokenList ./src/Assets/42161_arbitrum_native_token_list.json --newArbifiedList ./src/ArbTokenLists/660279_arbed_native_list.json
-
-          - name: Rari Arbify Uniswap
-            paths:
-              - ArbTokenLists/1380012617_arbed_uniswap_labs.json
-            version: true
-            command: yarn arbify --l2NetworkID 1380012617 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/1380012617_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/1380012617_arbed_uniswap_labs.json
-          - name: Rari Arbify L2 native list
-            paths:
-              - ArbTokenLists/1380012617_arbed_native_list.json
-            version: true
-            command: yarn arbify --l2NetworkID 1380012617 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/1380012617_arbed_native_list.json --tokenList ./src/Assets/42161_arbitrum_native_token_list.json --newArbifiedList ./src/ArbTokenLists/1380012617_arbed_native_list.json
-
-          - name: Muster Arbify Uniswap
-            paths:
-              - ArbTokenLists/4078_arbed_uniswap_labs.json
-            version: true
-            command: yarn arbify --l2NetworkID 4078 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/4078_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/4078_arbed_uniswap_labs.json
-          - name: Muster Arbify L2 native list
-            paths:
-              - ArbTokenLists/4078_arbed_native_list.json
-            version: true
-            command: yarn arbify --l2NetworkID 4078 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/4078_arbed_native_list.json --tokenList ./src/Assets/42161_arbitrum_native_token_list.json --newArbifiedList ./src/ArbTokenLists/4078_arbed_native_list.json
-
-          - name: Proof of Play Apex Arbify Uniswap
-            paths:
-              - ArbTokenLists/70700_arbed_uniswap_labs.json
-            version: true
-            command: yarn arbify --l2NetworkID 70700 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/70700_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/70700_arbed_uniswap_labs.json
-          - name: Proof of Play Apex Arbify L2 native list
-            paths:
-              - ArbTokenLists/70700_arbed_native_list.json
-            version: true
-            command: yarn arbify --l2NetworkID 70700 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/70700_arbed_native_list.json --tokenList ./src/Assets/42161_arbitrum_native_token_list.json --newArbifiedList ./src/ArbTokenLists/70700_arbed_native_list.json
-
-          # Orbit Chains testnet
-          - name: Xai Testnet Arbify Uniswap
-            paths:
-              - ArbTokenLists/37714555429_arbed_uniswap_labs.json
-            version: true
-            command: yarn arbify --l2NetworkID 37714555429 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/37714555429_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/37714555429_arbed_uniswap_labs.json
-
-          - name: Dodochain Testnet Arbify Uniswap
-            paths:
-              - ArbTokenLists/53457_arbed_uniswap_labs.json
-            version: true
-            command: yarn arbify --l2NetworkID 53457 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/53457_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/53457_arbed_uniswap_labs.json
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
 
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'

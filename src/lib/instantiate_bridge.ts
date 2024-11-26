@@ -1,24 +1,14 @@
 import { providers } from 'ethers';
 import { getL2Network, MultiCaller } from '@arbitrum/sdk';
 import { getArgvs } from './options';
+import { rpcs } from '../customNetworks';
 
 export const getNetworkConfig = async () => {
   const argv = getArgvs();
   const networkID = argv.l2NetworkID;
   console.log('Using L2 networkID:', networkID);
 
-  const childRpc = {
-    42161: 'https://arb1.arbitrum.io/rpc',
-    42170: 'https://nova.arbitrum.io/rpc',
-    421614: 'https://sepolia-rollup.arbitrum.io/rpc',
-    660279: 'https://xai-chain.net/rpc',
-    1380012617: 'https://mainnet.rpc.rarichain.org/http',
-    4078: 'https://muster.alt.technology',
-    70700: 'https://rpc.apex.proofofplay.com',
-    37714555429: 'https://testnet-v2.xai-chain.net/rpc',
-    53457: 'https://dodochain-testnet.alt.technology',
-    4162: 'https://rpc-rollup.sx.technology',
-  }[networkID];
+  const childRpc = rpcs[networkID];
 
   if (!childRpc) {
     throw new Error('No child chain RPC detected');

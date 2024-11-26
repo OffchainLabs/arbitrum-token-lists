@@ -1,8 +1,4 @@
-import {
-  L2Network,
-  addCustomNetwork,
-  constants as arbConstants,
-} from '@arbitrum/sdk';
+import { L2Network, constants as arbConstants } from '@arbitrum/sdk';
 
 const xai: L2Network = {
   chainID: 660279,
@@ -274,11 +270,28 @@ const dodochainTestnet: L2Network = {
   blockTime: arbConstants.ARB_MINIMUM_BLOCK_TIME_IN_SECONDS,
 };
 
-addCustomNetwork({ customL2Network: xai });
-addCustomNetwork({ customL2Network: rari });
-addCustomNetwork({ customL2Network: muster });
-addCustomNetwork({ customL2Network: proofOfPlayApex });
-addCustomNetwork({ customL2Network: SXNetwork });
+export const customNetworks: Record<number, L2Network> = {
+  [xai.chainID]: xai,
+  [rari.chainID]: rari,
+  [muster.chainID]: muster,
+  [proofOfPlayApex.chainID]: proofOfPlayApex,
+  [SXNetwork.chainID]: SXNetwork,
+  [xaiTestnet.chainID]: xaiTestnet,
+  [dodochainTestnet.chainID]: dodochainTestnet,
+};
 
-addCustomNetwork({ customL2Network: xaiTestnet });
-addCustomNetwork({ customL2Network: dodochainTestnet });
+export const rpcs: Record<keyof typeof customNetworks, string> = {
+  // Arbitrum networks
+  42161: 'https://arb1.arbitrum.io/rpc',
+  42170: 'https://nova.arbitrum.io/rpc',
+  421614: 'https://sepolia-rollup.arbitrum.io/rpc',
+  // Orbit chains
+  [xai.chainID]: 'https://xai-chain.net/rpc',
+  [rari.chainID]: 'https://mainnet.rpc.rarichain.org/http',
+  [muster.chainID]: 'https://muster.alt.technology',
+  [proofOfPlayApex.chainID]: 'https://rpc.apex.proofofplay.com',
+  [SXNetwork.chainID]: 'https://rpc-rollup.sx.technology',
+  // Orbit testnets
+  [xaiTestnet.chainID]: 'https://testnet-v2.xai-chain.net/rpc',
+  [dodochainTestnet.chainID]: 'https://dodochain-testnet.alt.technology',
+};
