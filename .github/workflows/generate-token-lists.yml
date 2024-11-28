@@ -9,6 +9,11 @@ on:
         type: environment
         default: Test
         required: true
+      firstTimeGeneration:
+        description: 'Generate new orbit chains for the first time'
+        type: boolean
+        default: false
+        required: true
   workflow_call:
     inputs:
       environment:
@@ -16,6 +21,11 @@ on:
         type: string
         required: true
         default: 'Test'
+      firstTimeGeneration:
+        description: 'Generate new orbit chains for the first time'
+        type: boolean
+        default: false
+        required: true
 
 jobs:
   install:
