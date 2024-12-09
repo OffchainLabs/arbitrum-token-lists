@@ -96,7 +96,7 @@ Object.values(customNetworks).forEach(({ name, chainID, partnerChainID }) => {
   if (partnerChainID === 1 || partnerChainID === 11155111) {
     orbitCommands.push({
       name: `${name} Arbify Uniswap`,
-      paths: ['ArbTokenLists/${chainID}_arbed_uniswap_labs.json'],
+      paths: [`ArbTokenLists/${chainID}_arbed_uniswap_labs.json`],
       version: true,
       command: `yarn arbify --l2NetworkID ${chainID} --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/${chainID}_arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/${chainID}_arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org`,
     });
