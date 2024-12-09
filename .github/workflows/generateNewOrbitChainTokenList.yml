@@ -5,11 +5,7 @@ name: Generate new orbit chain token list
 #     # Every day at 9:00
 #     - cron: '0 9 * * *'
 on:
-  pull_request_target:
-    types:
-      - opened
-      - edited
-      - synchronize
+  workflow_call:
 
 jobs:
   generate-token-lists:
