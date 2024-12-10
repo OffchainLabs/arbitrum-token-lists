@@ -8,6 +8,7 @@ export const getNetworkConfig = async () => {
   const networkID = argv.l2NetworkID;
   console.log('Using L2 networkID:', networkID);
 
+  // @ts-ignore azeaze
   const childRpc = rpcs[networkID];
 
   if (!childRpc) {
