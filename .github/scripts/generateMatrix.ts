@@ -1,4 +1,3 @@
-import { L2Network } from '@arbitrum/sdk';
 import { customNetworks } from '../../src/customNetworks';
 
 type Command = {
@@ -105,63 +104,72 @@ function getPreviousListFlag(
 ) {
   return requiresFirstTimeGeneration
     ? '--ignorePreviousList'
-    : `--prevArbifiedList https://tokenlist.arbitrum.io/${path}`;
+    : `--prevArbifiedList ${path}`;
 }
 
+async function addCommand({
+  chainID,
+  name,
+  path,
+  inputList,
+}: {
+  chainID: number;
+  name: string;
+  path: string;
+  inputList: string;
+}) {
+  const url = `https://tokenlist.arbitrum.io/${path}`;
+  const requiresFirstTimeGeneration = await fetch(url)
+    .then((response) => response.json())
+    .then(() => false)
+    .catch(() => true);
+
+  const previousListFlag = requiresFirstTimeGeneration
+    ? '--ignorePreviousList'
+    : `--prevArbifiedList ${url}`;
+
+  return {
+    name,
+    paths: [path],
+    version: true,
+    command: `yarn arbify --l2NetworkID ${chainID} ${previousListFlag} --tokenList ${inputList} --newArbifiedList ./src/${path}`,
+  };
+}
+
+const l1ChainIds = [1, 11155111, 17000]; // Mainnet, sepolia, holesky
 (async () => {
-  customNetworks.forEach(async ({ name, chainID, partnerChainID }) => {
-    const path = `ArbTokenLists/${chainID}_arbed_uniswap_labs.json`;
-    const requiresFirstTimeGeneration = await fetch(
-      `https://tokenlist.arbitrum.io/${path}`,
-    )
-      .then((response) => response.json())
-      .then(() => true)
-      .catch(() => false);
-    const previousListFlag = getPreviousListFlag(
-      path,
-      requiresFirstTimeGeneration,
+  for (let { name, chainID, partnerChainID } of customNetworks) {
+    console.log(`Generating commands for ${name} (${chainID})`);
+    // For Orbit chain settling on L1, use uniswap as source. Otherwise use arbified token list
+    const inputUniswapTokenList = l1ChainIds.includes(partnerChainID)
+      ? 'https://tokens.uniswap.org'
+      : 'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json';
+
+    orbitCommands.push(
+      await addCommand({
+        name: `${name} Arbify Uniswap`,
+        chainID,
+        path: `ArbTokenLists/${chainID}_arbed_uniswap_labs.json`,
+        inputList: inputUniswapTokenList,
+      }),
     );
 
-    // // For each L2 settling on Mainnet or Sepolia, only generate arbified uniswap list
-    // if (partnerChainID === 1 || partnerChainID === 11155111) {
-    //   orbitCommands.push({
-    //     name: `${name} Arbify Uniswap`,
-    //     paths: [path],
-    //     version: true,
-    //     command: `yarn arbify --l2NetworkID ${chainID} ${previousListFlag} --newArbifiedList ./src/${path} --tokenList https://tokens.uniswap.org`,
-    //   });
-    //   return;
-    // }
-
-    // // For each L3, generate native and arbified uniswap list
-    // orbitCommands.push({
-    //   name: `${name} Arbify Uniswap`,
-    //   paths: [path],
-    //   version: true,
-    //   command: `yarn arbify --l2NetworkID ${chainID} ${previousListFlag} --newArbifiedList ./src/${path} --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json`,
-    // });
-
-    // For Orbit chain settling on Mainnet or Sepolia, use uniswap as source. Otherwise use arbified token list
-    const inputTokenList =
-      partnerChainID === 1 || partnerChainID === 11155111
-        ? 'https://tokens.uniswap.org'
-        : 'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json';
-
-    const nativePreviousListFlag = getPreviousListFlag(
-      `https://tokenlist.arbitrum.io/ArbTokenLists/${chainID}_arbed_native_list.json`,
-      requiresFirstTimeGeneration,
-    );
-    orbitCommands.push({
-      name: `${name} Arbify L2 native list`,
-      paths: [`ArbTokenLists/${chainID}_arbed_native_list.json`],
-      version: true,
-      command: `yarn arbify --l2NetworkID ${chainID} ${nativePreviousListFlag} --tokenList ./src/Assets/42161_arbitrum_native_token_list.json --newArbifiedList ./src/ArbTokenLists/${chainID}_arbed_native_list.json`,
-    });
-  });
+    // For L3, generate arbified native token list
+    if (!l1ChainIds.includes(partnerChainID)) {
+      orbitCommands.push(
+        await addCommand({
+          name: `${name} Arbify L2 native list`,
+          chainID,
+          path: `ArbTokenLists/${chainID}_arbed_native_list.json`,
+          inputList: './src/Assets/42161_arbitrum_native_token_list.json',
+        }),
+      );
+    }
+  }
 
   const matrix: Record<'include', Command[]> = {
     include: arbitrumCommands.concat(orbitCommands),
   };
 
-  // console.log(JSON.stringify(matrix, null, 0));
+  console.log(JSON.stringify(matrix, null, 0));
 })();
