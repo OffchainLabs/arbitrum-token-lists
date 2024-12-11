@@ -7,6 +7,7 @@
     "build": "tsc",
     "main": "ts-node src/main.ts",
     "lint": "tsc --noEmit && eslint 'src/**/*.{js,ts,tsx}'",
+    "prettier:orbit": "yarn prettier './src/Assets/orbitChainsData.json' --write && yarn run lint --fix",
     "prettier:format": "yarn prettier './**/*.{js,json,md,ts,yml}' --write && yarn run lint --fix",
     "prettier:check": "yarn prettier './**/*.{js,json,md,ts,yml}' --check && yarn run lint --fix",
     "update": "yarn ts-node src/main.ts update",
