@@ -130,7 +130,6 @@ async function addCommand({
 const l1ChainIds = [1, 11155111, 17000]; // Mainnet, sepolia, holesky
 (async () => {
   for (let { name, chainID, partnerChainID } of customNetworks) {
-    console.log(`Generating commands for ${name} (${chainID})`);
     // For Orbit chain settling on L1, use uniswap as source. Otherwise use arbified token list
     const inputUniswapTokenList = l1ChainIds.includes(partnerChainID)
       ? 'https://tokens.uniswap.org'
