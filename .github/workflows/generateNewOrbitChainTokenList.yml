@@ -10,5 +10,4 @@ jobs:
     uses: ./.github/workflows/generate-token-lists.yml
     with:
       environment: 'Test'
-      firstTimeGeneration: true
     secrets: inherit

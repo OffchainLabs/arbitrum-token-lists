@@ -98,15 +98,6 @@ const arbitrumCommands: Command[] = [
 
 const orbitCommands: Command[] = [];
 
-function getPreviousListFlag(
-  path: string,
-  requiresFirstTimeGeneration: boolean,
-) {
-  return requiresFirstTimeGeneration
-    ? '--ignorePreviousList'
-    : `--prevArbifiedList ${path}`;
-}
-
 async function addCommand({
   chainID,
   name,
