@@ -42,15 +42,8 @@ jobs:
           path: '**/node_modules'
           key: ${{ steps.cache.outputs.primary-key }}
 
-  fetch-orbit-chains-data:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Fetch orbit chains data
-        run: npx ts-node .github/scripts/fetchOrbitChainsData.ts
-
   generate-matrix:
     runs-on: ubuntu-latest
-    needs: [fetch-orbit-chains-data]
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -65,7 +58,9 @@ jobs:
         run: npm install ts-node typescript
 
       - id: set-matrix
-        run: echo "matrix=$(npx ts-node .github/scripts/generateMatrix.ts)" >> $GITHUB_OUTPUT
+        run: |
+          npx ts-node .github/scripts/fetchOrbitChainsData.ts
+          echo "matrix=$(npx ts-node .github/scripts/generateMatrix.ts)" >> $GITHUB_OUTPUT
 
   generate-token-lists:
     name: 'Generate'
