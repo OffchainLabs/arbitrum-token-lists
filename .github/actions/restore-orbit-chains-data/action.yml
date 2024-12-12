@@ -4,6 +4,8 @@ description: 'Download orbit chains data artifact'
 runs:
   using: 'composite'
   steps:
+    - uses: actions/checkout@v4
+
     - name: Download artifact
       uses: actions/download-artifact@v4
       with:

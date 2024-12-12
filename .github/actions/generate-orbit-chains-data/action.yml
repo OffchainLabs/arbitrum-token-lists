@@ -4,10 +4,7 @@ description: 'Generate orbit chains data JSON file'
 runs:
   using: 'composite'
   steps:
-    - name: Setup Node
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
+    - uses: actions/checkout@v4
 
     - name: Generate Orbit Chains Data
       id: generate-data
