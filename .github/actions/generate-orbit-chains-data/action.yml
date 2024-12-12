@@ -16,5 +16,6 @@ runs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: orbit-chains-data
+        name: orbit-chains-data-${{ github.sha }}
         path: 'src/Assets/orbitChainsData.json'
+      continue-on-error: true
