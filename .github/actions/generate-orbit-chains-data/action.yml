@@ -6,6 +6,8 @@ runs:
   steps:
     - uses: actions/checkout@v4
 
+    - uses: ./.github/actions/restore-cache
+
     - name: Generate Orbit Chains Data
       id: generate-data
       shell: bash
