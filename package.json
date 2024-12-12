@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "generate:orbitChainsData": "npx ts-node src/scripts/fetchOrbitChainsData.ts && yarn prettier 'src/Assets/orbitChainsData.json'",
+    "generate:orbitChainsData": "npx ts-node src/scripts/fetchOrbitChainsData.ts && yarn prettier 'src/Assets/orbitChainsData.json' --write",
     "postinstall": "yarn generate:orbitChainsData",
     "build": "tsc",
     "main": "ts-node src/main.ts",
