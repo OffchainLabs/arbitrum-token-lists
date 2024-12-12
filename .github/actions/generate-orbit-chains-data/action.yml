@@ -4,10 +4,6 @@ description: 'Generate orbit chains data JSON file'
 runs:
   using: 'composite'
   steps:
-    - uses: actions/checkout@v4
-
-    - uses: ./.github/actions/restore-cache
-
     - name: Generate Orbit Chains Data
       id: generate-data
       shell: bash
