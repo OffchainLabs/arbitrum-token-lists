@@ -6,6 +6,24 @@ runs:
   steps:
     - uses: actions/checkout@v4
 
+    - name: Check cache for "node_modules"
+        id: cache
+        uses: martijnhols/actions-cache/check@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: yarn install --frozen-lockfile
+
+      - name: Save "node_modules" to cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: martijnhols/actions-cache/save@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ steps.cache.outputs.primary-key }}
+
     - name: Generate Orbit Chains Data
       id: generate-data
       shell: bash
