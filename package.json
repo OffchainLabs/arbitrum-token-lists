@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "postinstall": "yarn ts-node src/scripts/fetchOrbitChainsData.ts",
+    "generate:orbitChainsData": "yarn ts-node src/scripts/fetchOrbitChainsData.ts",
+    "postinstall": "yarn generate:orbitChainsData",
     "build": "tsc",
     "main": "ts-node src/main.ts",
     "lint": "tsc --noEmit && eslint 'src/**/*.{js,ts,tsx}'",

@@ -42,6 +42,9 @@ jobs:
           path: '**/node_modules'
           key: ${{ steps.cache.outputs.primary-key }}
 
+      - name: Generate orbit chains data
+        run: yarn generate:orbitChainsData
+
   generate-matrix:
     runs-on: ubuntu-latest
     outputs:

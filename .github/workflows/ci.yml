@@ -33,6 +33,9 @@ jobs:
           path: '**/node_modules'
           key: ${{ steps.cache.outputs.primary-key }}
 
+      - name: Generate orbit chains data
+        run: yarn generate:orbitChainsData
+
   check-formatting:
     name: 'Check Formatting'
     runs-on: ubuntu-latest
