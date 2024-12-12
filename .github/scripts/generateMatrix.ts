@@ -108,7 +108,7 @@ async function addCommand({
   name: string;
   path: string;
   inputList: string;
-}) {
+}): Promise<Command> {
   const url = `https://tokenlist.arbitrum.io/${path}`;
   const requiresFirstTimeGeneration = await fetch(url)
     .then((response) => response.json())

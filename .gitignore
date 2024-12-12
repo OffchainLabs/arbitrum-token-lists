@@ -13,4 +13,4 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-src/Assets/OrbitChainsData.json
+src/Assets/orbitChainsData.json
