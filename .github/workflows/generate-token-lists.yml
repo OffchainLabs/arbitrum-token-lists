@@ -58,10 +58,7 @@ jobs:
         run: npm install ts-node typescript
 
       - id: set-matrix
-        run: |
-          npx ts-node .github/scripts/fetchOrbitChainsData.ts
-          yarn prettier:orbit
-          echo "matrix=$(npx ts-node .github/scripts/generateMatrix.ts)" >> $GITHUB_OUTPUT
+        run: echo "matrix=$(npx ts-node .github/scripts/generateMatrix.ts)" >> $GITHUB_OUTPUT
 
   generate-token-lists:
     name: 'Generate'
