@@ -69,8 +69,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: ./.github/actions/restore-cache
       - uses: ./.github/actions/restore-orbit-chains-data
+      - uses: ./.github/actions/restore-cache
 
       - name: Test
         run: yarn test:integration
