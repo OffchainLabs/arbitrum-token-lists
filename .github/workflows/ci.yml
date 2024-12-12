@@ -34,7 +34,7 @@ jobs:
           key: ${{ steps.cache.outputs.primary-key }}
 
       - name: Generate orbit chains data
-        run: yarn generate:orbitChainsData
+        run: npm run generate:orbitChainsData
 
   check-formatting:
     name: 'Check Formatting'

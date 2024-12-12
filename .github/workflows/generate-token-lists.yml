@@ -42,9 +42,6 @@ jobs:
           path: '**/node_modules'
           key: ${{ steps.cache.outputs.primary-key }}
 
-      - name: Generate orbit chains data
-        run: yarn generate:orbitChainsData
-
   generate-matrix:
     runs-on: ubuntu-latest
     outputs:
@@ -59,6 +56,9 @@ jobs:
 
       - name: Install dependencies
         run: npm install ts-node typescript
+
+      - name: Generate orbit chains data
+        run: npm run generate:orbitChainsData
 
       - id: set-matrix
         run: echo "matrix=$(npx ts-node .github/scripts/generateMatrix.ts)" >> $GITHUB_OUTPUT
