@@ -7,11 +7,11 @@ runs:
     - uses: actions/checkout@v4
 
     - name: Check cache for "node_modules"
-        id: cache
-        uses: martijnhols/actions-cache/check@v3
-        with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+      id: cache
+      uses: martijnhols/actions-cache/check@v3
+      with:
+        path: '**/node_modules'
+        key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
     - name: Install dependencies
       if: steps.cache.outputs.cache-hit != 'true'
