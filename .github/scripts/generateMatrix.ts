@@ -127,13 +127,35 @@ async function addCommand({
   };
 }
 
+function getUniswapTokenListFromPartnerChainId(chainId: number) {
+  return (
+    {
+      // L1
+      1: 'https://tokens.uniswap.org',
+      11155111: 'https://tokens.uniswap.org',
+      17000: 'https://tokens.uniswap.org',
+      // Arbitrum
+      42161:
+        'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json',
+      42170:
+        'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs.json',
+      421614:
+        'https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_uniswap_labs.json',
+      // Base
+    }[chainId] ?? 'https://tokens.uniswap.org'
+  );
+}
 const l1ChainIds = [1, 11155111, 17000]; // Mainnet, sepolia, holesky
 (async () => {
   for (let { name, chainID, partnerChainID } of customNetworks) {
-    // For Orbit chain settling on L1, use uniswap as source. Otherwise use arbified token list
-    const inputUniswapTokenList = l1ChainIds.includes(partnerChainID)
-      ? 'https://tokens.uniswap.org'
-      : 'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json';
+    const inputUniswapTokenList =
+      getUniswapTokenListFromPartnerChainId(chainID);
+
+    if (!inputUniswapTokenList) {
+      throw new Error(
+        `Uniswap token list on parent chain does'nt exist for ${name} (${chainID})`,
+      );
+    }
 
     orbitCommands.push(
       await addCommand({
