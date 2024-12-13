@@ -59,19 +59,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # - name: Set up Node.js
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version: '20'
-
       - uses: ./.github/actions/restore-cache
-
-      # - name: Install dependencies
-      #   run: npm install ts-node typescript
+      - uses: ./.github/actions/generate-orbit-chains-data
 
       - id: set-matrix
         run: |
-          yarn generate:orbitChainsData
           echo "matrix=$(npx ts-node .github/scripts/generateMatrix.ts)" >> $GITHUB_OUTPUT
 
   generate-token-lists:
