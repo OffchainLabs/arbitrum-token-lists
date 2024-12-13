@@ -58,10 +58,10 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v3
+      - uses: ./.github/actions/restore-orbit-chains-data
 
       - uses: ./.github/actions/restore-cache
       # - uses: ./.github/actions/generate-orbit-chains-data
-      - uses: ./.github/actions/restore-orbit-chains-data
 
       - id: set-matrix
         run: |
