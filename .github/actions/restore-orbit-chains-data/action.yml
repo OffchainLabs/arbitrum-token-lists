@@ -10,4 +10,4 @@ runs:
       uses: actions/download-artifact@v4
       with:
         name: orbit-chains-data-${{ github.sha }}
-        path: src/Assets
+        path: 'src/Assets/orbitChainsData.json'
