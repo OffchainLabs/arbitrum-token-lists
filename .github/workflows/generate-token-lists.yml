@@ -61,9 +61,6 @@ jobs:
 
       - uses: ./.github/actions/restore-cache
       - uses: ./.github/actions/generate-orbit-chains-data
-      # - uses: ./.github/actions/restore-orbit-chains-data
-
-      - uses: ./.github/actions/restore-cache
 
       - id: set-matrix
         run: echo "matrix=$(npm run generate:matrix --silent)" >> $GITHUB_OUTPUT

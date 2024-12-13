@@ -14,7 +14,7 @@ const arbitrumCommands: Command[] = [
     paths: ['ArbTokenLists/arbed_full.json'],
     version: false,
     command:
-      'yarn fullList --l2NetworkID 42161 --newArbifiedList ./src/ArbTokenLists/arbed_full.json --skipValidation',
+      'npm run fullList --l2NetworkID 42161 --newArbifiedList ./src/ArbTokenLists/arbed_full.json --skipValidation',
   },
   {
     name: 'Arb1 Arbify Uniswap',
