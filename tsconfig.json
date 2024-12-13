@@ -16,5 +16,5 @@
     "target": "ES2017",
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.js"]
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.js", "src/**/*.json"]
 }
