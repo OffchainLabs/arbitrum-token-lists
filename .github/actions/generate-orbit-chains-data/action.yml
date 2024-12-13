@@ -14,5 +14,5 @@ runs:
       with:
         name: orbitChainsData.json
         path: 'src/Assets/'
+        overwrite: true
       continue-on-error: true
-      overwrite: true
