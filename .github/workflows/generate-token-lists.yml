@@ -93,7 +93,7 @@ jobs:
 
       - uses: ./.github/actions/restore-cache
 
-      - uses: ./.github/actions/restore-orbit-chains-data
+      # - uses: ./.github/actions/restore-orbit-chains-data
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
