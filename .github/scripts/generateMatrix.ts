@@ -161,7 +161,6 @@ function getUniswapTokenListFromPartnerChainId(chainId: number) {
       'https://tokenlist.arbitrum.io/ArbTokenLists/84532_uniswap_labs.json',
   }[chainId];
 }
-const l1ChainIds = [1, 11155111, 17000]; // Mainnet, sepolia, holesky
 (async () => {
   for (let { name, chainID, partnerChainID } of customNetworks) {
     const inputUniswapTokenList =
@@ -182,14 +181,14 @@ const l1ChainIds = [1, 11155111, 17000]; // Mainnet, sepolia, holesky
       }),
     );
 
-    // For L3, generate arbified native token list
-    if (!l1ChainIds.includes(partnerChainID)) {
+    // For L3 settling on L2 with native list (ArbOne), generate arbified native token list
+    if ([42161, 421614].includes(partnerChainID)) {
       orbitCommands.push(
         await addCommand({
           name: `${name} Arbify L2 native list`,
           chainID,
           path: `ArbTokenLists/${chainID}_arbed_native_list.json`,
-          inputList: './src/Assets/42161_arbitrum_native_token_list.json',
+          inputList: `./src/Assets/${chainID}_arbitrum_native_token_list.json`,
         }),
       );
     }
