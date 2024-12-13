@@ -54,7 +54,7 @@ jobs:
       - uses: ./.github/actions/restore-orbit-chains-data
 
       - name: debug
-        run: ls src/Assets
+        run: ls -l src/Assets
 
       - name: Check formatting with Prettier
         run: yarn prettier:check
