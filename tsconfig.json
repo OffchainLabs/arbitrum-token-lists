@@ -13,8 +13,7 @@
     "resolveJsonModule": true,
     "strict": true,
     "strictNullChecks": true,
-    "target": "ES2017",
-    "types": ["node"]
+    "target": "ES2017"
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.js", "src/**/*.json"]
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.js"]
 }

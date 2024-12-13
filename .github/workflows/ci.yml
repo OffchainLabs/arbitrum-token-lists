@@ -43,6 +43,19 @@ jobs:
       - uses: ./.github/actions/restore-cache
       - uses: ./.github/actions/generate-orbit-chains-data
 
+  check-formatting:
+    name: 'Check Formatting'
+    runs-on: ubuntu-latest
+    needs: [install, generate-orbit-chains-data]
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: ./.github/actions/restore-cache
+      - uses: ./.github/actions/restore-orbit-chains-data
+
+      - name: Check formatting with Prettier
+        run: yarn prettier:check
+
   integration-test:
     name: 'Integration tests'
     runs-on: ubuntu-latest
@@ -63,19 +76,6 @@ jobs:
 
       - name: Test
         run: yarn test:integration
-
-  check-formatting:
-    name: 'Check Formatting'
-    runs-on: ubuntu-latest
-    needs: [install, generate-orbit-chains-data]
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: ./.github/actions/restore-cache
-      - uses: ./.github/actions/restore-orbit-chains-data
-
-      - name: Check formatting with Prettier
-        run: yarn prettier:check
 
   unit-test:
     name: 'Unit tests'
