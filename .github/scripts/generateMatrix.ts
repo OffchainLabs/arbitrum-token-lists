@@ -188,7 +188,7 @@ function getUniswapTokenListFromPartnerChainId(chainId: number) {
           name: `${name} Arbify L2 native list`,
           chainID,
           path: `ArbTokenLists/${chainID}_arbed_native_list.json`,
-          inputList: `./src/Assets/${chainID}_arbitrum_native_token_list.json`,
+          inputList: `./src/Assets/${partnerChainID}_arbitrum_native_token_list.json`,
         }),
       );
     }
