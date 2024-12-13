@@ -14,7 +14,7 @@ const arbitrumCommands: Command[] = [
     paths: ['ArbTokenLists/arbed_full.json'],
     version: false,
     command:
-      'npm run fullList --l2NetworkID 42161 --newArbifiedList ./src/ArbTokenLists/arbed_full.json --skipValidation',
+      'yarn fullList --l2NetworkID 42161 --newArbifiedList ./src/ArbTokenLists/arbed_full.json --skipValidation',
   },
   {
     name: 'Arb1 Arbify Uniswap',
@@ -94,6 +94,21 @@ const arbitrumCommands: Command[] = [
     command:
       'yarn arbify --l2NetworkID 421614 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_coingecko.json  --tokenList https://tokens.coingecko.com/uniswap/all.json --newArbifiedList ./src/ArbTokenLists/421614_arbed_coingecko.json',
   },
+  // Base
+  {
+    name: 'Base Uniswap',
+    paths: ['ArbTokenLists/8453_uniswap_labs.json'],
+    version: true,
+    command:
+      'yarn arbify --l2NetworkID 8453 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/8453_uniswap_labs.json  --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/8453_uniswap_labs.json',
+  },
+  {
+    name: 'Base Sepolia Uniswap',
+    paths: ['ArbTokenLists/84532_uniswap_labs.json'],
+    version: true,
+    command:
+      'yarn arbify --l2NetworkID 84532 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/84532_uniswap_labs.json  --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/84532_uniswap_labs.json',
+  },
 ];
 
 const orbitCommands: Command[] = [];
@@ -128,22 +143,23 @@ async function addCommand({
 }
 
 function getUniswapTokenListFromPartnerChainId(chainId: number) {
-  return (
-    {
-      // L1
-      1: 'https://tokens.uniswap.org',
-      11155111: 'https://tokens.uniswap.org',
-      17000: 'https://tokens.uniswap.org',
-      // Arbitrum
-      42161:
-        'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json',
-      42170:
-        'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs.json',
-      421614:
-        'https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_uniswap_labs.json',
-      // Base
-    }[chainId] ?? 'https://tokens.uniswap.org'
-  );
+  return {
+    // L1
+    1: 'https://tokens.uniswap.org',
+    11155111: 'https://tokens.uniswap.org',
+    17000: 'https://tokens.uniswap.org',
+    // Arbitrum
+    42161:
+      'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json',
+    42170:
+      'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs.json',
+    421614:
+      'https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_uniswap_labs.json',
+    // Base
+    8453: 'https://tokenlist.arbitrum.io/ArbTokenLists/8453_uniswap_labs.json',
+    84532:
+      'https://tokenlist.arbitrum.io/ArbTokenLists/84532_uniswap_labs.json',
+  }[chainId];
 }
 const l1ChainIds = [1, 11155111, 17000]; // Mainnet, sepolia, holesky
 (async () => {
