@@ -165,11 +165,11 @@ const l1ChainIds = [1, 11155111, 17000]; // Mainnet, sepolia, holesky
 (async () => {
   for (let { name, chainID, partnerChainID } of customNetworks) {
     const inputUniswapTokenList =
-      getUniswapTokenListFromPartnerChainId(chainID);
+      getUniswapTokenListFromPartnerChainId(partnerChainID);
 
     if (!inputUniswapTokenList) {
       throw new Error(
-        `Uniswap token list on parent chain does'nt exist for ${name} (${chainID})`,
+        `Uniswap token list on parent chain doesn't exist for ${name} (${chainID})`,
       );
     }
 
