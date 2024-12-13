@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "generate:orbitChainsData": "yarn ts-node src/scripts/fetchOrbitChainsData.ts && yarn prettier 'src/Assets/orbitChainsData.json' --write",
+    "generate:matrix": "yarn ts-node .github/scripts/generateMatrix.ts",
     "postinstall": "yarn generate:orbitChainsData",
     "build": "tsc",
     "main": "ts-node src/main.ts",

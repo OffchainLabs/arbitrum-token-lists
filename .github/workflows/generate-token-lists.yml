@@ -66,7 +66,7 @@ jobs:
       - id: set-matrix
         run: |
           ls src/Assets/
-          echo "matrix=$(npx ts-node .github/scripts/generateMatrix.ts)" >> $GITHUB_OUTPUT
+          echo "matrix=$(yarn generate:matrix)" >> $GITHUB_OUTPUT
 
   generate-token-lists:
     name: 'Generate'
