@@ -59,15 +59,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm install ts-node typescript
+      # - name: Set up Node.js
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: '20'
 
       - uses: ./.github/actions/restore-cache
+
+      # - name: Install dependencies
+      #   run: npm install ts-node typescript
 
       - id: set-matrix
         run: |
