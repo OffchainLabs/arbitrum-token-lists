@@ -181,8 +181,8 @@ function getUniswapTokenListFromPartnerChainId(chainId: number) {
       }),
     );
 
-    // For L3 settling on L2 with native list (ArbOne), generate arbified native token list
-    if ([42161, 421614].includes(partnerChainID)) {
+    // For L3 settling on ArbOne, generate arbified native token list
+    if (partnerChainID === 42161) {
       orbitCommands.push(
         await addCommand({
           name: `${name} Arbify L2 native list`,
