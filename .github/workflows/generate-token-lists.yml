@@ -64,7 +64,7 @@ jobs:
       # - uses: ./.github/actions/restore-orbit-chains-data
 
       - id: set-matrix
-        run: echo "matrix=$(yarn generate:matrix)" >> $GITHUB_OUTPUT
+        run: echo "matrix=$(npx ts-node generate:matrix)" >> $GITHUB_OUTPUT
 
   generate-token-lists:
     name: 'Generate'
