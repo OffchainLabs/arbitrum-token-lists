@@ -63,18 +63,10 @@ jobs:
       - uses: ./.github/actions/generate-orbit-chains-data
       # - uses: ./.github/actions/restore-orbit-chains-data
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
       - uses: ./.github/actions/restore-cache
 
-      - name: Install dependencies
-        run: npm install ts-node
-
       - id: set-matrix
-        run: echo "matrix=$(yarn ts-node .github/scripts/generateMatrix.ts)" >> $GITHUB_OUTPUT
+        run: echo "matrix=$(npm run generate:matrix)" >> $GITHUB_OUTPUT
 
   generate-token-lists:
     name: 'Generate'

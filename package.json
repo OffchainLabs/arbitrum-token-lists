@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "generate:orbitChainsData": "yarn ts-node src/scripts/fetchOrbitChainsData.ts && yarn prettier 'src/Assets/orbitChainsData.json' --write",
+    "generate:matrix": "ts-node .github/scripts/generateMatrix.ts",
+    "generate:orbitChainsData": "ts-node src/scripts/fetchOrbitChainsData.ts && yarn prettier 'src/Assets/orbitChainsData.json' --write",
     "postinstall": "yarn generate:orbitChainsData",
     "build": "tsc",
     "main": "ts-node src/main.ts",
@@ -12,7 +13,7 @@
     "prettier:format": "yarn prettier './**/*.{js,json,md,ts,yml}' --write && yarn run lint --fix",
     "prettier:check": "yarn prettier './**/*.{js,json,md,ts,yml}' --check && yarn run lint --fix",
     "update": "yarn ts-node src/main.ts update",
-    "arbify": "yarn ts-node src/main.ts arbify",
+    "arbify": "ts-node src/main.ts arbify",
     "permit": "yarn ts-node src/main.ts permit",
     "fullList": "yarn ts-node src/main.ts full --tokenList full --ignorePreviousList",
     "allTokensList": "yarn ts-node src/main.ts alltokenslist --tokenList full",
