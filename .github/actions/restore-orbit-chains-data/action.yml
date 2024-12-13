@@ -8,4 +8,4 @@ runs:
       uses: actions/download-artifact@v4
       with:
         name: orbitChainsData.json
-        path: 'src/Assets/orbitChainsData.json'
+        path: 'src/Assets/'
