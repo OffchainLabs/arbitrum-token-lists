@@ -42,15 +42,6 @@ jobs:
           path: '**/node_modules'
           key: ${{ steps.cache.outputs.primary-key }}
 
-  # generate-orbit-chains-data:
-  #   name: 'Generate Orbit Chains'
-  #   runs-on: ubuntu-latest
-  #   needs: install
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - uses: ./.github/actions/restore-cache
-  #     - uses: ./.github/actions/generate-orbit-chains-data
-
   generate-matrix:
     runs-on: ubuntu-latest
     needs: [install]
