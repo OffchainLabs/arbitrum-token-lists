@@ -70,13 +70,14 @@ export async function fetchOrbitChainsData() {
 
 function parseChainToL2Network({
   chainId,
-  nativeToken,
-  isTestnet,
-  slug,
-  bridgeUiConfig,
   parentChainId,
   tokenBridge,
-  ...chain
+  confirmPeriodBlocks,
+  ethBridge,
+  explorerUrl,
+  rpcUrl,
+  isCustom,
+  name,
 }: OrbitChainData): L2NetworkWithRpc {
   return {
     chainID: chainId,
@@ -104,7 +105,12 @@ function parseChainToL2Network({
       l2Weth: tokenBridge.childWeth,
       l2WethGateway: tokenBridge.childWethGateway,
     },
-    ...chain,
+    confirmPeriodBlocks,
+    ethBridge,
+    explorerUrl,
+    rpcUrl,
+    isCustom,
+    name,
   };
 }
 
