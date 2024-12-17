@@ -27,13 +27,6 @@ const arbitrumCommands: Command[] = [
       'yarn arbify --l2NetworkID 42161 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/arbed_uniswap_labs.json && cp ./src/ArbTokenLists/arbed_uniswap_labs.json ./src/ArbTokenLists/arbed_uniswap_labs_default.json',
   },
   {
-    name: 'Arb1 Sepolia Arbify Uniswap',
-    paths: ['ArbTokenLists/421614_arbed_uniswap_labs.json'],
-    version: true,
-    command:
-      'yarn arbify --l2NetworkID 421614 --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org --newArbifiedList ./src/ArbTokenLists/421614_arbed_uniswap_labs.json',
-  },
-  {
     name: 'Arb1 Arbify CMC',
     paths: ['ArbTokenLists/arbed_coinmarketcap.json'],
     version: true,
