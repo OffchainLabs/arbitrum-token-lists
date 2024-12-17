@@ -78,8 +78,8 @@ jobs:
       HOLESKY_RPC: 'https://holesky.infura.io/v3/${{ secrets.INFURA_KEY }}'
       ARB_SEPOLIA_RPC: 'https://arbitrum-sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
       ARB_NOVA_RPC: 'https://nova.arbitrum.io/rpc'
-      BASE_RPC: 'https://base-mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
-      BASE_SEPOLIA_RPC: 'https://base-sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      BASE_RPC: 'https://mainnet.base.org'
+      BASE_SEPOLIA_RPC: 'https://sepolia.base.org'
       L2_GATEWAY_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SUBGRAPH_URL }}'
       L2_GATEWAY_SEPOLIA_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SEPOLIA_SUBGRAPH_URL }}'
     steps:
