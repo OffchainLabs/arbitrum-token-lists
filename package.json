@@ -4,6 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "generate:matrix": "ts-node .github/scripts/generateMatrix.ts",
+    "generate:orbitChainsData": "ts-node src/scripts/fetchOrbitChainsData.ts && yarn prettier 'src/Assets/orbitChainsData.json' --write",
+    "postinstall": "yarn generate:orbitChainsData",
     "build": "tsc",
     "main": "ts-node src/main.ts",
     "lint": "tsc --noEmit && eslint 'src/**/*.{js,ts,tsx}'",

@@ -376,6 +376,29 @@ export const arbifyL1List = async (
   const prevArbTokenList = ignorePreviousList
     ? null
     : await getPrevList(prevArbifiedList);
+
+  // We can't arbify token list for base, we filter out non-base tokens from uniswap list
+  const argv = getArgvs();
+  if (argv.l2NetworkID === 8453 || argv.l2NetworkID === 84532) {
+    const tokens = l1TokenList.tokens
+      .filter((token) => token.chainId === argv.l2NetworkID)
+      .map(({ extensions, ...token }) => ({
+        ...token,
+      }));
+
+    const version = getVersion(prevArbTokenList, tokens);
+    return {
+      newList: {
+        ...l1TokenList,
+        name: `Uniswap labs ${argv.l2NetworkID}`,
+        timestamp: new Date().toISOString(),
+        version,
+        tokens,
+      },
+      l1ListName: l1TokenList.name,
+    };
+  }
+
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
     includeAllL1Tokens: false,
     includeOldDataFields,

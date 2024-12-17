@@ -22,6 +22,10 @@ export const getNetworkConfig = async () => {
     else if (childNetwork.partnerChainID === 11155111) return 'SEPOLIA_RPC';
     else if (childNetwork.partnerChainID === 42161) return 'ARB_ONE_RPC';
     else if (childNetwork.partnerChainID === 421614) return 'ARB_SEPOLIA_RPC';
+    else if (childNetwork.partnerChainID === 42170) return 'ARB_NOVA_RPC';
+    else if (childNetwork.partnerChainID === 17000) return 'HOLESKY_RPC';
+    else if (childNetwork.partnerChainID === 8453) return 'BASE_RPC';
+    else if (childNetwork.partnerChainID === 84532) return 'BASE_SEPOLIA_RPC';
     throw new Error('No parent chain RPC detected');
   })();
   const parentRpc = process.env[expectedEnv];

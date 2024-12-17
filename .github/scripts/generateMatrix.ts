@@ -91,35 +91,90 @@ const arbitrumCommands: Command[] = [
 
 const orbitCommands: Command[] = [];
 
-Object.values(customNetworks).forEach(({ name, chainID, partnerChainID }) => {
-  // For each L2, generate arbified list
-  if (partnerChainID === 1 || partnerChainID === 11155111) {
-    orbitCommands.push({
-      name: `${name} Arbify Uniswap`,
-      paths: [`ArbTokenLists/${chainID}_arbed_uniswap_labs.json`],
-      version: true,
-      command: `yarn arbify --l2NetworkID ${chainID} --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/${chainID}_arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/${chainID}_arbed_uniswap_labs.json --tokenList https://tokens.uniswap.org`,
-    });
-    return;
+async function addCommand({
+  chainID,
+  name,
+  path,
+  inputList,
+}: {
+  chainID: number;
+  name: string;
+  path: string;
+  inputList: string;
+}): Promise<Command> {
+  const url = `https://tokenlist.arbitrum.io/${path}`;
+  const requiresFirstTimeGeneration = await fetch(url)
+    .then((response) => response.json())
+    .then(() => false)
+    .catch(() => true);
+
+  const previousListFlag = requiresFirstTimeGeneration
+    ? '--ignorePreviousList'
+    : `--prevArbifiedList ${url}`;
+
+  return {
+    name,
+    paths: [path],
+    version: true,
+    command: `yarn arbify --l2NetworkID ${chainID} ${previousListFlag} --tokenList ${inputList} --newArbifiedList ./src/${path}`,
+  };
+}
+
+function getUniswapTokenListFromPartnerChainId(chainId: number) {
+  return {
+    // L1
+    1: 'https://tokens.uniswap.org',
+    11155111: 'https://tokens.uniswap.org',
+    17000: 'https://tokens.uniswap.org',
+    // Arbitrum
+    42161:
+      'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json',
+    42170:
+      'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_uniswap_labs.json',
+    421614:
+      'https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_uniswap_labs.json',
+    // Base
+    8453: 'https://tokenlist.arbitrum.io/ArbTokenLists/8453_uniswap_labs.json',
+    84532:
+      'https://tokenlist.arbitrum.io/ArbTokenLists/84532_uniswap_labs.json',
+  }[chainId];
+}
+(async () => {
+  for (let { name, chainID, partnerChainID } of customNetworks) {
+    const inputUniswapTokenList =
+      getUniswapTokenListFromPartnerChainId(partnerChainID);
+
+    if (!inputUniswapTokenList) {
+      throw new Error(
+        `Uniswap token list on parent chain doesn't exist for ${name} (${chainID})`,
+      );
+    }
+
+    orbitCommands.push(
+      await addCommand({
+        name: `${name} Arbify Uniswap`,
+        chainID,
+        path: `ArbTokenLists/${chainID}_arbed_uniswap_labs.json`,
+        inputList: inputUniswapTokenList,
+      }),
+    );
+
+    // For L3 settling on ArbOne, generate arbified native token list
+    if (partnerChainID === 42161) {
+      orbitCommands.push(
+        await addCommand({
+          name: `${name} Arbify L2 native list`,
+          chainID,
+          path: `ArbTokenLists/${chainID}_arbed_native_list.json`,
+          inputList: `./src/Assets/${partnerChainID}_arbitrum_native_token_list.json`,
+        }),
+      );
+    }
   }
 
-  // For each L3, generate native and uniswap list
-  orbitCommands.push({
-    name: `${name} Arbify Uniswap`,
-    paths: [`ArbTokenLists/${chainID}_arbed_uniswap_labs.json`],
-    version: true,
-    command: `yarn arbify --l2NetworkID ${chainID} --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/${chainID}_arbed_uniswap_labs.json --tokenList https://tokenlist.arbitrum.io/ArbTokenLists/arbed_uniswap_labs.json --newArbifiedList ./src/ArbTokenLists/${chainID}_arbed_uniswap_labs.json`,
-  });
-  orbitCommands.push({
-    name: `${name} Arbify L2 native list`,
-    paths: [`ArbTokenLists/${chainID}_arbed_native_list.json`],
-    version: true,
-    command: `yarn arbify --l2NetworkID ${chainID} --prevArbifiedList https://tokenlist.arbitrum.io/ArbTokenLists/${chainID}_arbed_native_list.json --tokenList ./src/Assets/42161_arbitrum_native_token_list.json --newArbifiedList ./src/ArbTokenLists/${chainID}_arbed_native_list.json`,
-  });
-});
+  const matrix: Record<'include', Command[]> = {
+    include: arbitrumCommands.concat(orbitCommands),
+  };
 
-const matrix: Record<'include', Command[]> = {
-  include: arbitrumCommands.concat(orbitCommands),
-};
-
-console.log(JSON.stringify(matrix, null, 0));
+  console.log(JSON.stringify(matrix, null, 0));
+})();
