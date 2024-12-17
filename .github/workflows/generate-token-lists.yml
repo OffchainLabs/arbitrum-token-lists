@@ -51,7 +51,8 @@ jobs:
       - uses: actions/checkout@v3
 
       - uses: ./.github/actions/restore-cache
-      - uses: ./.github/actions/generate-orbit-chains-data
+      - name: Generate orbit chains data
+        run: yarn generate:orbitChainsData
 
       - id: set-matrix
         run: echo "matrix=$(npm run generate:matrix --silent)" >> $GITHUB_OUTPUT
@@ -85,7 +86,9 @@ jobs:
       - uses: actions/checkout@v3
 
       - uses: ./.github/actions/restore-cache
-      - uses: ./.github/actions/restore-orbit-chains-data
+
+      - name: Generate orbit chains data
+        run: yarn generate:orbitChainsData
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
