@@ -76,6 +76,7 @@ export const generateTokenList = async (
     (token) => token.chainId === l1.provider.network.chainId,
   );
 
+  console.log('L79, before let tokens');
   let tokens: GraphTokenResult[] =
     options && options.getAllTokensInNetwork
       ? await promiseErrorMultiplier(getAllTokens(l2.network.chainID), () =>
@@ -101,6 +102,7 @@ export const generateTokenList = async (
             ),
         );
 
+  console.log('L105, before l1TokenAddresses');
   const l1TokenAddresses =
     options && options.getAllTokensInNetwork && !isNova
       ? tokens.map((curr) => curr.l1TokenAddr)
@@ -108,6 +110,8 @@ export const generateTokenList = async (
 
   const intermediatel2AddressesFromL1 = [];
   const intermediatel2AddressesFromL2 = [];
+
+  console.log('115, before forloop L1TOKENADDRESSES');
   for (const addrs of getChunks(l1TokenAddresses)) {
     const l2AddressesFromL1Temp = await promiseErrorMultiplier(
       getL2TokenAddressesFromL1(
