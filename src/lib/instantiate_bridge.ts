@@ -6,7 +6,6 @@ import {
 } from '@arbitrum/sdk';
 import { getArgvs } from './options';
 import { customNetworks, rpcs } from '../customNetworks';
-import { log } from 'console';
 
 const customNetworksObject = customNetworks.reduce<{
   [chainId: number]: ArbitrumNetwork;
