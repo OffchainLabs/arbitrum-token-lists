@@ -4,9 +4,7 @@ import { customNetworks } from './customNetworks';
 import { registerCustomArbitrumNetwork } from '@arbitrum/sdk';
 
 (async () => {
-  for (const network of Object.values(customNetworks)) {
-    registerCustomArbitrumNetwork(network);
-  }
+  customNetworks.forEach((network) => registerCustomArbitrumNetwork(network));
 })();
 
 const myEnv = dotenv.config();

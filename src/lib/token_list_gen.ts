@@ -106,6 +106,12 @@ export const generateTokenList = async (
       ? tokens.map((curr) => curr.l1TokenAddr)
       : l1TokenListL1Tokens.map((token) => token.address);
 
+  const tokenBridge = l2.network.tokenBridge;
+
+  if (!tokenBridge) {
+    throw new Error('Child network is missing tokenBridge');
+  }
+
   const intermediatel2AddressesFromL1 = [];
   const intermediatel2AddressesFromL2 = [];
   for (const addrs of getChunks(l1TokenAddresses)) {
@@ -113,13 +119,13 @@ export const generateTokenList = async (
       getL2TokenAddressesFromL1(
         addrs,
         l1.multiCaller,
-        l2.network.tokenBridge.l1GatewayRouter,
+        tokenBridge.parentGatewayRouter,
       ),
       () =>
         getL2TokenAddressesFromL1(
           addrs,
           l1.multiCaller,
-          l2.network.tokenBridge.l1GatewayRouter,
+          tokenBridge.parentGatewayRouter,
         ),
     );
     intermediatel2AddressesFromL1.push(l2AddressesFromL1Temp);
@@ -127,13 +133,13 @@ export const generateTokenList = async (
       getL2TokenAddressesFromL2(
         addrs,
         l2.multiCaller,
-        l2.network.tokenBridge.l2GatewayRouter,
+        tokenBridge.childGatewayRouter,
       ),
       () =>
         getL2TokenAddressesFromL2(
           addrs,
           l2.multiCaller,
-          l2.network.tokenBridge.l2GatewayRouter,
+          tokenBridge.childGatewayRouter,
         ),
     );
     intermediatel2AddressesFromL2.push(l2AddressesFromL2Temp);

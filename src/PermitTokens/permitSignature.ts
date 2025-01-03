@@ -171,8 +171,8 @@ export const addPermitTags = async (
 
   for (let i = 0; i < permitTokenInfo.length; i++) {
     const curr = permitTokenInfo[i];
-    const isL1Token = curr.chainId === l2.network.partnerChainID;
-    const isL2Token = curr.chainId === l2.network.chainID;
+    const isL1Token = curr.chainId === l2.network.parentChainId;
+    const isL2Token = curr.chainId === l2.network.chainId;
     if (!isL1Token && !isL2Token) continue;
 
     const provider = isL1Token ? l1.provider : l2.provider;
@@ -268,10 +268,16 @@ export const addPermitTags = async (
   }
 
   const handleCalls = async (calls: Array<Call>, layer: 1 | 2) => {
+    const tokenBridge = l2.network.tokenBridge;
+
+    if (!tokenBridge) {
+      throw new Error('Child network is missing tokenBridge');
+    }
+
     // TODO: use SDKs multicaller
     let multiCallAddr =
-      l2.network.tokenBridge[layer === 2 ? 'l2Multicall' : 'l1MultiCall'];
-    const isL1Mainnet = layer === 1 && l2.network.partnerChainID === 1;
+      tokenBridge[layer === 2 ? 'childMultiCall' : 'parentMultiCall'];
+    const isL1Mainnet = layer === 1 && l2.network.parentChainId === 1;
     if (isL1Mainnet)
       multiCallAddr = '0x1b193bedb0b0a29c5759355d4193cb2838d2e170';
 
@@ -309,9 +315,14 @@ export const addPermitTags = async (
       }
       const originalIndex = calls[i].tokenIndex;
       // add to existing token lists w tags for all tokens (permit or no permit)
-      if (!permitTokenInfo[originalIndex].tags)
-        (permitTokenInfo[originalIndex].tags as string[]) = [];
-      permitTokenInfo[originalIndex].tags!.push(tag);
+      const tags = permitTokenInfo[originalIndex].tags ?? [];
+
+      if (!permitTokenInfo[originalIndex].tags) {
+        (permitTokenInfo[originalIndex].tags as unknown as string[]) = [];
+      }
+
+      tags.push(tag);
+      (permitTokenInfo[originalIndex].tags as unknown as string[]) = tags;
     }
   };
 

@@ -1,15 +1,34 @@
 import { providers } from 'ethers';
-import { MultiCaller } from '@arbitrum/sdk';
+import {
+  ArbitrumNetwork,
+  getArbitrumNetwork,
+  MultiCaller,
+} from '@arbitrum/sdk';
 import { getArgvs } from './options';
-import { customNetworks } from '../customNetworks';
+import { customNetworks, rpcs } from '../customNetworks';
+import { log } from 'console';
+
+const customNetworksObject = customNetworks.reduce<{
+  [chainId: number]: ArbitrumNetwork;
+}>((acc, customNetwork) => {
+  acc[customNetwork.chainId] = customNetwork;
+  return acc;
+}, {});
+
+const allNetworks: Record<number, ArbitrumNetwork> = {
+  ...customNetworksObject,
+  [42_161]: getArbitrumNetwork(42_161),
+  [421_614]: getArbitrumNetwork(421_614),
+  [42_170]: getArbitrumNetwork(42_170),
+};
 
 export const getNetworkConfig = async () => {
   const argv = getArgvs();
   const networkID = argv.l2NetworkID;
   console.log('Using L2 networkID:', networkID);
 
-  const childNetwork = customNetworks[networkID];
-  const childProvider = new providers.JsonRpcProvider();
+  const childNetwork = allNetworks[networkID];
+  const childProvider = new providers.JsonRpcProvider(rpcs[networkID]);
 
   const expectedEnv = (() => {
     if (childNetwork.parentChainId === 1) return 'MAINNET_RPC';
