@@ -1,10 +1,10 @@
-import { L2Network } from '@arbitrum/sdk';
+import { ArbitrumNetwork } from '@arbitrum/sdk';
 import orbitChainsData from './Assets/orbitChainsData.json';
 
-export const customNetworks = orbitChainsData.data as L2Network[];
+export const customNetworks = orbitChainsData.data as ArbitrumNetwork[];
 
 const orbitChainsRpc = orbitChainsData.data.reduce((acc, chain) => {
-  acc[chain.chainID] = chain.rpcUrl;
+  acc[chain.chainId] = chain.rpcUrl;
   return acc;
 }, {} as Record<number, string>);
 
