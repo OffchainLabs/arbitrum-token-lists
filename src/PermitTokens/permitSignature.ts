@@ -314,15 +314,16 @@ export const addPermitTags = async (
         tag = PermitTypes.NoPermit;
       }
       const originalIndex = calls[i].tokenIndex;
+      const info = permitTokenInfo[originalIndex];
+
       // add to existing token lists w tags for all tokens (permit or no permit)
-      const tags = permitTokenInfo[originalIndex].tags ?? [];
-
-      if (!permitTokenInfo[originalIndex].tags) {
-        (permitTokenInfo[originalIndex].tags as unknown as string[]) = [];
-      }
-
+      const tags = info.tags ?? [];
       tags.push(tag);
-      (permitTokenInfo[originalIndex].tags as unknown as string[]) = tags;
+
+      permitTokenInfo[originalIndex] = {
+        ...permitTokenInfo[originalIndex],
+        tags,
+      };
     }
   };
 

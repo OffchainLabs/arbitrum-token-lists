@@ -250,7 +250,7 @@ export const generateTokenList = async (
       const symbol = sanitizeSymbolString(_symbol);
 
       const arbTokenInfo: ArbTokenInfo = {
-        chainId: +l2.network.chainId,
+        chainId: Number(l2.network.chainId),
         address: token.l2Address,
         name,
         symbol,
