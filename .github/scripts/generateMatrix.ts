@@ -92,12 +92,12 @@ const arbitrumCommands: Command[] = [
 const orbitCommands: Command[] = [];
 
 async function addCommand({
-  chainID,
+  chainId,
   name,
   path,
   inputList,
 }: {
-  chainID: number;
+  chainId: number;
   name: string;
   path: string;
   inputList: string;
@@ -116,11 +116,11 @@ async function addCommand({
     name,
     paths: [path],
     version: true,
-    command: `yarn arbify --l2NetworkID ${chainID} ${previousListFlag} --tokenList ${inputList} --newArbifiedList ./src/${path}`,
+    command: `yarn arbify --l2NetworkID ${chainId} ${previousListFlag} --tokenList ${inputList} --newArbifiedList ./src/${path}`,
   };
 }
 
-function getUniswapTokenListFromPartnerChainId(chainId: number) {
+function getUniswapTokenListFromParentChainId(chainId: number) {
   return {
     // L1
     1: 'https://tokens.uniswap.org',
@@ -140,33 +140,33 @@ function getUniswapTokenListFromPartnerChainId(chainId: number) {
   }[chainId];
 }
 (async () => {
-  for (let { name, chainID, partnerChainID } of customNetworks) {
+  for (let { name, chainId, parentChainId } of customNetworks) {
     const inputUniswapTokenList =
-      getUniswapTokenListFromPartnerChainId(partnerChainID);
+      getUniswapTokenListFromParentChainId(parentChainId);
 
     if (!inputUniswapTokenList) {
       throw new Error(
-        `Uniswap token list on parent chain doesn't exist for ${name} (${chainID})`,
+        `Uniswap token list on parent chain doesn't exist for ${name} (${chainId})`,
       );
     }
 
     orbitCommands.push(
       await addCommand({
         name: `${name} Arbify Uniswap`,
-        chainID,
-        path: `ArbTokenLists/${chainID}_arbed_uniswap_labs.json`,
+        chainId,
+        path: `ArbTokenLists/${chainId}_arbed_uniswap_labs.json`,
         inputList: inputUniswapTokenList,
       }),
     );
 
     // For L3 settling on ArbOne, generate arbified native token list
-    if (partnerChainID === 42161) {
+    if (parentChainId === 42161) {
       orbitCommands.push(
         await addCommand({
           name: `${name} Arbify L2 native list`,
-          chainID,
-          path: `ArbTokenLists/${chainID}_arbed_native_list.json`,
-          inputList: `./src/Assets/${partnerChainID}_arbitrum_native_token_list.json`,
+          chainId,
+          path: `ArbTokenLists/${chainId}_arbed_native_list.json`,
+          inputList: `./src/Assets/${parentChainId}_arbitrum_native_token_list.json`,
         }),
       );
     }

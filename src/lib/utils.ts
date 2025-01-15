@@ -2,7 +2,7 @@ import { TokenList } from '@uniswap/token-lists';
 import { readFileSync, existsSync } from 'fs';
 import axios from 'axios';
 import axiosRetry from 'axios-retry';
-import { L2Network, MultiCaller } from '@arbitrum/sdk';
+import { ArbitrumNetwork, MultiCaller } from '@arbitrum/sdk';
 import { L1GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L1GatewayRouter__factory';
 import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L2GatewayRouter__factory';
 
@@ -67,7 +67,7 @@ export const listNameToArbifiedListName = (
 export const getL1TokenAndL2Gateway = async (
   tokenList: { addr: string; logo: string | undefined }[],
   l2Multicaller: MultiCaller,
-  l2Network: L2Network,
+  l2Network: ArbitrumNetwork,
 ): Promise<Array<GraphTokenResult>> => {
   const routerData = await getL2GatewayAddressesFromL1Token(
     tokenList.map((curr) => curr.addr),
@@ -117,7 +117,7 @@ export const getL1GatewayAddress = (l2GatewayAddress: string) => {
 export const getL2GatewayAddressesFromL1Token = async (
   l1TokenAddresses: string[],
   l2Multicaller: MultiCaller,
-  l2Network: L2Network,
+  l2Network: ArbitrumNetwork,
 ): Promise<string[]> => {
   const iFace = L1GatewayRouter__factory.createInterface();
 
@@ -140,12 +140,18 @@ export const getL2GatewayAddressesFromL1Token = async (
     );
 
     const l1TokenAddressesSlice = l1TokenAddresses.slice(index, index + INC);
+
+    const tokenBridge = l2Network.tokenBridge;
+    if (!tokenBridge) {
+      throw new Error('Child network is missing tokenBridge');
+    }
+
     const result = await l2Multicaller.multiCall(
       l1TokenAddressesSlice.map((addr) => ({
         encoder: () => iFace.encodeFunctionData('getGateway', [addr]),
         decoder: (returnData: string) =>
           iFace.decodeFunctionResult('getGateway', returnData)[0] as string,
-        targetAddr: l2Network.tokenBridge.l2GatewayRouter,
+        targetAddr: tokenBridge.childGatewayRouter,
       })),
     );
     gateways = gateways.concat(result);

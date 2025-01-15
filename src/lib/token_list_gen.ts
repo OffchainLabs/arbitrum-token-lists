@@ -78,8 +78,8 @@ export const generateTokenList = async (
 
   let tokens: GraphTokenResult[] =
     options && options.getAllTokensInNetwork
-      ? await promiseErrorMultiplier(getAllTokens(l2.network.chainID), () =>
-          getAllTokens(l2.network.chainID),
+      ? await promiseErrorMultiplier(getAllTokens(l2.network.chainId), () =>
+          getAllTokens(l2.network.chainId),
         )
       : await promiseErrorMultiplier(
           getL1TokenAndL2Gateway(
@@ -106,6 +106,12 @@ export const generateTokenList = async (
       ? tokens.map((curr) => curr.l1TokenAddr)
       : l1TokenListL1Tokens.map((token) => token.address);
 
+  const tokenBridge = l2.network.tokenBridge;
+
+  if (!tokenBridge) {
+    throw new Error('Child network is missing tokenBridge');
+  }
+
   const intermediatel2AddressesFromL1 = [];
   const intermediatel2AddressesFromL2 = [];
   for (const addrs of getChunks(l1TokenAddresses)) {
@@ -113,13 +119,13 @@ export const generateTokenList = async (
       getL2TokenAddressesFromL1(
         addrs,
         l1.multiCaller,
-        l2.network.tokenBridge.l1GatewayRouter,
+        tokenBridge.parentGatewayRouter,
       ),
       () =>
         getL2TokenAddressesFromL1(
           addrs,
           l1.multiCaller,
-          l2.network.tokenBridge.l1GatewayRouter,
+          tokenBridge.parentGatewayRouter,
         ),
     );
     intermediatel2AddressesFromL1.push(l2AddressesFromL1Temp);
@@ -127,13 +133,13 @@ export const generateTokenList = async (
       getL2TokenAddressesFromL2(
         addrs,
         l2.multiCaller,
-        l2.network.tokenBridge.l2GatewayRouter,
+        tokenBridge.childGatewayRouter,
       ),
       () =>
         getL2TokenAddressesFromL2(
           addrs,
           l2.multiCaller,
-          l2.network.tokenBridge.l2GatewayRouter,
+          tokenBridge.childGatewayRouter,
         ),
     );
     intermediatel2AddressesFromL2.push(l2AddressesFromL2Temp);
@@ -244,7 +250,7 @@ export const generateTokenList = async (
       const symbol = sanitizeSymbolString(_symbol);
 
       const arbTokenInfo: ArbTokenInfo = {
-        chainId: +l2.network.chainID,
+        chainId: Number(l2.network.chainId),
         address: token.l2Address,
         name,
         symbol,
@@ -252,7 +258,7 @@ export const generateTokenList = async (
         logoURI: logos[token.token.l1TokenAddr],
         extensions: {
           bridgeInfo: {
-            [l2.network.partnerChainID]: {
+            [l2.network.parentChainId]: {
               tokenAddress: token.token.l1TokenAddr, // this is the wrong address
               originBridgeAddress: l2GatewayAddress,
               destBridgeAddress: l1GatewayAddress,
@@ -277,7 +283,7 @@ export const generateTokenList = async (
     return (
       tokenInfo &&
       tokenInfo.extensions &&
-      tokenInfo.extensions.bridgeInfo[l2.network.partnerChainID]
+      tokenInfo.extensions.bridgeInfo[l2.network.parentChainId]
         .originBridgeAddress !== arbConstants.DISABLED_GATEWAY
     );
   }) as ArbTokenInfo[];
@@ -286,7 +292,7 @@ export const generateTokenList = async (
   console.log(`List has ${arbifiedTokenList.length} bridged tokens`);
 
   const allOtherTokens = l1TokenList.tokens
-    .filter((l1TokenInfo) => l1TokenInfo.chainId !== l2.network.chainID)
+    .filter((l1TokenInfo) => l1TokenInfo.chainId !== l2.network.chainId)
     .map((l1TokenInfo) => {
       return {
         chainId: +l1TokenInfo.chainId,
@@ -308,7 +314,7 @@ export const generateTokenList = async (
       .filter((l1TokenInfo) => {
         return (
           !l1AddressesOfBridgedTokens.has(l1TokenInfo.address.toLowerCase()) &&
-          l1TokenInfo.chainId === +l2.network.partnerChainID
+          l1TokenInfo.chainId === +l2.network.parentChainId
         );
       })
       .sort((a, b) => (a.symbol < b.symbol ? -1 : 1));
@@ -324,7 +330,7 @@ export const generateTokenList = async (
     name:
       options && options.preserveListName
         ? name
-        : listNameToArbifiedListName(name, l2.network.chainID),
+        : listNameToArbifiedListName(name, l2.network.chainId),
     timestamp: new Date().toISOString(),
     version,
     tokens: arbifiedTokenList,
