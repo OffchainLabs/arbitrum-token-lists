@@ -8,11 +8,21 @@ const orbitChainsRpc = orbitChainsData.data.reduce((acc, chain) => {
   return acc;
 }, {} as Record<number, string>);
 
+if (!process.env.ARB_ONE_RPC) {
+  throw new Error('process.env.ARB_ONE_RPC was not set');
+}
+if (!process.env.ARB_NOVA_RPC) {
+  throw new Error('process.env.ARB_NOVA_RPC was not set');
+}
+if (!process.env.ARB_SEPOLIA_RPC) {
+  throw new Error('process.env.ARB_SEPOLIA_RPC was not set');
+}
+
 export const rpcs: Record<number, string> = {
   // Arbitrum networks
-  42161: 'https://arb1.arbitrum.io/rpc',
-  42170: 'https://nova.arbitrum.io/rpc',
-  421614: 'https://sepolia-rollup.arbitrum.io/rpc',
+  42161: process.env.ARB_ONE_RPC,
+  42170: process.env.ARB_NOVA_RPC,
+  421614: process.env.ARB_SEPOLIA_RPC,
   // Orbit chains
   ...orbitChainsRpc,
 };
