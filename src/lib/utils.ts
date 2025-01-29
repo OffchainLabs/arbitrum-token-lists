@@ -396,10 +396,10 @@ export const isTokenList = (obj: any) => {
 };
 
 export const sanitizeNameString = (str: string) =>
-  str.replace(/[^ \w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)]/gi, '');
+  str.replace(/[^ \w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)₮]/gi, '');
 
 export const sanitizeSymbolString = (str: string) =>
-  str.replace(/[^\w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)]/gi, '');
+  str.replace(/[^\w.'+\-%/À-ÖØ-öø-ÿ:&\[\]\(\)₮]/gi, '');
 
 export function* getChunks<T>(arr: Array<T>, chunkSize = 500) {
   for (let i = 0; i < arr.length; i += chunkSize) {
