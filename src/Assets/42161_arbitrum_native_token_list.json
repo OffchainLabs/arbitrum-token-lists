@@ -33,4 +33,96 @@
     }
   ],
   "logoURI": "https://avatars.githubusercontent.com/u/43838009"
+},
+{
+  "name": "Arbitrum Token List",
+  "timestamp": "2025-02-06T00:00:00Z",
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "tokens": [
+    {
+      "chainId": 42161,
+      "address": "0x14d44f4457de9bd6435b566543d0a58754ba27b3",
+      "name": "FYDE",
+      "symbol": "FYDE",
+      "decimals": 18,
+      "logoURI": "https://arbiscan.io/token/0x14d44f4457de9bd6435b566543d0a58754ba27b3"
+    },
+    {
+      "chainId": 42161,
+      "address": "0x8707cdf0767a4a956d6ebd7728a2ad483b334968",
+      "name": "PEPE",
+      "symbol": "PEPE",
+      "decimals": 18,
+      "logoURI": "https://arbiscan.io/token/0x8707cdf0767a4a956d6ebd7728a2ad483b334968"
+    },
+    {
+      "chainId": 42161,
+      "address": "0x422e3b839e0bcf7c9dbc7df39329e9380096149c",
+      "name": "Tether USD",
+      "symbol": "USDT",
+      "decimals": 6,
+      "logoURI": "https://arbiscan.io/token/0x422e3b839e0bcf7c9dbc7df39329e9380096149c"
+    },
+    {
+      "chainId": 42161,
+      "address": "0xcbc79972198fd73ddb8fdee6dcdec1e6270be357",
+      "name": "Ethereum",
+      "symbol": "ETH",
+      "decimals": 18,
+      "logoURI": "https://arbiscan.io/token/0xcbc79972198fd73ddb8fdee6dcdec1e6270be357"
+    },
+    {
+      "chainId": 42161,
+      "address": "0x1db4E24A2747D0E7b209E9BB4EFe0b7d3Df806B0",
+      "name": "Aave",
+      "symbol": "AAVE",
+      "decimals": 18,
+      "logoURI": "https://arbiscan.io/token/0x1db4E24A2747D0E7b209E9BB4EFe0b7d3Df806B0"
+    },
+    {
+      "chainId": 42161,
+      "address": "0x7b6bcfbb49199e16b5c2cd9f1b627575e2fadf6f",
+      "name": "Curve DAO Token",
+      "symbol": "CRV",
+      "decimals": 18,
+      "logoURI": "https://arbiscan.io/token/0x7b6bcfbb49199e16b5c2cd9f1b627575e2fadf6f"
+    },
+    {
+      "chainId": 42161,
+      "address": "0xece654d50a41c1f562e46ecee9334a45a57b918d",
+      "name": "Wrapped Bitcoin",
+      "symbol": "WBTC",
+      "decimals": 8,
+      "logoURI": "https://arbiscan.io/token/0xece654d50a41c1f562e46ecee9334a45a57b918d"
+    },
+    {
+      "chainId": 42161,
+      "address": "0xb2785e03e542161d3dfa3ce3ddad4a26d892cd6a",
+      "name": "ZAP",
+      "symbol": "ZAP",
+      "decimals": 18,
+      "logoURI": "https://arbiscan.io/token/0xb2785e03e542161d3dfa3ce3ddad4a26d892cd6a"
+    },
+    {
+      "chainId": 42161,
+      "address": "0xcceea600520f56982e389e97ac6ac1ffc68c3b9d",
+      "name": "Dai Stablecoin",
+      "symbol": "DAI",
+      "decimals": 18,
+      "logoURI": "https://arbiscan.io/token/0xcceea600520f56982e389e97ac6ac1ffc68c3b9d"
+    },
+    {
+      "chainId": 42161,
+      "address": "0xb41877593e1eec5a380f8c22d0abfa17b0865527",
+      "name": "Arbitrum Token",
+      "symbol": "ARB",
+      "decimals": 18,
+      "logoURI": "https://arbiscan.io/token/0xb41877593e1eec5a380f8c22d0abfa17b0865527"
+    }
+  ]
 }
+
