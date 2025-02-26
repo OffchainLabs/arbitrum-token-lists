@@ -1,7 +1,10 @@
 import { ArbitrumNetwork } from '@arbitrum/sdk';
 import orbitChainsData from './Assets/orbitChainsData.json';
 
-export const customNetworks = orbitChainsData.data as ArbitrumNetwork[];
+const excludedNetworksIds = [98865];
+export const customNetworks = (
+  orbitChainsData.data as ArbitrumNetwork[]
+).filter((chain) => !excludedNetworksIds.includes(chain.chainId));
 
 const orbitChainsRpc = orbitChainsData.data.reduce((acc, chain) => {
   acc[chain.chainId] = chain.rpcUrl;
