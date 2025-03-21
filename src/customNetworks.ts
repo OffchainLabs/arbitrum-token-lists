@@ -1,7 +1,7 @@
 import { ArbitrumNetwork } from '@arbitrum/sdk';
 import orbitChainsData from './Assets/orbitChainsData.json';
 
-const excludedNetworksIds: number[] = [149, 749]; // Social network mainnet and testnet
+const excludedNetworksIds: number[] = [];
 export const customNetworks = (
   orbitChainsData.data as ArbitrumNetwork[]
 ).filter((chain) => !excludedNetworksIds.includes(chain.chainId));
