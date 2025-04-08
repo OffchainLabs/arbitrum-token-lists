@@ -54,9 +54,12 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: ./.github/actions/restore-cache
+      - name: Install node_modules
+        uses: OffchainLabs/actions/node-modules/install@main
+
       - name: Generate orbit chains data
         run: yarn generate:orbitChainsData
 
@@ -89,9 +92,11 @@ jobs:
       L2_GATEWAY_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SUBGRAPH_URL }}'
       L2_GATEWAY_SEPOLIA_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SEPOLIA_SUBGRAPH_URL }}'
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: ./.github/actions/restore-cache
+      - name: Install node_modules
+        uses: OffchainLabs/actions/node-modules/install@main
 
       - name: Generate orbit chains data
         run: yarn generate:orbitChainsData
