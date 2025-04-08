@@ -16,7 +16,7 @@ env:
   ARB_NOVA_RPC: 'https://nova.arbitrum.io/rpc'
 
 jobs:
- check-formatting:
+  check-formatting:
     name: 'Check Formatting'
     runs-on: ubuntu-latest
     steps:
