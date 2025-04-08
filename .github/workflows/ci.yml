@@ -16,38 +16,15 @@ env:
   ARB_NOVA_RPC: 'https://nova.arbitrum.io/rpc'
 
 jobs:
-  install:
-    name: 'Install'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Check cache for "node_modules"
-        id: cache
-        uses: martijnhols/actions-cache/check@v3
-        with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
-
-      - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: yarn install --frozen-lockfile
-
-      - name: Save "node_modules" to cache
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: martijnhols/actions-cache/save@v3
-        with:
-          path: '**/node_modules'
-          key: ${{ steps.cache.outputs.primary-key }}
-
-  check-formatting:
+ check-formatting:
     name: 'Check Formatting'
     runs-on: ubuntu-latest
-    needs: [install]
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: ./.github/actions/restore-cache
+      - name: Install node_modules
+        uses: OffchainLabs/actions/node-modules/install@main
 
       - name: Generate orbit chains data
         run: yarn generate:orbitChainsData
@@ -59,7 +36,6 @@ jobs:
     name: 'Integration tests'
     runs-on: ubuntu-latest
     environment: CI
-    needs: [install]
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
       MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
@@ -68,9 +44,11 @@ jobs:
       L2_GATEWAY_SEPOLIA_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SEPOLIA_SUBGRAPH_URL }}'
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: ./.github/actions/restore-cache
+      - name: Install node_modules
+        uses: OffchainLabs/actions/node-modules/install@main
 
       - name: Generate orbit chains data
         run: yarn generate:orbitChainsData
@@ -82,7 +60,6 @@ jobs:
     name: 'Unit tests'
     runs-on: ubuntu-latest
     environment: CI
-    needs: [install]
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
       MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
@@ -91,9 +68,11 @@ jobs:
       L2_GATEWAY_SEPOLIA_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SEPOLIA_SUBGRAPH_URL }}'
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: ./.github/actions/restore-cache
+      - name: Install node_modules
+        uses: OffchainLabs/actions/node-modules/install@main
 
       - name: Generate orbit chains data
         run: yarn generate:orbitChainsData

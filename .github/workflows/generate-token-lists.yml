@@ -18,33 +18,8 @@ on:
         default: 'Test'
 
 jobs:
-  install:
-    name: 'Install'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Check cache for "node_modules"
-        id: cache
-        uses: martijnhols/actions-cache/check@v3
-        with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
-
-      - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: yarn install --frozen-lockfile
-
-      - name: Save "node_modules" to cache
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: martijnhols/actions-cache/save@v3
-        with:
-          path: '**/node_modules'
-          key: ${{ steps.cache.outputs.primary-key }}
-
   generate-matrix:
     runs-on: ubuntu-latest
-    needs: [install]
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
       MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
@@ -54,9 +29,12 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: ./.github/actions/restore-cache
+      - name: Install node_modules
+        uses: OffchainLabs/actions/node-modules/install@main
+
       - name: Generate orbit chains data
         run: yarn generate:orbitChainsData
 
@@ -67,7 +45,7 @@ jobs:
     name: 'Generate'
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    needs: [install, generate-matrix]
+    needs: [generate-matrix]
     permissions:
       id-token: write # need this for OIDC
       contents: read # This is required for actions/checkout@v2
@@ -89,9 +67,11 @@ jobs:
       L2_GATEWAY_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SUBGRAPH_URL }}'
       L2_GATEWAY_SEPOLIA_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SEPOLIA_SUBGRAPH_URL }}'
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: ./.github/actions/restore-cache
+      - name: Install node_modules
+        uses: OffchainLabs/actions/node-modules/install@main
 
       - name: Generate orbit chains data
         run: yarn generate:orbitChainsData
@@ -160,7 +140,7 @@ jobs:
   error-alerts:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    needs: [install, generate-token-lists]
+    needs: [generate-token-lists]
     # Run this job if any of the job in needs array failed
     if: ${{ always() && contains(needs.*.result, 'failure') }}
     steps:
