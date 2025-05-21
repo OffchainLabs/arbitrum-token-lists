@@ -1,7 +1,7 @@
 import { ArbitrumNetwork } from '@arbitrum/sdk';
 import orbitChainsData from './Assets/orbitChainsData.json';
 
-const excludedNetworksIds: number[] = [1918988905]; // RARI testnet
+const excludedNetworksIds: number[] = [];
 
 export const customNetworks = (
   orbitChainsData.data as ArbitrumNetwork[]
