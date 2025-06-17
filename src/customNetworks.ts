@@ -1,7 +1,7 @@
 import { ArbitrumNetwork } from '@arbitrum/sdk';
 import orbitChainsData from './Assets/orbitChainsData.json';
 
-const excludedNetworksIds: number[] = [];
+const excludedNetworksIds: number[] = [394 /** nexus sepolia */];
 
 export const customNetworks = (
   orbitChainsData.data as ArbitrumNetwork[]
