@@ -23,14 +23,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Install node_modules
         uses: OffchainLabs/actions/node-modules/install@main
+        with:
+          cache-key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          install-command: 'pnpm install --frozen-lockfile'
 
       - name: Generate orbit chains data
-        run: yarn generate:orbitChainsData
+        run: pnpm generate:orbitChainsData
 
       - name: Check formatting with Prettier
-        run: yarn prettier:check
+        run: pnpm prettier:check
 
   integration-test:
     name: 'Integration tests'
@@ -47,14 +55,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Install node_modules
         uses: OffchainLabs/actions/node-modules/install@main
+        with:
+          cache-key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          install-command: 'pnpm install --frozen-lockfile'
 
       - name: Generate orbit chains data
-        run: yarn generate:orbitChainsData
+        run: pnpm generate:orbitChainsData
 
       - name: Test
-        run: yarn test:integration
+        run: pnpm test:integration
 
   unit-test:
     name: 'Unit tests'
@@ -71,14 +87,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Install node_modules
         uses: OffchainLabs/actions/node-modules/install@main
+        with:
+          cache-key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          install-command: 'pnpm install --frozen-lockfile'
 
       - name: Generate orbit chains data
-        run: yarn generate:orbitChainsData
+        run: pnpm generate:orbitChainsData
 
       - name: Test
-        run: yarn test:unit
+        run: pnpm test:unit
 
   generate-token-lists:
     uses: ./.github/workflows/generate-token-lists.yml

@@ -32,11 +32,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Install node_modules
         uses: OffchainLabs/actions/node-modules/install@main
+        with:
+          cache-key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          install-command: 'pnpm install --frozen-lockfile'
 
       - name: Generate orbit chains data
-        run: yarn generate:orbitChainsData
+        run: pnpm generate:orbitChainsData
 
       - id: set-matrix
         run: echo "matrix=$(npm run generate:matrix --silent)" >> $GITHUB_OUTPUT
@@ -70,11 +78,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Install node_modules
         uses: OffchainLabs/actions/node-modules/install@main
+        with:
+          cache-key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          install-command: 'pnpm install --frozen-lockfile'
 
       - name: Generate orbit chains data
-        run: yarn generate:orbitChainsData
+        run: pnpm generate:orbitChainsData
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
