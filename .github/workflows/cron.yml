@@ -2,7 +2,7 @@ name: Cron
 
 on:
   schedule:
-    - cron: '0/10 * * * *'
+    - cron: '2 * * * *' # At minute 2 past every hour
 
 jobs:
   generate-token-lists:
