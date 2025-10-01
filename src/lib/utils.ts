@@ -246,35 +246,44 @@ export const getTokenListObjFromLocalPath = async (path: string) => {
 export const removeInvalidTokensFromList = (
   tokenList: ArbTokenList | TokenList,
 ): ArbTokenList | TokenList => {
-  let valid = tokenListIsValid(tokenList);
-  const startingTokenListLen = tokenList.tokens.length;
-
-  if (valid) {
+  // Quick check: if valid, return immediately
+  if (tokenListIsValid(tokenList)) {
     return tokenList;
-  } else {
-    const tokenListCopy = JSON.parse(
-      JSON.stringify(tokenList),
-    ) as typeof tokenList;
-    console.log('Invalid token list:');
-    while (!valid && tokenListCopy.tokens.length > 0) {
-      const targetToken = tokenListCopy.tokens.pop();
-      const tokenTokenIndex = tokenListCopy.tokens.length;
-      valid = tokenListIsValid(tokenListCopy);
-      if (valid) {
-        console.log('Invalid token token, removing from list', targetToken);
+  }
 
-        tokenList.tokens.splice(tokenTokenIndex, 1);
-        // pre-recursion sanity check:
-        if (tokenList.tokens.length >= startingTokenListLen) {
-          throw new Error(
-            '666: removeInvalidTokensFromList failed basic sanity check',
-          );
-        }
-        return removeInvalidTokensFromList(tokenList);
-      }
+  console.log('Invalid token list detected, filtering invalid tokens...');
+
+  // Validate each token individually (much faster than repeated full-list validation)
+  const validTokens = tokenList.tokens.filter((token) => {
+    const singleTokenList = {
+      ...tokenList,
+      tokens: [token],
+    };
+
+    const isValid = tokenListIsValid(singleTokenList);
+
+    if (!isValid) {
+      console.log('Removing invalid token:', token.name || token.address);
     }
+
+    return isValid;
+  });
+
+  const removedCount = tokenList.tokens.length - validTokens.length;
+  console.log(`Removed ${removedCount} invalid token(s)`);
+
+  // Create cleaned list
+  const cleanedList = {
+    ...tokenList,
+    tokens: validTokens,
+  };
+
+  // Final validation to catch list-level issues (not token-level)
+  if (!tokenListIsValid(cleanedList)) {
     throw new Error('Data does not confirm to token list schema; not sure why');
   }
+
+  return cleanedList;
 };
 
 export const getTokenListObj = async (pathOrUrl: string) => {
