@@ -6,6 +6,7 @@ import daiPermitTokenAbi from '../PermitTokens/daiPermitTokenAbi.json';
 import multicallAbi from '../PermitTokens/multicallAbi.json';
 import { getNetworkConfig } from '../lib/instantiate_bridge';
 import { getChunks, promiseRetrier } from '../lib/utils';
+import { loadCache } from '../lib/tokenListCache';
 
 async function getPermitSig(
   wallet: Wallet,
@@ -156,6 +157,11 @@ export const addPermitTags = async (
   console.log('Adding permit tags');
   const { l1, l2 } = await getNetworkConfig();
 
+  // Load cache from public S3 URL (uses latest deployed production data)
+  const { permitCache } = await loadCache({
+    chainId: l2.network.chainId,
+  });
+
   const value = utils.parseUnits('1.0', 18);
   const deadline = constants.MaxUint256;
 
@@ -169,8 +175,37 @@ export const addPermitTags = async (
 
   const permitTokenInfo: ArbTokenInfo[] = [...tokenList.tokens];
 
+  // Apply cached results first
+  let cachedCount = 0;
   for (let i = 0; i < permitTokenInfo.length; i++) {
     const curr = permitTokenInfo[i];
+    const cacheKey = `${curr.chainId}:${curr.address.toLowerCase()}`;
+    const cachedResult = permitCache[cacheKey] as PermitTypes | undefined;
+
+    if (cachedResult) {
+      const tags = curr.tags ?? [];
+      tags.push(cachedResult);
+      permitTokenInfo[i] = {
+        ...permitTokenInfo[i],
+        tags,
+      };
+      cachedCount++;
+    }
+  }
+  console.log(
+    `Applied ${cachedCount} cached permit results from existing token lists`,
+  );
+
+  // Only process tokens not in cache
+  for (let i = 0; i < permitTokenInfo.length; i++) {
+    const curr = permitTokenInfo[i];
+    const cacheKey = `${curr.chainId}:${curr.address.toLowerCase()}`;
+
+    // Skip if already cached
+    if (permitCache[cacheKey]) {
+      continue;
+    }
+
     const isL1Token = curr.chainId === l2.network.parentChainId;
     const isL2Token = curr.chainId === l2.network.chainId;
     if (!isL1Token && !isL2Token) continue;
@@ -268,13 +303,17 @@ export const addPermitTags = async (
   }
 
   const handleCalls = async (calls: Array<Call>, layer: 1 | 2) => {
+    if (calls.length === 0) {
+      console.log(`No uncached tokens to check on L${layer}`);
+      return;
+    }
+
     const tokenBridge = l2.network.tokenBridge;
 
     if (!tokenBridge) {
       throw new Error('Child network is missing tokenBridge');
     }
 
-    // TODO: use SDKs multicaller
     let multiCallAddr =
       tokenBridge[layer === 2 ? 'childMultiCall' : 'parentMultiCall'];
     const isL1Mainnet = layer === 1 && l2.network.parentChainId === 1;
@@ -283,10 +322,9 @@ export const addPermitTags = async (
 
     const provider = (layer === 1 ? l1 : l2).provider;
     const multicall = new Contract(multiCallAddr, multicallAbi, provider);
-    // get array of results from tryAggregate
     const tryPermit = [];
-    for (const chunk of getChunks(calls, 10)) {
-      console.log('handling chunk of size', chunk.length);
+    for (const chunk of getChunks(calls, 100)) {
+      console.log(`Processing chunk of ${chunk.length} calls on L${layer}`);
       const curr = promiseRetrier(() =>
         multicall.callStatic[
           isL1Mainnet ? 'tryAggregateGasRation' : 'tryAggregate'
@@ -315,6 +353,10 @@ export const addPermitTags = async (
       }
       const originalIndex = calls[i].tokenIndex;
       const info = permitTokenInfo[originalIndex];
+
+      // Add to cache
+      const cacheKey = `${info.chainId}:${info.address.toLowerCase()}`;
+      permitCache[cacheKey] = tag;
 
       // add to existing token lists w tags for all tokens (permit or no permit)
       const tags = info.tags ?? [];

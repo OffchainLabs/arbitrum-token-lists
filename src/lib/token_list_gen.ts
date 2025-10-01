@@ -32,6 +32,7 @@ import { getPrevList } from './store';
 import { getArgvs } from './options';
 import { BridgedUSDCContractAddressArb1 } from './constants';
 import { getVersion } from './getVersion';
+import { loadCache } from './tokenListCache';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -168,23 +169,85 @@ export const generateTokenList = async (
   l2AddressesFromL1 = filteredL2AddressesFromL1;
   l2AddressesFromL2 = filteredL2AddressesFromL1;
 
-  const intermediateTokenData = [];
-  for (const addrs of getChunks(l2AddressesFromL1, 100)) {
-    const tokenDataTemp = await promiseErrorMultiplier(
-      l2.multiCaller.getTokenData(
-        addrs.map((t) => t || constants.AddressZero),
-        { name: true, decimals: true, symbol: true },
-      ),
-      () =>
-        l2.multiCaller.getTokenData(
-          addrs.map((t) => t || constants.AddressZero),
-          { name: true, decimals: true, symbol: true },
-        ),
-    );
-    intermediateTokenData.push(tokenDataTemp);
+  // Load metadata cache from public S3 URL (uses latest deployed production data)
+  const { metadataCache } = await loadCache({
+    chainId: l2.network.chainId,
+  });
+  let cacheHits = 0;
+  let cacheMisses = 0;
+
+  // Build token data array using cache where possible
+  const tokenData: Array<
+    | {
+        name: string | undefined;
+        symbol: string | undefined;
+        decimals: number | undefined;
+      }
+    | undefined
+  > = [];
+
+  const uncachedAddresses: string[] = [];
+  const uncachedIndices: number[] = [];
+
+  for (let i = 0; i < l2AddressesFromL1.length; i++) {
+    const addr = l2AddressesFromL1[i];
+    if (!addr || addr === constants.AddressZero) {
+      tokenData.push(undefined);
+      continue;
+    }
+
+    const cacheKey = `${l2.network.chainId}:${addr.toLowerCase()}`;
+    const cached = metadataCache[cacheKey];
+
+    if (cached) {
+      tokenData.push(cached);
+      cacheHits++;
+    } else {
+      tokenData.push(undefined);
+      uncachedAddresses.push(addr);
+      uncachedIndices.push(i);
+      cacheMisses++;
+    }
   }
 
-  const tokenData = intermediateTokenData.flat(1);
+  console.log(
+    `Metadata cache (from existing token lists): ${cacheHits} hits, ${cacheMisses} misses`,
+  );
+
+  // Fetch uncached token data
+  if (uncachedAddresses.length > 0) {
+    const intermediateTokenData = [];
+    for (const addrs of getChunks(uncachedAddresses, 100)) {
+      const tokenDataTemp = await promiseErrorMultiplier(
+        l2.multiCaller.getTokenData(addrs, {
+          name: true,
+          decimals: true,
+          symbol: true,
+        }),
+        () =>
+          l2.multiCaller.getTokenData(addrs, {
+            name: true,
+            decimals: true,
+            symbol: true,
+          }),
+      );
+      intermediateTokenData.push(tokenDataTemp);
+    }
+
+    const fetchedData = intermediateTokenData.flat(1);
+
+    // Merge fetched data back into tokenData array and update cache
+    for (let i = 0; i < fetchedData.length; i++) {
+      const originalIndex = uncachedIndices[i];
+      const addr = uncachedAddresses[i];
+      const data = fetchedData[i];
+
+      tokenData[originalIndex] = data;
+
+      // Note: New metadata will be included in the generated token list,
+      // which gets deployed to S3 and becomes the cache for the next run
+    }
+  }
 
   const _arbifiedTokenList = tokens
     .map((t, i) => ({
@@ -203,7 +266,10 @@ export const generateTokenList = async (
         token.token.joinTableEntry[0].gateway.gatewayAddr;
       const l1GatewayAddress = getL1GatewayAddress(l2GatewayAddress) ?? 'N/A';
 
-      let { name: _name, decimals, symbol: _symbol } = token.tokenDatum;
+      const tokenDatum = token.tokenDatum;
+      if (!tokenDatum) return undefined;
+
+      let { name: _name, decimals, symbol: _symbol } = tokenDatum;
 
       // we queried the L2 token and got nothing, so token doesn't exist yet
       if (decimals === undefined) return undefined;
