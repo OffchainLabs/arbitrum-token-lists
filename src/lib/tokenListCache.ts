@@ -18,9 +18,6 @@ export interface CacheData {
   metadataCache: MetadataCache;
 }
 
-const PUBLIC_TOKEN_LIST_BASE_URL =
-  'https://tokenlist.arbitrum.io/ArbTokenLists';
-
 /**
  * Fetches the public token list from S3 and extracts cache data.
  */
@@ -89,41 +86,40 @@ export async function loadCacheFromPublicURL(
   }
 }
 
-
 /**
- * Gets the public URL for a token list based on chainId.
+ * Extracts cache data from an already-loaded token list.
+ * This is more efficient than fetching from S3 since the list is already loaded.
  */
-function getPublicTokenListURL(chainId: number): string | null {
-  const chainIdToListName: Record<number, string> = {
-    42161: 'arbed_uniswap_labs.json',
-    42170: '42170_arbed_uniswap_labs.json',
-    421614: '421614_arbed_uniswap_labs.json',
-  };
+export function extractCacheFromTokenList(tokenList: ArbTokenList): CacheData {
+  const permitCache: PermitCache = {};
+  const metadataCache: MetadataCache = {};
 
-  const fileName = chainIdToListName[chainId];
-  if (!fileName) {
-    return null;
+  if (!tokenList.tokens || !Array.isArray(tokenList.tokens)) {
+    return { permitCache, metadataCache };
   }
 
-  return `${PUBLIC_TOKEN_LIST_BASE_URL}/${fileName}`;
-}
+  for (const token of tokenList.tokens) {
+    const cacheKey = `${token.chainId}:${token.address.toLowerCase()}`;
 
-/**
- * Loads cache from S3. Fetches the latest production token list and extracts cached data.
- * No local caching - always fetches from S3 to ensure consistency across all environments.
- */
-export async function loadCache(options?: {
-  chainId?: number;
-  publicListUrl?: string;
-}): Promise<CacheData> {
-  const publicUrl =
-    options?.publicListUrl ||
-    (options?.chainId ? getPublicTokenListURL(options.chainId) : null);
+    // Extract permit tag if present
+    if (token.tags && Array.isArray(token.tags)) {
+      const permitTag = token.tags.find(
+        (tag: string) => tag.includes('Permit') || tag.includes('permit'),
+      );
+      if (permitTag) {
+        permitCache[cacheKey] = permitTag;
+      }
+    }
 
-  if (!publicUrl) {
-    console.log('No public URL available, starting with empty cache');
-    return { permitCache: {}, metadataCache: {} };
+    // Extract metadata
+    if (token.name && token.symbol && token.decimals !== undefined) {
+      metadataCache[cacheKey] = {
+        name: token.name,
+        symbol: token.symbol,
+        decimals: token.decimals,
+      };
+    }
   }
 
-  return await loadCacheFromPublicURL(publicUrl);
+  return { permitCache, metadataCache };
 }

@@ -6,7 +6,8 @@ import daiPermitTokenAbi from '../PermitTokens/daiPermitTokenAbi.json';
 import multicallAbi from '../PermitTokens/multicallAbi.json';
 import { getNetworkConfig } from '../lib/instantiate_bridge';
 import { getChunks, promiseRetrier } from '../lib/utils';
-import { loadCache } from '../lib/tokenListCache';
+import { getPrevList } from '../lib/store';
+import { getArgvs } from '../lib/options';
 
 async function getPermitSig(
   wallet: Wallet,
@@ -156,11 +157,32 @@ export const addPermitTags = async (
 ): Promise<ArbTokenList> => {
   console.log('Adding permit tags');
   const { l1, l2 } = await getNetworkConfig();
+  const argvs = getArgvs();
 
-  // Load cache from public S3 URL (uses latest deployed production data)
-  const { permitCache } = await loadCache({
-    chainId: l2.network.chainId,
-  });
+  // Load cache from previous token list (same list we're updating)
+  const prevList = argvs.ignorePreviousList
+    ? null
+    : await getPrevList(argvs.prevArbifiedList);
+
+  const permitCache: { [key: string]: string } = {};
+  if (prevList && prevList.tokens) {
+    for (const token of prevList.tokens) {
+      if (token.tags && Array.isArray(token.tags)) {
+        const permitTag = token.tags.find(
+          (tag: string) => tag.includes('Permit') || tag.includes('permit'),
+        );
+        if (permitTag) {
+          const cacheKey = `${token.chainId}:${token.address.toLowerCase()}`;
+          permitCache[cacheKey] = permitTag;
+        }
+      }
+    }
+    console.log(
+      `Loaded ${
+        Object.keys(permitCache).length
+      } permit tags from previous list`,
+    );
+  }
 
   const value = utils.parseUnits('1.0', 18);
   const deadline = constants.MaxUint256;

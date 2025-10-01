@@ -32,7 +32,7 @@ import { getPrevList } from './store';
 import { getArgvs } from './options';
 import { BridgedUSDCContractAddressArb1 } from './constants';
 import { getVersion } from './getVersion';
-import { loadCache } from './tokenListCache';
+import { extractCacheFromTokenList } from './tokenListCache';
 
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
@@ -169,10 +169,11 @@ export const generateTokenList = async (
   l2AddressesFromL1 = filteredL2AddressesFromL1;
   l2AddressesFromL2 = filteredL2AddressesFromL1;
 
-  // Load metadata cache from public S3 URL (uses latest deployed production data)
-  const { metadataCache } = await loadCache({
-    chainId: l2.network.chainId,
-  });
+  // Load metadata cache from previous token list (already loaded by caller)
+  const { metadataCache } = prevArbTokenList
+    ? extractCacheFromTokenList(prevArbTokenList)
+    : { metadataCache: {} };
+
   let cacheHits = 0;
   let cacheMisses = 0;
 
@@ -236,10 +237,9 @@ export const generateTokenList = async (
 
     const fetchedData = intermediateTokenData.flat(1);
 
-    // Merge fetched data back into tokenData array and update cache
+    // Merge fetched data back into tokenData array
     for (let i = 0; i < fetchedData.length; i++) {
       const originalIndex = uncachedIndices[i];
-      const addr = uncachedAddresses[i];
       const data = fetchedData[i];
 
       tokenData[originalIndex] = data;
