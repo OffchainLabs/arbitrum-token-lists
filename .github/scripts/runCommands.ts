@@ -34,7 +34,10 @@ async function fetchOnlineVersion(path: string): Promise<string> {
       return '1.0.0';
     }
 
-    return ((await response.json()) as { version?: string }).version ?? '1.0.0';
+    // return ((await response.json()) as { version?: string }).version ?? '1.0.0';
+    const data = await response.json();
+    console.log(data);
+    return data.version ?? '1.0.0';
   } catch (error) {
     console.warn(`Failed to fetch online version for ${url}:`, error);
     return '1.0.0';
