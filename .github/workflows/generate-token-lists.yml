@@ -18,41 +18,13 @@ on:
         default: 'Test'
 
 jobs:
-  generate-matrix:
-    runs-on: ubuntu-latest
-    env:
-      INFURA_KEY: '${{ secrets.INFURA_KEY }}'
-      MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
-      ARB_ONE_RPC: 'https://arbitrum-mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
-      ARB_SEPOLIA_RPC: 'https://arbitrum-sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
-      ARB_NOVA_RPC: 'https://nova.arbitrum.io/rpc'
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install node_modules
-        uses: OffchainLabs/actions/node-modules/install@main
-
-      - name: Generate orbit chains data
-        run: yarn generate:orbitChainsData
-
-      - id: set-matrix
-        run: echo "matrix=$(npm run generate:matrix --silent)" >> $GITHUB_OUTPUT
-
-  generate-token-lists:
-    name: 'Generate'
+  generate-token-lists-core:
+    name: 'Generate Core'
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    needs: [generate-matrix]
     permissions:
-      id-token: write # need this for OIDC
-      contents: read # This is required for actions/checkout@v2
-    strategy:
-      max-parallel: 5
-      fail-fast: false
-      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+      id-token: write
+      contents: read
 
     env:
       INFURA_KEY: '${{ secrets.INFURA_KEY }}'
@@ -66,6 +38,7 @@ jobs:
       BASE_SEPOLIA_RPC: 'https://base-sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
       L2_GATEWAY_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SUBGRAPH_URL }}'
       L2_GATEWAY_SEPOLIA_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SEPOLIA_SUBGRAPH_URL }}'
+      AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -83,64 +56,53 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: ${{ matrix.name }}
-        if: success()
-        run: ${{ matrix.command }}
+      - name: Run core commands
+        run: yarn ts-node .github/scripts/runCommands.ts core ${{ inputs.environment }}
 
-      - name: Get online version
-        id: onlineVersion
-        if: ${{ matrix.version == true && matrix.version == true }}
-        run: |
-          # Check if the list exists online (it will not exist on the first run)
-          if curl --silent --head --fail "https://tokenlist.arbitrum.io/${{ matrix.paths[0] }}"; then
-            # Get the version from the online list (formatted to major.minor.patch)
-            version=$(curl https://tokenlist.arbitrum.io/${{ matrix.paths[0] }} | jq .version | jq 'join(".")')
-            if [[ -n $version ]]; then
-              echo "onlineVersion=$version" >> $GITHUB_OUTPUT
-            else
-              # Make sure failure from curl or jq fails the generation
-              exit 1
-            fi
-          else
-            # Only applies when a new list is added
-            echo "onlineVersion=1.0.0" >> $GITHUB_OUTPUT
-          fi
+  generate-token-lists-orbit:
+    name: 'Generate Orbit'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      INFURA_KEY: '${{ secrets.INFURA_KEY }}'
+      MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      SEPOLIA_RPC: 'https://sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      ARB_ONE_RPC: 'https://arbitrum-mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      HOLESKY_RPC: 'https://holesky.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      ARB_SEPOLIA_RPC: 'https://arbitrum-sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      ARB_NOVA_RPC: 'https://nova.arbitrum.io/rpc'
+      BASE_RPC: 'https://base-mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      BASE_SEPOLIA_RPC: 'https://base-sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      L2_GATEWAY_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SUBGRAPH_URL }}'
+      L2_GATEWAY_SEPOLIA_SUBGRAPH_URL: '${{ secrets.L2_GATEWAY_SEPOLIA_SUBGRAPH_URL }}'
+      AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Backup
-        if: ${{ matrix.version == true }}
-        run: |
-          paths=(${{ join(matrix.paths, ' ') }})
-          for path in ${paths[*]}
-          do
-            if [[ "${{ inputs.environment }}" == "Test" ]]
-            then
-              additionalPath='TestFolder/'
-            else
-              additionalPath=''
-            fi
+      - name: Install node_modules
+        uses: OffchainLabs/actions/node-modules/install@main
 
-            # Backup online list to {version}/{path} before deploying a new one
-            lines=$(aws s3 ls s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path | wc -l)
-            if (( $lines > 0 )); then
-              backupCommand="aws s3 cp s3://${{ secrets.AWS_BUCKET }}/$additionalPath$path s3://${{ secrets.AWS_BUCKET }}/$additionalPath"
-              backupCommand+=$(echo $path | awk -F'.json' '{print $1}') # Remove .json
-              backupCommand+=/${{ steps.onlineVersion.outputs.onlineVersion }}.json
-              $backupCommand
-            fi
-          done
+      - name: Generate orbit chains data
+        run: yarn generate:orbitChainsData
 
-      - name: Deploy (Test folder)
-        if: ${{ inputs.environment == 'Test' }}
-        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-region: 'us-west-2'
+          aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: Deploy
-        if: ${{ inputs.environment == 'CI' }}
-        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"
+      - name: Run orbit commands
+        run: yarn ts-node .github/scripts/runCommands.ts orbit ${{ inputs.environment }}
 
   error-alerts:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    needs: [generate-token-lists]
+    needs: [generate-token-lists-core, generate-token-lists-orbit]
     # Run this job if any of the job in needs array failed
     if: ${{ always() && contains(needs.*.result, 'failure') }}
     steps:
