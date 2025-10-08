@@ -34,10 +34,12 @@ async function fetchOnlineVersion(path: string): Promise<string> {
       return '1.0.0';
     }
 
-    // return ((await response.json()) as { version?: string }).version ?? '1.0.0';
-    const data = await response.json();
-    console.log(data);
-    return data.version ?? '1.0.0';
+    const version = (
+      (await response.json()) as {
+        version?: { major: string; minor: string; patch: string };
+      }
+    ).version || { major: '1', minor: '0', patch: '0' };
+    return `${version.major}.${version.minor}.${version.patch}`;
   } catch (error) {
     console.warn(`Failed to fetch online version for ${url}:`, error);
     return '1.0.0';
