@@ -10,7 +10,7 @@ const fileName = './src/Assets/orbitChainsData.json';
 
 export async function fetchOrbitChainsData() {
   const response = await fetch(
-    'https://raw.githubusercontent.com/OffchainLabs/arbitrum-token-bridge/refs/heads/master/packages/arb-token-bridge-ui/src/util/orbitChainsData.json',
+    'https://raw.githubusercontent.com/OffchainLabs/arbitrum-portal/refs/heads/master/packages/arb-token-bridge-ui/src/util/orbitChainsData.json',
   );
 
   const data: OrbitChainDataResponse = await response.json();
