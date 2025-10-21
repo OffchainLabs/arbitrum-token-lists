@@ -1,7 +1,7 @@
 import { ArbitrumNetwork } from '@arbitrum/sdk';
 import orbitChainsData from './Assets/orbitChainsData.json';
 
-const excludedNetworksIds: number[] = [98867]; // Plume testnet
+const excludedNetworksIds: number[] = [98867, 10058111, 10058112, 393]; // Plume testnet, Spotlight Mainnet, Spotlight Sepolia, Nexus Devnet
 
 export const customNetworks = (
   orbitChainsData.data as ArbitrumNetwork[]
