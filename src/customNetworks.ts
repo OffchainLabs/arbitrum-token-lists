@@ -1,7 +1,7 @@
 import { ArbitrumNetwork } from '@arbitrum/sdk';
 import orbitChainsData from './Assets/orbitChainsData.json';
 
-const excludedNetworksIds: number[] = [98867]; // Plume testnet
+const excludedNetworksIds: number[] = [98867, 383353, 668668, 2730]; // Plume testnet, Cheese Chain, Conwai, XR Sepolia
 
 export const customNetworks = (
   orbitChainsData.data as ArbitrumNetwork[]
