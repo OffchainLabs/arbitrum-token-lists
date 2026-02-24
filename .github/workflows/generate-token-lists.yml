@@ -131,11 +131,11 @@ jobs:
 
       - name: Deploy (Test folder)
         if: ${{ inputs.environment == 'Test' }}
-        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --include "ArbTokenLists/chains/*.json"
+        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --include "ArbTokenLists/chains/*.json" --include "ArbTokenLists/mappings/*/*.json"
 
       - name: Deploy
         if: ${{ inputs.environment == 'CI' }}
-        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --include "ArbTokenLists/chains/*.json" --acl "public-read"
+        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --include "ArbTokenLists/chains/*.json" --include "ArbTokenLists/mappings/*/*.json" --acl "public-read"
 
   generate-chain-lists:
     name: 'Generate chain lists'
@@ -174,13 +174,16 @@ jobs:
       - name: Generate chain index
         run: yarn generate:chainLists -- ./src/ArbTokenLists ./src/ArbTokenLists/chains
 
-      - name: Deploy chain lists (Test folder)
-        if: ${{ inputs.environment == 'Test' }}
-        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "ArbTokenLists/chains/*.json" --delete
+      - name: Generate token mappings
+        run: yarn generate:tokenMappings -- ./src/ArbTokenLists ./src/ArbTokenLists/mappings
 
-      - name: Deploy chain lists
+      - name: Deploy derived lists (Test folder)
+        if: ${{ inputs.environment == 'Test' }}
+        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "ArbTokenLists/chains/*.json" --include "ArbTokenLists/mappings/*/*.json" --delete
+
+      - name: Deploy derived lists
         if: ${{ inputs.environment == 'CI' }}
-        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "ArbTokenLists/chains/*.json" --delete --acl "public-read"
+        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "ArbTokenLists/chains/*.json" --include "ArbTokenLists/mappings/*/*.json" --delete --acl "public-read"
 
   error-alerts:
     runs-on: ubuntu-latest
