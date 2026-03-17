@@ -131,16 +131,64 @@ jobs:
 
       - name: Deploy (Test folder)
         if: ${{ inputs.environment == 'Test' }}
-        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json"
+        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --include "ArbTokenLists/chains/*.json" --include "ArbTokenLists/mappings/*/*.json"
 
       - name: Deploy
         if: ${{ inputs.environment == 'CI' }}
-        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"
+        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --include "ArbTokenLists/chains/*.json" --include "ArbTokenLists/mappings/*/*.json" --acl "public-read"
+
+  generate-chain-lists:
+    name: 'Generate chain lists'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    needs: [generate-token-lists]
+    permissions:
+      id-token: write # need this for OIDC
+      contents: read # This is required for actions/checkout@v2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install node_modules
+        uses: OffchainLabs/actions/node-modules/install@main
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-region: 'us-west-2'
+          aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Download token lists (Test folder)
+        if: ${{ inputs.environment == 'Test' }}
+        run: |
+          mkdir -p ./src/ArbTokenLists
+          aws s3 sync s3://${{ secrets.AWS_BUCKET }}/TestFolder/ArbTokenLists ./src/ArbTokenLists --exclude "*" --include "*.json" --exclude "*/*"
+
+      - name: Download token lists
+        if: ${{ inputs.environment == 'CI' }}
+        run: |
+          mkdir -p ./src/ArbTokenLists
+          aws s3 sync s3://${{ secrets.AWS_BUCKET }}/ArbTokenLists ./src/ArbTokenLists --exclude "*" --include "*.json" --exclude "*/*"
+
+      - name: Generate chain index
+        run: yarn generate:chainLists -- ./src/ArbTokenLists ./src/ArbTokenLists/chains
+
+      - name: Generate token mappings
+        run: yarn generate:tokenMappings -- ./src/ArbTokenLists ./src/ArbTokenLists/mappings
+
+      - name: Deploy derived lists (Test folder)
+        if: ${{ inputs.environment == 'Test' }}
+        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }}/TestFolder --exclude "*" --include "ArbTokenLists/chains/*.json" --include "ArbTokenLists/mappings/*/*.json" --delete
+
+      - name: Deploy derived lists
+        if: ${{ inputs.environment == 'CI' }}
+        run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "ArbTokenLists/chains/*.json" --include "ArbTokenLists/mappings/*/*.json" --delete --acl "public-read"
 
   error-alerts:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    needs: [generate-token-lists]
+    needs: [generate-token-lists, generate-chain-lists]
     # Run this job if any of the job in needs array failed
     if: ${{ always() && contains(needs.*.result, 'failure') }}
     steps:
