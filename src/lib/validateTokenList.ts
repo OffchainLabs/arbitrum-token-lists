@@ -17,10 +17,13 @@ const validateTokenInfo = ajv.compile({
 export const tokenInfoIsValid = (tokenInfo: TokenInfo) =>
   validateTokenInfo(tokenInfo) as boolean;
 
-export const tokenListIsValid = (tokenList: ArbTokenList | TokenList) => {
+export const tokenListIsValid = (
+  tokenList: ArbTokenList | TokenList,
+  { logErrors = true }: { logErrors?: boolean } = {},
+) => {
   const isValid = validate(tokenList) as boolean;
 
-  if (validate.errors) {
+  if (logErrors && validate.errors) {
     const output = betterAjvErrors(schema, tokenList, validate.errors, {
       indent: 2,
     });

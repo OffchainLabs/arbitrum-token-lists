@@ -246,6 +246,10 @@ export const getTokenListObjFromLocalPath = async (path: string) => {
 export const removeInvalidTokensFromList = (
   tokenList: ArbTokenList | TokenList,
 ): ArbTokenList | TokenList => {
+  if (tokenListIsValid(tokenList, { logErrors: false })) {
+    return tokenList;
+  }
+
   let removedCount = 0;
   let loggedInvalidList = false;
 
