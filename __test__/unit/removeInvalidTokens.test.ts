@@ -2,6 +2,42 @@ import { removeInvalidTokensFromList } from '../../src/lib/utils';
 import { ArbTokenList } from '../../src/lib/types';
 
 describe('removeInvalidTokensFromList - performance bug', () => {
+  it('should filter out tokens with non-EVM addresses such as Solana tokens', () => {
+    const listWithSolanaToken: ArbTokenList = {
+      name: 'Test List',
+      timestamp: '2025-01-01T00:00:00.000Z',
+      version: { major: 1, minor: 0, patch: 0 },
+      tokens: [
+        {
+          chainId: 42161,
+          address: '0x1111111111111111111111111111111111111111',
+          name: 'Valid Token',
+          symbol: 'VALID',
+          decimals: 18,
+        },
+        {
+          chainId: 501000101,
+          address: '5mbK36SZ7J19An8jFochhQS4of8g6BwUjbeCSxBSoWdp',
+          name: 'michi',
+          symbol: '$MICHI',
+          decimals: 6,
+        },
+      ],
+    };
+
+    const result = removeInvalidTokensFromList(listWithSolanaToken);
+
+    expect(result.tokens).toHaveLength(1);
+    expect(result.tokens[0].symbol).toBe('VALID');
+    expect(result.tokens).not.toContainEqual({
+      chainId: 501000101,
+      address: '5mbK36SZ7J19An8jFochhQS4of8g6BwUjbeCSxBSoWdp',
+      name: 'michi',
+      symbol: '$MICHI',
+      decimals: 6,
+    });
+  });
+
   it('should remove token with name > 40 characters without hanging', () => {
     const listWithLongName: ArbTokenList = {
       name: 'Test List',

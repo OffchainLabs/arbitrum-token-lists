@@ -376,9 +376,9 @@ export const arbifyL1List = async (
   newList: ArbTokenList;
   l1ListName: string;
 }> => {
-  const l1TokenList = await getTokenListObj(pathOrUrl);
-
-  removeInvalidTokensFromList(l1TokenList);
+  const l1TokenList = removeInvalidTokensFromList(
+    await getTokenListObj(pathOrUrl),
+  ) as TokenList;
   const prevArbTokenList = ignorePreviousList
     ? null
     : await getPrevList(prevArbifiedList);
@@ -429,8 +429,9 @@ export const updateArbifiedList = async (
     prevArbifiedList: string | undefined;
   },
 ) => {
-  const arbTokenList = await getTokenListObj(pathOrUrl);
-  removeInvalidTokensFromList(arbTokenList);
+  const arbTokenList = removeInvalidTokensFromList(
+    await getTokenListObj(pathOrUrl),
+  ) as ArbTokenList;
   const prevArbTokenList = ignorePreviousList
     ? null
     : await getPrevList(prevArbifiedList);

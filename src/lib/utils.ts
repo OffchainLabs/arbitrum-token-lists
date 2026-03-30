@@ -8,7 +8,7 @@ import { L2GatewayRouter__factory } from '@arbitrum/sdk/dist/lib/abi/factories/L
 
 import { ArbTokenList, GraphTokenResult } from './types';
 import path from 'path';
-import { tokenListIsValid } from './validateTokenList';
+import { tokenInfoIsValid, tokenListIsValid } from './validateTokenList';
 import {
   l2ToL1GatewayAddresses,
   l2ToL1GatewayAddressesNova,
@@ -246,31 +246,31 @@ export const getTokenListObjFromLocalPath = async (path: string) => {
 export const removeInvalidTokensFromList = (
   tokenList: ArbTokenList | TokenList,
 ): ArbTokenList | TokenList => {
-  // Quick check: if valid, return immediately
-  if (tokenListIsValid(tokenList)) {
+  if (tokenListIsValid(tokenList, { logErrors: false })) {
     return tokenList;
   }
 
-  console.log('Invalid token list detected, filtering invalid tokens...');
+  let removedCount = 0;
+  let loggedInvalidList = false;
 
-  // Validate each token individually
   const validTokens = tokenList.tokens.filter((token) => {
-    const singleTokenList = {
-      ...tokenList,
-      tokens: [token],
-    };
-
-    const isValid = tokenListIsValid(singleTokenList);
+    const isValid = tokenInfoIsValid(token);
 
     if (!isValid) {
+      if (!loggedInvalidList) {
+        console.log('Invalid token list detected, filtering invalid tokens...');
+        loggedInvalidList = true;
+      }
+      removedCount++;
       console.log('Removing invalid token:', token.name || token.address);
     }
 
     return isValid;
   });
 
-  const removedCount = tokenList.tokens.length - validTokens.length;
-  console.log(`Removed ${removedCount} invalid token(s)`);
+  if (removedCount > 0) {
+    console.log(`Removed ${removedCount} invalid token(s)`);
+  }
 
   // Create cleaned list
   const cleanedList = {
