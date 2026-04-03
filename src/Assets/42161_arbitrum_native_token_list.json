@@ -30,7 +30,14 @@
       "symbol": "rsETH",
       "decimals": 18,
       "logoURI": "https://assets.coingecko.com/coins/images/33800/large/Icon___Dark.png"
+    },      "logoURI": "https://assets.coingecko.com/coins/    {
+      "chainId": 42161,
+      "address": "0x25d34817D4205fE605b4C65Ed3Be83C85107d333",
+      "name": "Bharat USD",
+      "symbol": "BUSD",
+      "decimals": 18,
+      "logoURI": "https://raw.githubusercontent.com/binnace/bharatusd/main/0x25d34817D4205fE605b4C65Ed3Be83C85107d333.png"
     }
-  ],
-  "logoURI": "https://avatars.githubusercontent.com/u/43838009"
+  ]
 }
+
