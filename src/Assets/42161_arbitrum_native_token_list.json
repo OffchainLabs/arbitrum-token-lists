@@ -30,6 +30,14 @@
       "symbol": "rsETH",
       "decimals": 18,
       "logoURI": "https://assets.coingecko.com/coins/images/33800/large/Icon___Dark.png"
+    },
+    {
+      "chainId": 42161,
+      "address": "0x25cf13fe02af9181cb5361bac4610e5c2e8b2519",
+      "name": "Wrapped 0xForce",
+      "symbol": "wXFO",
+      "decimals": 18,
+      "logoURI": "https://xfo.network/images/logo/xfo_token_logo.png"
     }
   ],
   "logoURI": "https://avatars.githubusercontent.com/u/43838009"
