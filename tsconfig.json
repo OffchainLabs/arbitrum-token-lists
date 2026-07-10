@@ -15,5 +15,10 @@
     "strictNullChecks": true,
     "target": "ES2017"
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.js"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.js",
+    ".github/scripts/**/*.ts"
+  ]
 }
