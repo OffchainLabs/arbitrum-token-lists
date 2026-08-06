@@ -1,6 +1,6 @@
 import { customNetworks } from '../../src/customNetworks';
 
-type Command = {
+export type Command = {
   name: string;
   paths: string[];
   version: boolean;
@@ -89,21 +89,31 @@ const arbitrumCommands: Command[] = [
   },
 ];
 
-const orbitCommands: Command[] = [];
+type OrbitNetwork = {
+  name: string;
+  chainId: number;
+  parentChainId: number;
+};
+
+type FetchTokenList = (
+  url: string,
+) => Promise<{ json: () => Promise<unknown> }>;
 
 async function addCommand({
   chainId,
+  fetchTokenList,
   name,
   path,
-  inputList,
+  inputLists,
 }: {
   chainId: number;
+  fetchTokenList: FetchTokenList;
   name: string;
   path: string;
-  inputList: string;
+  inputLists: string[];
 }): Promise<Command> {
   const url = `https://tokenlist.arbitrum.io/${path}`;
-  const requiresFirstTimeGeneration = await fetch(url)
+  const requiresFirstTimeGeneration = await fetchTokenList(url)
     .then((response) => response.json())
     .then(() => false)
     .catch(() => true);
@@ -116,8 +126,37 @@ async function addCommand({
     name,
     paths: [path],
     version: true,
-    command: `yarn arbify --l2NetworkID ${chainId} ${previousListFlag} --tokenList ${inputList} --newArbifiedList ./src/${path}`,
+    command: `yarn arbify --l2NetworkID ${chainId} ${previousListFlag} --tokenList ${
+      inputLists[0]
+    } ${inputLists
+      .slice(1)
+      .map((inputList) => `--inputTokenList ${inputList}`)
+      .join(' ')} --newArbifiedList ./src/${path}`,
   };
+}
+
+export async function createOrbitTokenListCommand(
+  { chainId, name }: OrbitNetwork,
+  inputLists: (string | undefined)[],
+  fetchTokenList: FetchTokenList,
+): Promise<Command> {
+  const availableInputLists = inputLists.filter(
+    (inputList): inputList is string => !!inputList,
+  );
+
+  if (availableInputLists.length === 0) {
+    throw new Error(
+      `Token lists on parent chain don't exist for ${name} (${chainId})`,
+    );
+  }
+
+  return addCommand({
+    name: `${name} Arbify token lists`,
+    chainId,
+    fetchTokenList,
+    path: `ArbTokenLists/${chainId}_arbed.json`,
+    inputLists: availableInputLists,
+  });
 }
 
 function getUniswapTokenListFromParentChainId(chainId: number) {
@@ -139,24 +178,57 @@ function getUniswapTokenListFromParentChainId(chainId: number) {
       'https://tokenlist.arbitrum.io/ArbTokenLists/84532_uniswap_labs.json',
   }[chainId];
 }
-(async () => {
-  for (let { name, chainId, parentChainId } of customNetworks) {
-    const inputUniswapTokenList =
-      getUniswapTokenListFromParentChainId(parentChainId);
 
-    if (!inputUniswapTokenList) {
-      throw new Error(
-        `Uniswap token list on parent chain doesn't exist for ${name} (${chainId})`,
-      );
-    }
+function getCoinGeckoTokenListFromParentChainId(chainId: number) {
+  return {
+    // L1
+    1: 'https://tokens.coingecko.com/uniswap/all.json',
+    11155111: 'https://tokens.coingecko.com/uniswap/all.json',
+    17000: 'https://tokens.coingecko.com/uniswap/all.json',
+    // Arbitrum
+    42161: 'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_coingecko.json',
+    42170:
+      'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_coingecko.json',
+    421614:
+      'https://tokenlist.arbitrum.io/ArbTokenLists/421614_arbed_coingecko.json',
+    // Base
+    8453: 'https://tokens.coingecko.com/base/all.json',
+    84532: 'https://tokens.coingecko.com/uniswap/all.json',
+  }[chainId];
+}
 
+function getCMCTokenListFromParentChainId(chainId: number) {
+  return {
+    // L1
+    1: 'https://api.coinmarketcap.com/data-api/v3/uniswap/all.json',
+    11155111: 'https://api.coinmarketcap.com/data-api/v3/uniswap/all.json',
+    17000: 'https://api.coinmarketcap.com/data-api/v3/uniswap/all.json',
+    // Arbitrum
+    42161:
+      'https://tokenlist.arbitrum.io/ArbTokenLists/arbed_coinmarketcap.json',
+    42170:
+      'https://tokenlist.arbitrum.io/ArbTokenLists/42170_arbed_coinmarketcap.json',
+  }[chainId];
+}
+
+export async function generateOrbitCommands(
+  networks: OrbitNetwork[],
+  fetchTokenList: FetchTokenList,
+): Promise<Command[]> {
+  const orbitCommands: Command[] = [];
+
+  for (const network of networks) {
+    const { chainId, name, parentChainId } = network;
     orbitCommands.push(
-      await addCommand({
-        name: `${name} Arbify Uniswap`,
-        chainId,
-        path: `ArbTokenLists/${chainId}_arbed_uniswap_labs.json`,
-        inputList: inputUniswapTokenList,
-      }),
+      await createOrbitTokenListCommand(
+        network,
+        [
+          getUniswapTokenListFromParentChainId(parentChainId),
+          getCoinGeckoTokenListFromParentChainId(parentChainId),
+          getCMCTokenListFromParentChainId(parentChainId),
+        ],
+        fetchTokenList,
+      ),
     );
 
     // For L3 settling on ArbOne, generate arbified native token list
@@ -165,16 +237,26 @@ function getUniswapTokenListFromParentChainId(chainId: number) {
         await addCommand({
           name: `${name} Arbify L2 native list`,
           chainId,
+          fetchTokenList,
           path: `ArbTokenLists/${chainId}_arbed_native_list.json`,
-          inputList: `./src/Assets/${parentChainId}_arbitrum_native_token_list.json`,
+          inputLists: [
+            `./src/Assets/${parentChainId}_arbitrum_native_token_list.json`,
+          ],
         }),
       );
     }
   }
 
-  const matrix: Record<'include', Command[]> = {
-    include: arbitrumCommands.concat(orbitCommands),
-  };
+  return orbitCommands;
+}
 
-  console.log(JSON.stringify(matrix, null, 0));
-})();
+if (process.env.NODE_ENV !== 'test') {
+  (async () => {
+    const orbitCommands = await generateOrbitCommands(customNetworks, fetch);
+    const matrix: Record<'include', Command[]> = {
+      include: arbitrumCommands.concat(orbitCommands),
+    };
+
+    console.log(JSON.stringify(matrix, null, 0));
+  })();
+}
