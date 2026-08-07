@@ -10,8 +10,9 @@ export const describe = 'Arbify';
 
 export const handler = async (argvs: Args) => {
   const includeOldDataFields = !!argvs.includeOldDataFields;
+  const inputTokenLists = [argvs.tokenList, ...(argvs.inputTokenList ?? [])];
 
-  const { newList } = await arbifyL1List(argvs.tokenList, {
+  const { newList } = await arbifyL1List(inputTokenLists, {
     includeOldDataFields,
     ignorePreviousList: argvs.ignorePreviousList,
     prevArbifiedList: argvs.prevArbifiedList,

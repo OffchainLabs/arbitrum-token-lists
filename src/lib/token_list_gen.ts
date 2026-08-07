@@ -1,4 +1,4 @@
-import { TokenList } from '@uniswap/token-lists';
+import { TokenInfo, TokenList } from '@uniswap/token-lists';
 import { getAllTokens } from './graph';
 import { constants, utils } from 'ethers';
 
@@ -36,6 +36,23 @@ import { getVersion } from './getVersion';
 export interface ArbificationOptions {
   overwriteCurrentList: boolean;
 }
+
+export const mergeInputTokenLists = (
+  tokenLists: (ArbTokenList | TokenList)[],
+): TokenList => {
+  const tokens = new Map<string, TokenInfo>();
+  tokenLists.forEach((tokenList) =>
+    tokenList.tokens.forEach((token) => {
+      const key = `${token.chainId}:${token.address.toLowerCase()}`;
+      if (!tokens.has(key)) tokens.set(key, token);
+    }),
+  );
+
+  return {
+    ...tokenLists[0],
+    tokens: Array.from(tokens.values()),
+  } as TokenList;
+};
 
 export const generateTokenList = async (
   l1TokenList: TokenList,
@@ -362,7 +379,7 @@ export const generateTokenList = async (
 };
 
 export const arbifyL1List = async (
-  pathOrUrl: string,
+  pathsOrUrls: string[],
   {
     includeOldDataFields,
     ignorePreviousList,
@@ -376,9 +393,12 @@ export const arbifyL1List = async (
   newList: ArbTokenList;
   l1ListName: string;
 }> => {
-  const l1TokenList = removeInvalidTokensFromList(
-    await getTokenListObj(pathOrUrl),
-  ) as TokenList;
+  const tokenLists = await Promise.all(
+    pathsOrUrls.map(async (pathOrUrl) =>
+      removeInvalidTokensFromList(await getTokenListObj(pathOrUrl)),
+    ),
+  );
+  const l1TokenList = mergeInputTokenLists(tokenLists);
   const prevArbTokenList = ignorePreviousList
     ? null
     : await getPrevList(prevArbifiedList);
@@ -408,7 +428,10 @@ export const arbifyL1List = async (
   const newList = await generateTokenList(l1TokenList, prevArbTokenList, {
     includeAllL1Tokens: false,
     includeOldDataFields,
-    sourceListURL: isValidHttpUrl(pathOrUrl) ? pathOrUrl : undefined,
+    sourceListURL:
+      pathsOrUrls.length === 1 && isValidHttpUrl(pathsOrUrls[0])
+        ? pathsOrUrls[0]
+        : undefined,
   });
 
   return {
