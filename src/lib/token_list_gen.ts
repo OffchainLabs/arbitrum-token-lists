@@ -187,18 +187,35 @@ export const generateTokenList = async (
 
   const intermediateTokenData = [];
   for (const addrs of getChunks(l2AddressesFromL1, 100)) {
-    const tokenDataTemp = await promiseErrorMultiplier(
-      l2.multiCaller.getTokenData(
-        addrs.map((t) => t || constants.AddressZero),
-        { name: true, decimals: true, symbol: true },
-      ),
-      () =>
-        l2.multiCaller.getTokenData(
-          addrs.map((t) => t || constants.AddressZero),
-          { name: true, decimals: true, symbol: true },
-        ),
+    const targets = addrs.map((t) => t || constants.AddressZero);
+    // `decimals` alone tells us whether the child token exists, in one call per
+    // token. Asking for name and symbol up front triples child chain traffic and
+    // throws most of it away at the `decimals === undefined` check below, which
+    // exhausts the bandwidth quota of Orbit chains served by public RPCs.
+    const decimals = await promiseErrorMultiplier(
+      l2.multiCaller.getTokenData(targets, { decimals: true }),
+      () => l2.multiCaller.getTokenData(targets, { decimals: true }),
     );
-    intermediateTokenData.push(tokenDataTemp);
+    const deployed = targets.filter(
+      (_, i) => decimals[i].decimals !== undefined,
+    );
+    const named = deployed.length
+      ? await promiseErrorMultiplier(
+          l2.multiCaller.getTokenData(deployed, { name: true, symbol: true }),
+          () =>
+            l2.multiCaller.getTokenData(deployed, { name: true, symbol: true }),
+        )
+      : [];
+    let j = 0;
+    intermediateTokenData.push(
+      // `getTokenData` returns every field it knows about, so `decimals` has to
+      // win over the undefined one that comes back from the name/symbol call
+      decimals.map((datum) =>
+        datum.decimals === undefined
+          ? datum
+          : { ...named[j++], decimals: datum.decimals },
+      ),
+    );
   }
 
   const tokenData = intermediateTokenData.flat(1);
