@@ -4,6 +4,7 @@ import orbitChainsData from './Assets/orbitChainsData.json';
 const excludedNetworksIds: number[] = [
   98867, // Plume testnet
   4162, // SX Network
+  787878, // RECYCLEFARM Carbon Network Testnet
 ];
 
 export const customNetworks = (
