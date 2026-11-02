@@ -29,7 +29,7 @@ function toTokenKey(chainId: number, address: string): TokenKey {
   return `${chainId}:${address.toLowerCase()}`;
 }
 
-function withoutUndefined<T extends object>(value: T): T {
+export function withoutUndefined<T extends object>(value: T): T {
   return Object.fromEntries(
     Object.entries(value).filter(([, field]) => field !== undefined),
   ) as T;
