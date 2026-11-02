@@ -1,6 +1,7 @@
 import { ArbitrumNetwork } from '@arbitrum/sdk';
 
 import {
+  CanonicalLink,
   NATIVE_TOKEN_ADDRESS,
   addCounterparts,
   buildChainTokens,
@@ -252,27 +253,32 @@ function findToken(
 
 describe('Token registry', () => {
   describe('getRegistryChains', () => {
-    it('adds Ether gas chains whose parent is in the registry, L3s included', () => {
-      const chainIds = getRegistryChains([
+    it('adds the chains whose parent is in the registry, L3s included', () => {
+      const registryChains = getRegistryChains([
         // The L3 comes before its parent on purpose.
         network(5000, 4000),
         network(4000, ARBITRUM_ONE),
         network(ROBINHOOD, ETHEREUM),
         network(6000, ETHEREUM, {
-          nativeToken: '0x0000000000000000000000000000000000000001',
+          nativeToken: '0x00000000000000000000000000000000000000Ff',
         }),
         network(7000, ETHEREUM, { isTestnet: true }),
         network(8000, 8453),
-      ]).map((chain) => chain.chainId);
+      ]);
 
-      expect(chainIds).toEqual([
+      expect(registryChains.map((chain) => chain.chainId)).toEqual([
         ETHEREUM,
         ARBITRUM_ONE,
         42170,
         4000,
         ROBINHOOD,
+        6000,
         5000,
       ]);
+      expect(registryChains[5].nativeToken).toBe(
+        '0x00000000000000000000000000000000000000ff',
+      );
+      expect(registryChains[3].nativeToken).toBeUndefined();
     });
 
     it('reads the native list of chains that settle on Arbitrum One', () => {
@@ -463,6 +469,91 @@ describe('Token registry', () => {
         [L3]: NATIVE_TOKEN_ADDRESS,
         [NATIVE_USDC_L3]: NATIVE_TOKEN_ADDRESS,
       });
+    });
+  });
+
+  describe('custom gas tokens', () => {
+    const APE_CHAIN = 33139;
+    const APE_ETHEREUM = '0x00000000000000000000000000000000000000e4';
+    const APE_ARBITRUM = '0x00000000000000000000000000000000000000a6';
+    const gasChains: RegistryChain[] = [
+      chains[0],
+      chains[1],
+      {
+        chainId: APE_CHAIN,
+        name: 'ApeChain',
+        parentChainId: ARBITRUM_ONE,
+        nativeToken: APE_ARBITRUM,
+        tokenListUrls: [],
+      },
+    ];
+    const links: CanonicalLink[] = [
+      {
+        childChainId: ARBITRUM_ONE,
+        parentChainId: ETHEREUM,
+        childAddress: APE_ARBITRUM,
+        parentAddress: APE_ETHEREUM,
+        symbol: 'APE',
+        name: 'ApeCoin',
+        decimals: 18,
+      },
+      // Not 18 decimals, to check that the native token keeps 18.
+      {
+        childChainId: APE_CHAIN,
+        parentChainId: ARBITRUM_ONE,
+        childAddress: NATIVE_TOKEN_ADDRESS,
+        parentAddress: APE_ARBITRUM,
+        symbol: 'APE',
+        name: 'ApeCoin',
+        decimals: 6,
+      },
+    ];
+    const tokensByChainId = addCounterparts({
+      chains: gasChains,
+      tokensByChainId: new Map(
+        gasChains.map((chain) => [
+          chain.chainId,
+          buildChainTokens({
+            chainId: chain.chainId,
+            links,
+            lifiTokens: null,
+            oftAddresses: new Set(),
+            curatedTokens: [],
+          }),
+        ]),
+      ),
+      curatedTokenGroups: [],
+    });
+
+    it('names the native token after the gas token, with 18 decimals', () => {
+      expect(
+        findToken(tokensByChainId, APE_CHAIN, NATIVE_TOKEN_ADDRESS),
+      ).toMatchObject({
+        symbol: 'APE',
+        name: 'ApeCoin',
+        decimals: 18,
+        parentAddress: APE_ARBITRUM,
+      });
+    });
+
+    it('maps the gas token through its parent chains, and Ether only to Ether', () => {
+      expect(
+        findToken(tokensByChainId, APE_CHAIN, NATIVE_TOKEN_ADDRESS)
+          ?.counterparts,
+      ).toEqual({
+        [ETHEREUM]: APE_ETHEREUM,
+        [ARBITRUM_ONE]: APE_ARBITRUM,
+      });
+      expect(
+        findToken(tokensByChainId, ARBITRUM_ONE, APE_ARBITRUM)?.counterparts,
+      ).toEqual({
+        [ETHEREUM]: APE_ETHEREUM,
+        [APE_CHAIN]: NATIVE_TOKEN_ADDRESS,
+      });
+      expect(
+        findToken(tokensByChainId, ARBITRUM_ONE, NATIVE_TOKEN_ADDRESS)
+          ?.counterparts,
+      ).toEqual({ [ETHEREUM]: NATIVE_TOKEN_ADDRESS });
     });
   });
 

@@ -5,6 +5,8 @@ export type RegistryChain = {
   name: string;
   // Absent on Ethereum.
   parentChainId?: number;
+  // The gas token's address on the parent chain. Absent when the gas token is Ether.
+  nativeToken?: string;
   // The lists that hold the chain's canonical tokens, with the parent token in bridgeInfo.
   tokenListUrls: string[];
 };
@@ -55,7 +57,8 @@ export type RegistryToken = {
   decimals: number;
   logoURI?: string;
   coinKey?: string;
-  // The canonical parent token on the chain's parent chain, from bridgeInfo.
+  // The canonical parent token on the chain's parent chain, from bridgeInfo. On the native token
+  // of a custom gas chain, the gas token's ERC-20 on the parent chain.
   parentAddress?: string;
   // Set on canonical parent tokens that answer oftVersion().
   isOft?: true;

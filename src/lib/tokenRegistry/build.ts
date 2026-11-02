@@ -10,7 +10,8 @@ import {
 
 export const NATIVE_TOKEN_ADDRESS = constants.AddressZero;
 
-// A child token and its canonical parent token, from the child's bridgeInfo.
+// A child token and its canonical parent token, from the child's bridgeInfo. A custom gas token
+// is also one: the child's native token, linked to its ERC-20 on the parent chain.
 export type CanonicalLink = {
   childChainId: number;
   parentChainId: number;
@@ -115,10 +116,17 @@ export function buildChainTokens({
     );
   };
 
+  // A custom gas token takes its symbol and name from its link. On its own chain, every gas token
+  // has 18 decimals, whatever its decimals on the parent chain.
+  const nativeLink = links.find(
+    (link) =>
+      link.childChainId === chainId &&
+      link.childAddress === NATIVE_TOKEN_ADDRESS,
+  );
   add({
     address: NATIVE_TOKEN_ADDRESS,
-    symbol: 'ETH',
-    name: 'Ether',
+    symbol: nativeLink?.symbol ?? 'ETH',
+    name: nativeLink?.name ?? 'Ether',
     decimals: 18,
   });
 
@@ -238,7 +246,7 @@ function getOnlyAddress(addresses: string[]): string | undefined {
 
 // For each token and each other chain, the first rule that finds exactly one token wins:
 // 1. the token's curated group,
-// 2. the native token maps to the native token,
+// 2. the native token maps to the native token, when both chains pay gas in Ether,
 // 3. its bridgeInfo family,
 // 4. the curated groups that its family belongs to, then those groups' families,
 // 5. its LiFi coinKey.
@@ -260,6 +268,11 @@ export function addCounterparts({
   }
 
   const familyByKey = getCanonicalFamilies(tokensByChainId, chains);
+  const etherChainIds = new Set(
+    chains
+      .filter((chain) => chain.nativeToken === undefined)
+      .map((chain) => chain.chainId),
+  );
   const getFamily = (key: TokenKey) => familyByKey.get(key) ?? [key];
 
   const coinKeysByChainId = new Map<number, Map<string, TokenKey[]>>();
@@ -296,7 +309,11 @@ export function addCounterparts({
     if (curatedAddress) {
       return curatedAddress;
     }
-    if (token.address === NATIVE_TOKEN_ADDRESS) {
+    if (
+      token.address === NATIVE_TOKEN_ADDRESS &&
+      etherChainIds.has(chainId) &&
+      etherChainIds.has(targetChainId)
+    ) {
       return NATIVE_TOKEN_ADDRESS;
     }
 

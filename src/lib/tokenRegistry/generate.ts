@@ -18,6 +18,7 @@ import {
   fetchLifiTokens,
   fetchTokenList,
 } from './fetch';
+import { fetchNativeTokenLinks } from './nativeTokens';
 import { findOftTokens } from './oft';
 import {
   ChainFile,
@@ -98,7 +99,10 @@ export async function generateTokenRegistry({
       urls.map(async (url) => [url, await fetchTokenList(url)] as const),
     ),
   );
-  const links = getCanonicalLinks(chains, listsByUrl);
+  const links = [
+    ...getCanonicalLinks(chains, listsByUrl),
+    ...(await fetchNativeTokenLinks({ chains, rpcUrls })),
+  ];
 
   // One chain at a time, to stay under LiFi's rate limit.
   const builtTokens = new Map<number, RegistryToken[]>();

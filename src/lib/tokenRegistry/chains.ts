@@ -37,7 +37,6 @@ const coreChains: RegistryChain[] = [
   },
 ];
 
-// Custom gas token chains need a native token mapping that the registry does not build yet.
 function usesEther(network: ArbitrumNetwork): boolean {
   return !network.nativeToken || network.nativeToken === constants.AddressZero;
 }
@@ -47,6 +46,9 @@ function toOrbitChain(network: ArbitrumNetwork): RegistryChain {
     chainId: network.chainId,
     name: network.name,
     parentChainId: network.parentChainId,
+    nativeToken: usesEther(network)
+      ? undefined
+      : network.nativeToken?.toLowerCase(),
     tokenListUrls: [
       ARBITRUM_TOKEN_TOKEN_LIST,
       `${TOKEN_LISTS_URL}/${network.chainId}_arbed.json`,
@@ -65,8 +67,7 @@ export function getRegistryChains(
 
   // An L3 is added once its parent chain is in, so this repeats until nothing changes.
   let remaining = orbitNetworks.filter(
-    (network) =>
-      !network.isTestnet && network.tokenBridge && usesEther(network),
+    (network) => !network.isTestnet && network.tokenBridge,
   );
   let added = true;
   while (added) {
