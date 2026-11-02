@@ -136,10 +136,56 @@ jobs:
         if: ${{ inputs.environment == 'CI' }}
         run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"
 
+  generate-token-registry:
+    name: 'Generate token registry'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    # Runs after the lists, so it reads the versions they just published. A failed list does not
+    # block it: it then reads that list's previous version.
+    needs: [generate-token-lists]
+    if: ${{ !cancelled() }}
+    permissions:
+      id-token: write # need this for OIDC
+      contents: read
+    env:
+      INFURA_KEY: '${{ secrets.INFURA_KEY }}'
+      MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      ARB_ONE_RPC: 'https://arbitrum-mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      ARB_SEPOLIA_RPC: 'https://arbitrum-sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      ARB_NOVA_RPC: 'https://nova.arbitrum.io/rpc'
+      LIFI_API_KEY: '${{ secrets.LIFI_API_KEY }}'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install node_modules
+        uses: OffchainLabs/actions/node-modules/install@main
+
+      - name: Generate orbit chains data
+        run: yarn generate:orbitChainsData
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::352956043285:role/gha-arbitrum-token-lists
+          aws-region: 'us-west-2'
+
+      - name: Generate token registry
+        run: yarn tokenRegistry
+
+      # Only the TokenRegistry folder is synced, so the token lists are left untouched.
+      - name: Deploy (Test folder)
+        if: ${{ inputs.environment == 'Test' }}
+        run: aws s3 sync ./src/TokenRegistry/ s3://${{ secrets.AWS_BUCKET }}/TestFolder/TokenRegistry
+
+      - name: Deploy
+        if: ${{ inputs.environment == 'CI' }}
+        run: aws s3 sync ./src/TokenRegistry/ s3://${{ secrets.AWS_BUCKET }}/TokenRegistry --acl "public-read"
+
   error-alerts:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    needs: [generate-token-lists]
+    needs: [generate-token-lists, generate-token-registry]
     # Run this job if any of the job in needs array failed
     if: ${{ always() && contains(needs.*.result, 'failure') }}
     steps:
