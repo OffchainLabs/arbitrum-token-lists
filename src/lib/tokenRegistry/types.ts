@@ -35,6 +35,7 @@ export type LifiToken = {
   decimals: number;
   logoURI?: string;
   coinKey?: string;
+  volumeUSD24H?: number | null;
 };
 
 export type LifiConnection = {
@@ -83,6 +84,24 @@ export type PairFile = {
   destinationChainId: number;
   // Absent when LiFi does not connect the two chains.
   lifi?: LifiConnection;
+};
+
+export type TopToken = {
+  chainId: number;
+  address: string;
+  symbol: string;
+  name: string;
+  decimals: number;
+  logoURI?: string;
+  // LiFi's 24-hour volume. Absent when LiFi has none, for example on a chain LiFi does not support.
+  volumeUSD24H?: number;
+};
+
+// The tokens the all-chains picker shows before any search.
+export type TopFile = {
+  version: typeof REGISTRY_VERSION;
+  generatedAt: string;
+  tokens: TopToken[];
 };
 
 export type IndexFile = {

@@ -12,11 +12,13 @@ import {
   getRegistryPairs,
 } from '../../src/lib/tokenRegistry/chains';
 import { checkShrink } from '../../src/lib/tokenRegistry/generate';
+import { buildTopTokens } from '../../src/lib/tokenRegistry/top';
 import {
   CuratedToken,
   RegistryChain,
   RegistryToken,
   TokenListEntry,
+  TopToken,
 } from '../../src/lib/tokenRegistry/types';
 import { toV2Files } from '../../src/lib/tokenRegistry/v2';
 
@@ -664,6 +666,90 @@ describe('Token registry', () => {
           publishedCount: undefined,
         }),
       ).not.toThrow();
+    });
+  });
+
+  describe('buildTopTokens', () => {
+    const tokensByChainId = buildAll();
+    const lifiTokensByChainId = new Map([
+      [
+        ETHEREUM,
+        [
+          {
+            address: USDC_ETHEREUM,
+            symbol: 'USDC',
+            name: 'USDC',
+            decimals: 6,
+            volumeUSD24H: 100,
+          },
+          {
+            address: WBTC_ETHEREUM,
+            symbol: 'WBTC',
+            name: 'WBTC',
+            decimals: 8,
+            volumeUSD24H: 30,
+          },
+        ],
+      ],
+      [
+        ARBITRUM_ONE,
+        [
+          {
+            address: WBTC_ARBITRUM,
+            symbol: 'WBTC',
+            name: 'WBTC',
+            decimals: 8,
+            volumeUSD24H: 50,
+          },
+          {
+            address: USDC_E_ARBITRUM,
+            symbol: 'USDC.e',
+            name: 'USDC.e',
+            decimals: 6,
+            volumeUSD24H: null,
+          },
+        ],
+      ],
+    ]);
+    const buildTop = (limit: number) =>
+      buildTopTokens({
+        chains,
+        tokensByChainId,
+        lifiTokensByChainId,
+        curatedTokenGroups,
+        limit,
+      });
+    const keys = (tokens: TopToken[]) =>
+      tokens.map((token) => `${token.chainId}:${token.address}`);
+    const nativeAndCurated = [
+      `${ETHEREUM}:${NATIVE_TOKEN_ADDRESS}`,
+      `${ARBITRUM_ONE}:${NATIVE_TOKEN_ADDRESS}`,
+      `${ROBINHOOD}:${NATIVE_TOKEN_ADDRESS}`,
+      `${L3}:${NATIVE_TOKEN_ADDRESS}`,
+      `${NATIVE_USDC_L3}:${NATIVE_TOKEN_ADDRESS}`,
+      `${ETHEREUM}:${USDC_ETHEREUM}`,
+      `${ARBITRUM_ONE}:${USDC_ARBITRUM}`,
+      `${ROBINHOOD}:${USDC_ROBINHOOD}`,
+    ];
+
+    it('puts native and curated tokens first, then ranks the rest by volume across chains', () => {
+      const top = buildTop(100);
+      expect(keys(top)).toEqual([
+        ...nativeAndCurated,
+        `${ARBITRUM_ONE}:${WBTC_ARBITRUM}`,
+        `${ETHEREUM}:${WBTC_ETHEREUM}`,
+      ]);
+      expect(
+        top.find((token) => token.address === USDC_ETHEREUM)?.volumeUSD24H,
+      ).toBe(100);
+    });
+
+    it('stops at the limit, but keeps every native and curated token', () => {
+      expect(keys(buildTop(9))).toEqual([
+        ...nativeAndCurated,
+        `${ARBITRUM_ONE}:${WBTC_ARBITRUM}`,
+      ]);
+      expect(keys(buildTop(2))).toEqual(nativeAndCurated);
     });
   });
 });

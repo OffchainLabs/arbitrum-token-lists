@@ -72,7 +72,7 @@ export async function fetchLifiChainIds(): Promise<Set<number>> {
 
 export async function fetchLifiTokens(chainId: number): Promise<LifiToken[]> {
   const { tokens } = await fetchJson<{ tokens: Record<string, LifiToken[]> }>(
-    `${LIFI_API_URL}/tokens?chains=${chainId}`,
+    `${LIFI_API_URL}/tokens?chains=${chainId}&extended=true`,
     lifiInit(),
   );
   return tokens[String(chainId)] ?? [];

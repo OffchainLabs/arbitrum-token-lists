@@ -25,13 +25,16 @@ import {
 } from './fetch';
 import { fetchNativeTokenLinks } from './nativeTokens';
 import { findOftTokens } from './oft';
+import { buildTopTokens } from './top';
 import {
   ChainFile,
   IndexFile,
   LifiConnection,
+  LifiToken,
   PairFile,
   REGISTRY_VERSION,
   RegistryToken,
+  TopFile,
 } from './types';
 import { toV2Files } from './v2';
 
@@ -112,11 +115,15 @@ export async function generateTokenRegistry({
 
   // One chain at a time, to stay under LiFi's rate limit.
   const builtTokens = new Map<number, RegistryToken[]>();
+  const lifiTokensByChainId = new Map<number, LifiToken[]>();
   const lifiAddressesByChainId = new Map<number, Set<string>>();
   for (const chain of chains) {
     const lifiTokens = lifiChainIds.has(chain.chainId)
       ? await fetchLifiTokens(chain.chainId)
       : null;
+    if (lifiTokens) {
+      lifiTokensByChainId.set(chain.chainId, lifiTokens);
+    }
     lifiAddressesByChainId.set(
       chain.chainId,
       new Set((lifiTokens ?? []).map((token) => token.address.toLowerCase())),
@@ -152,7 +159,7 @@ export async function generateTokenRegistry({
     curatedTokenGroups,
   });
 
-  const files = new Map<string, ChainFile | PairFile | IndexFile>();
+  const files = new Map<string, ChainFile | PairFile | TopFile | IndexFile>();
 
   for (const chain of chains) {
     const file = `chains/${chain.chainId}.json`;
@@ -219,6 +226,24 @@ export async function generateTokenRegistry({
       lifi,
     });
   }
+
+  const topTokens = buildTopTokens({
+    chains,
+    tokensByChainId,
+    lifiTokensByChainId,
+    curatedTokenGroups,
+  });
+  const publishedTop = await fetchPublished<TopFile>('top.json');
+  checkShrink({
+    file: 'top.json',
+    count: topTokens.length,
+    publishedCount: publishedTop?.tokens.length,
+  });
+  files.set('top.json', {
+    version: REGISTRY_VERSION,
+    generatedAt,
+    tokens: topTokens,
+  });
 
   files.set('index.json', {
     version: REGISTRY_VERSION,
