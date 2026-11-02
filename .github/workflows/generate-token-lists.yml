@@ -173,10 +173,11 @@ jobs:
       - name: Generate token registry
         run: yarn tokenRegistry
 
-      # Only the TokenRegistry folder is synced, so the token lists are left untouched.
+      # Only the TokenRegistry folder is synced, so the token lists are left untouched. Unlike the
+      # test token lists, the test registry is public, so a portal preview can read it.
       - name: Deploy (Test folder)
         if: ${{ inputs.environment == 'Test' }}
-        run: aws s3 sync ./src/TokenRegistry/ s3://${{ secrets.AWS_BUCKET }}/TestFolder/TokenRegistry
+        run: aws s3 sync ./src/TokenRegistry/ s3://${{ secrets.AWS_BUCKET }}/TestFolder/TokenRegistry --acl "public-read"
 
       - name: Deploy
         if: ${{ inputs.environment == 'CI' }}
