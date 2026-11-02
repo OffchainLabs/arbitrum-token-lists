@@ -350,7 +350,7 @@ describe('Token registry', () => {
       );
     });
 
-    it('prefers the metadata of the source that describes the token', () => {
+    it('prefers curated metadata, then the source that describes the token', () => {
       expect(
         findToken(tokensByChainId, ARBITRUM_ONE, USDC_E_ARBITRUM),
       ).toMatchObject({
@@ -359,20 +359,19 @@ describe('Token registry', () => {
       });
       expect(findToken(tokensByChainId, ETHEREUM, USDC_ETHEREUM)).toMatchObject(
         {
-          name: 'USD Coin',
+          name: 'USDC',
           coinKey: 'USDC',
           logoURI: 'usdc.png',
         },
       );
     });
 
-    it('flags OFTs and tokens that LiFi does not list', () => {
-      expect(findToken(tokensByChainId, ETHEREUM, DAI_ETHEREUM)).toMatchObject({
-        isOft: true,
-        isNotOnLifi: true,
-      });
+    it('flags OFTs', () => {
+      expect(findToken(tokensByChainId, ETHEREUM, DAI_ETHEREUM)?.isOft).toBe(
+        true,
+      );
       expect(
-        findToken(tokensByChainId, ETHEREUM, USDC_ETHEREUM)?.isNotOnLifi,
+        findToken(tokensByChainId, ETHEREUM, USDC_ETHEREUM)?.isOft,
       ).toBeUndefined();
     });
 

@@ -122,6 +122,18 @@ export function buildChainTokens({
     decimals: 18,
   });
 
+  // Curated metadata wins. The other sources still add the fields it lacks, like the logo.
+  for (const token of curatedTokens) {
+    if (token.chainId === chainId) {
+      add({
+        address: token.address,
+        symbol: token.symbol,
+        name: token.name,
+        decimals: token.decimals,
+      });
+    }
+  }
+
   // A list entry describes the child token. Its parent only borrows that metadata, so the
   // parent comes after the sources that describe it directly.
   for (const link of links) {
@@ -148,17 +160,6 @@ export function buildChainTokens({
     });
   }
 
-  for (const token of curatedTokens) {
-    if (token.chainId === chainId) {
-      add({
-        address: token.address,
-        symbol: token.symbol,
-        name: token.name,
-        decimals: token.decimals,
-      });
-    }
-  }
-
   for (const link of links) {
     if (link.parentChainId === chainId) {
       add({
@@ -171,17 +172,12 @@ export function buildChainTokens({
     }
   }
 
-  const lifiAddresses = new Set(
-    (lifiTokens ?? []).map((token) => token.address.toLowerCase()),
-  );
   return [...byAddress.values()]
-    .map((token) => ({
-      ...token,
-      ...(oftAddresses.has(token.address) ? { isOft: true as const } : {}),
-      ...(lifiAddresses.has(token.address)
-        ? {}
-        : { isNotOnLifi: true as const }),
-    }))
+    .map((token) =>
+      oftAddresses.has(token.address)
+        ? { ...token, isOft: true as const }
+        : token,
+    )
     .sort((a, b) => a.address.localeCompare(b.address));
 }
 
@@ -241,8 +237,8 @@ function getOnlyAddress(addresses: string[]): string | undefined {
 }
 
 // For each token and each other chain, the first rule that finds exactly one token wins:
-// 1. the native token maps to the native token,
-// 2. the token's curated group,
+// 1. the token's curated group,
+// 2. the native token maps to the native token,
 // 3. its bridgeInfo family,
 // 4. the curated groups that its family belongs to, then those groups' families,
 // 5. its LiFi coinKey.
@@ -285,10 +281,6 @@ export function addCounterparts({
     token: RegistryToken,
     targetChainId: number,
   ): string | undefined => {
-    if (token.address === NATIVE_TOKEN_ADDRESS) {
-      return NATIVE_TOKEN_ADDRESS;
-    }
-
     const prefix = `${targetChainId}:`;
     const findOnTarget = (keys: TokenKey[]) =>
       getOnlyAddress([
@@ -300,12 +292,19 @@ export function addCounterparts({
       ]);
 
     const key = toTokenKey(chainId, token.address);
+    const curatedAddress = findOnTarget(groupByKey.get(key) ?? []);
+    if (curatedAddress) {
+      return curatedAddress;
+    }
+    if (token.address === NATIVE_TOKEN_ADDRESS) {
+      return NATIVE_TOKEN_ADDRESS;
+    }
+
     const family = getFamily(key);
     const familyGroups = family.flatMap(
       (member) => groupByKey.get(member) ?? [],
     );
     const candidates: (() => TokenKey[])[] = [
-      () => groupByKey.get(key) ?? [],
       () => family,
       () => familyGroups,
       () => familyGroups.flatMap(getFamily),

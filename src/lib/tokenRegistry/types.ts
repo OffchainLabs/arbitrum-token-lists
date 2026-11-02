@@ -59,8 +59,6 @@ export type RegistryToken = {
   parentAddress?: string;
   // Set on canonical parent tokens that answer oftVersion().
   isOft?: true;
-  // Set when LiFi's /v1/tokens does not list the token.
-  isNotOnLifi?: true;
   // The same token on the other registry chains, keyed by chain id.
   counterparts?: Record<string, string>;
 };

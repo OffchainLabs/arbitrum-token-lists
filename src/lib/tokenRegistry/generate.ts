@@ -74,14 +74,9 @@ function countPairTokens(lifi: LifiConnection | undefined): number {
 // LiFi can connect tokens that its /v1/tokens does not list. Nothing can route them.
 function keepListedTokens(
   addresses: string[],
-  tokens: RegistryToken[] | undefined,
+  listed: Set<string> | undefined,
 ): string[] {
-  const listed = new Set(
-    (tokens ?? [])
-      .filter((token) => !token.isNotOnLifi)
-      .map((token) => token.address),
-  );
-  return addresses.filter((address) => listed.has(address));
+  return addresses.filter((address) => listed?.has(address));
 }
 
 export async function generateTokenRegistry({
@@ -107,10 +102,15 @@ export async function generateTokenRegistry({
 
   // One chain at a time, to stay under LiFi's rate limit.
   const builtTokens = new Map<number, RegistryToken[]>();
+  const lifiAddressesByChainId = new Map<number, Set<string>>();
   for (const chain of chains) {
     const lifiTokens = lifiChainIds.has(chain.chainId)
       ? await fetchLifiTokens(chain.chainId)
       : null;
+    lifiAddressesByChainId.set(
+      chain.chainId,
+      new Set((lifiTokens ?? []).map((token) => token.address.toLowerCase())),
+    );
 
     const parentAddresses = getCanonicalParentAddresses(links, chain.chainId);
     let oftAddresses = new Set<string>();
@@ -174,11 +174,11 @@ export async function generateTokenRegistry({
       ? {
           fromTokens: keepListedTokens(
             connection.fromTokens,
-            tokensByChainId.get(pair.sourceChainId),
+            lifiAddressesByChainId.get(pair.sourceChainId),
           ),
           toTokens: keepListedTokens(
             connection.toTokens,
-            tokensByChainId.get(pair.destinationChainId),
+            lifiAddressesByChainId.get(pair.destinationChainId),
           ),
         }
       : undefined;
