@@ -3,6 +3,9 @@ import { CuratedToken } from './types';
 const ETHEREUM = 1;
 const ARBITRUM_ONE = 42161;
 const ROBINHOOD = 4663;
+const GRAVITY = 1625;
+const APE_CHAIN = 33139;
+const PLUME = 98866;
 
 // Tokens that are the same asset on each chain of their group, even though bridgeInfo does not
 // link them: natively issued tokens, or a token whose canonical bridged version is not the one
@@ -29,6 +32,29 @@ export const curatedTokenGroups: CuratedToken[][] = [
       address: '0x80e0e24718dbfcad49ecaa6f1e6c89a190586ca8',
       symbol: 'USDC',
       name: 'USD Coin',
+      decimals: 6,
+    },
+    // Stargate's USDC.e, the USDC these chains use. Their canonical bridged USDC has no route
+    // from Ethereum USDC, and LiFi does not list it.
+    {
+      chainId: GRAVITY,
+      address: '0xfbda5f676cb37624f28265a144a48b0d6e87d3b6',
+      symbol: 'USDC.e',
+      name: 'Bridged USD Coin',
+      decimals: 6,
+    },
+    {
+      chainId: APE_CHAIN,
+      address: '0xf1815bd50389c46847f0bda824ec8da914045d14',
+      symbol: 'USDC.e',
+      name: 'Bridged USDC (Stargate)',
+      decimals: 6,
+    },
+    {
+      chainId: PLUME,
+      address: '0x78add880a697070c1e765ac44d65323a0dcce913',
+      symbol: 'USDC.e',
+      name: 'Bridged USDC (Stargate)',
       decimals: 6,
     },
   ],
