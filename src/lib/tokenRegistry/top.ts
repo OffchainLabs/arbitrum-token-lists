@@ -7,22 +7,16 @@ import {
   TopToken,
 } from './types';
 
-export const TOP_TOKENS_LIMIT = 1_000;
+export const TOP_TOKENS_PER_CHAIN = 1_000;
 
-type TokenKey = `${number}:${string}`;
-
-function toTokenKey(chainId: number, address: string): TokenKey {
-  return `${chainId}:${address.toLowerCase()}`;
-}
-
-// The native token of every chain and the curated tokens are always in, first. LiFi's 24-hour
-// volume ranks the rest, across all chains.
+// Like Jumper, each chain gets its own top tokens: the native token and the curated tokens first,
+// then the tokens LiFi has a 24-hour volume for, by volume, then the others by symbol.
 export function buildTopTokens({
   chains,
   tokensByChainId,
   lifiTokensByChainId,
   curatedTokenGroups,
-  limit = TOP_TOKENS_LIMIT,
+  limit = TOP_TOKENS_PER_CHAIN,
 }: {
   chains: RegistryChain[];
   tokensByChainId: Map<number, RegistryToken[]>;
@@ -30,57 +24,59 @@ export function buildTopTokens({
   curatedTokenGroups: CuratedToken[][];
   limit?: number;
 }): TopToken[] {
-  const tokensByKey = new Map<TokenKey, TopToken>();
-  for (const [chainId, tokens] of tokensByChainId) {
-    for (const token of tokens) {
-      tokensByKey.set(
-        toTokenKey(chainId, token.address),
-        withoutUndefined({
+  const curatedTokens = curatedTokenGroups.flat();
+
+  return chains.flatMap(({ chainId }) => {
+    const volumes = new Map<string, number>();
+    for (const { address, volumeUSD24H } of lifiTokensByChainId.get(chainId) ??
+      []) {
+      if (volumeUSD24H && volumeUSD24H > 0) {
+        volumes.set(address.toLowerCase(), volumeUSD24H);
+      }
+    }
+
+    const tokens = new Map(
+      (tokensByChainId.get(chainId) ?? []).map((token) => [
+        token.address,
+        withoutUndefined<TopToken>({
           chainId,
           address: token.address,
           symbol: token.symbol,
           name: token.name,
           decimals: token.decimals,
           logoURI: token.logoURI,
+          volumeUSD24H: volumes.get(token.address),
         }),
-      );
-    }
-  }
+      ]),
+    );
 
-  const volumes: [TokenKey, number][] = [];
-  for (const [chainId, lifiTokens] of lifiTokensByChainId) {
-    for (const { address, volumeUSD24H } of lifiTokens) {
-      const key = toTokenKey(chainId, address);
-      const token = tokensByKey.get(key);
-      if (token && volumeUSD24H && volumeUSD24H > 0) {
-        token.volumeUSD24H = volumeUSD24H;
-        volumes.push([key, volumeUSD24H]);
+    const top = new Map<string, TopToken>();
+    const add = (address: string) => {
+      const token = tokens.get(address.toLowerCase());
+      if (token && !top.has(token.address)) {
+        top.set(token.address, token);
+      }
+    };
+
+    add(NATIVE_TOKEN_ADDRESS);
+    for (const token of curatedTokens) {
+      if (token.chainId === chainId) {
+        add(token.address);
       }
     }
-  }
 
-  const top = new Map<TokenKey, TopToken>();
-  const add = (key: TokenKey) => {
-    const token = tokensByKey.get(key);
-    if (token && !top.has(key)) {
-      top.set(key, token);
+    const ranked = [...tokens.values()].sort(
+      (a, b) =>
+        (b.volumeUSD24H ?? 0) - (a.volumeUSD24H ?? 0) ||
+        a.symbol.localeCompare(b.symbol),
+    );
+    for (const token of ranked) {
+      if (top.size >= limit) {
+        break;
+      }
+      add(token.address);
     }
-  };
 
-  for (const chain of chains) {
-    add(toTokenKey(chain.chainId, NATIVE_TOKEN_ADDRESS));
-  }
-  for (const group of curatedTokenGroups) {
-    for (const token of group) {
-      add(toTokenKey(token.chainId, token.address));
-    }
-  }
-  for (const [key] of volumes.sort((a, b) => b[1] - a[1])) {
-    if (top.size >= limit) {
-      break;
-    }
-    add(key);
-  }
-
-  return [...top.values()];
+    return [...top.values()];
+  });
 }
