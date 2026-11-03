@@ -97,7 +97,7 @@ export type TopToken = {
   volumeUSD24H?: number;
 };
 
-// The tokens the all-chains picker shows before any search.
+// The tokens the all-chains picker shows before any search, up to 1,000 per chain.
 export type TopFile = {
   version: typeof REGISTRY_VERSION;
   generatedAt: string;
