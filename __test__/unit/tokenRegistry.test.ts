@@ -18,6 +18,7 @@ import {
   RegistryToken,
   TokenListEntry,
 } from '../../src/lib/tokenRegistry/types';
+import { toV2Files } from '../../src/lib/tokenRegistry/v2';
 
 const ETHEREUM = 1;
 const ARBITRUM_ONE = 42161;
@@ -290,10 +291,10 @@ describe('Token registry', () => {
   });
 
   describe('getRegistryPairs', () => {
-    it('pairs parent and child chains both ways, and every two LiFi chains', () => {
+    it('pairs parent and child chains both ways, and the LiFi pairs the bridge UI offers', () => {
       const pairs = getRegistryPairs(
         chains,
-        new Set([ARBITRUM_ONE, ROBINHOOD]),
+        new Set([ETHEREUM, ARBITRUM_ONE, ROBINHOOD, L3]),
       );
       expect(
         pairs.map((pair) => `${pair.sourceChainId}-${pair.destinationChainId}`),
@@ -309,6 +310,92 @@ describe('Token registry', () => {
         '42161-4663',
         '4663-42161',
       ]);
+    });
+  });
+
+  describe('toV2Files', () => {
+    const token = (address: string, symbol: string): RegistryToken => ({
+      address,
+      symbol,
+      name: symbol,
+      decimals: 6,
+    });
+
+    it('flags the LiFi tokens and pairs, drops the pair files and copies the others', () => {
+      const generatedAt = '2026-01-01T00:00:00.000Z';
+      const v2Files = toV2Files({
+        files: new Map<string, { version: number } & Record<string, unknown>>([
+          [
+            `chains/${ETHEREUM}.json`,
+            {
+              version: 1,
+              generatedAt,
+              chainId: ETHEREUM,
+              tokens: [
+                token(USDC_ETHEREUM, 'USDC'),
+                token(DAI_ETHEREUM, 'DAI'),
+              ],
+            },
+          ],
+          [
+            `pairs/${ETHEREUM}-${ARBITRUM_ONE}.json`,
+            {
+              version: 1,
+              generatedAt,
+              sourceChainId: ETHEREUM,
+              destinationChainId: ARBITRUM_ONE,
+            },
+          ],
+          [
+            'index.json',
+            {
+              version: 1,
+              generatedAt,
+              chains: [],
+              pairs: [
+                { sourceChainId: ETHEREUM, destinationChainId: ARBITRUM_ONE },
+                { sourceChainId: ETHEREUM, destinationChainId: ROBINHOOD },
+              ],
+            },
+          ],
+          ['top.json', { version: 1, generatedAt, tokens: [] }],
+        ]),
+        lifiAddressesByChainId: new Map([[ETHEREUM, new Set([USDC_ETHEREUM])]]),
+        lifiPairKeys: new Set([`${ETHEREUM}-${ARBITRUM_ONE}`]),
+      });
+
+      expect([...v2Files.keys()]).toEqual([
+        `chains/${ETHEREUM}.json`,
+        'index.json',
+        'top.json',
+      ]);
+      expect(v2Files.get(`chains/${ETHEREUM}.json`)).toEqual({
+        version: 2,
+        generatedAt,
+        chainId: ETHEREUM,
+        tokens: [
+          { ...token(USDC_ETHEREUM, 'USDC'), isLifi: true },
+          token(DAI_ETHEREUM, 'DAI'),
+        ],
+      });
+      expect(v2Files.get('index.json')).toEqual({
+        version: 2,
+        generatedAt,
+        chains: [],
+        pairs: [
+          {
+            sourceChainId: ETHEREUM,
+            destinationChainId: ARBITRUM_ONE,
+            hasLifi: true,
+          },
+          { sourceChainId: ETHEREUM, destinationChainId: ROBINHOOD },
+        ],
+      });
+      expect(v2Files.get('top.json')).toEqual({
+        version: 2,
+        generatedAt,
+        tokens: [],
+      });
     });
   });
 

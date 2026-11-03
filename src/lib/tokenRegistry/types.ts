@@ -91,3 +91,19 @@ export type IndexFile = {
   chains: Omit<RegistryChain, 'tokenListUrls'>[];
   pairs: ChainPair[];
 };
+
+// Version 2 has no pair files. LiFi gives a chain the same tokens on each of its
+// pairs, both ways, so a flag on the token replaces the pair files' lists.
+export const REGISTRY_V2_VERSION = 2;
+
+export type ChainFileV2 = Omit<ChainFile, 'version' | 'tokens'> & {
+  version: typeof REGISTRY_V2_VERSION;
+  // isLifi: LiFi routes the token on every LiFi pair of the chain.
+  tokens: (RegistryToken & { isLifi?: true })[];
+};
+
+export type IndexFileV2 = Omit<IndexFile, 'version' | 'pairs'> & {
+  version: typeof REGISTRY_V2_VERSION;
+  // hasLifi: the bridge UI offers LiFi on the pair, and LiFi connects it.
+  pairs: (ChainPair & { hasLifi?: true })[];
+};

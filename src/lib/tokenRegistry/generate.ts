@@ -8,7 +8,12 @@ import {
   getCanonicalLinks,
   getCanonicalParentAddresses,
 } from './build';
-import { getRegistryChains, getRegistryPairs, pairKey } from './chains';
+import {
+  getRegistryChains,
+  getRegistryPairs,
+  isLifiPair,
+  pairKey,
+} from './chains';
 import { curatedTokenGroups } from './curatedTokens';
 import {
   HttpError,
@@ -28,6 +33,7 @@ import {
   REGISTRY_VERSION,
   RegistryToken,
 } from './types';
+import { toV2Files } from './v2';
 
 const PUBLISHED_URL = `https://tokenlist.arbitrum.io/TokenRegistry/v${REGISTRY_VERSION}`;
 
@@ -167,13 +173,17 @@ export async function generateTokenRegistry({
   }
 
   const pairs = getRegistryPairs(chains, lifiChainIds);
+  const lifiPairKeys = new Set<string>();
+  const lifiConnectedAddressesByChainId = new Map<number, Set<string>>();
+  const addLifiConnectedAddresses = (chainId: number, addresses: string[]) => {
+    const connected = lifiConnectedAddressesByChainId.get(chainId) ?? new Set();
+    addresses.forEach((address) => connected.add(address));
+    lifiConnectedAddressesByChainId.set(chainId, connected);
+  };
   for (const pair of pairs) {
     const file = `pairs/${pairKey(pair)}.json`;
-    const connection =
-      lifiChainIds.has(pair.sourceChainId) &&
-      lifiChainIds.has(pair.destinationChainId)
-        ? await fetchLifiConnection(pair)
-        : null;
+    const hasLifi = isLifiPair(pair, lifiChainIds);
+    const connection = hasLifi ? await fetchLifiConnection(pair) : null;
     const lifi = connection
       ? {
           fromTokens: keepListedTokens(
@@ -186,13 +196,22 @@ export async function generateTokenRegistry({
           ),
         }
       : undefined;
+    if (lifi) {
+      lifiPairKeys.add(pairKey(pair));
+      addLifiConnectedAddresses(pair.sourceChainId, lifi.fromTokens);
+      addLifiConnectedAddresses(pair.destinationChainId, lifi.toTokens);
+    }
 
-    const published = await fetchPublished<PairFile>(file);
-    checkShrink({
-      file,
-      count: countPairTokens(lifi),
-      publishedCount: published && countPairTokens(published.lifi),
-    });
+    // A pair can lose LiFi when the bridge UI stops offering it, and drop to 0
+    // tokens.
+    if (hasLifi) {
+      const published = await fetchPublished<PairFile>(file);
+      checkShrink({
+        file,
+        count: countPairTokens(lifi),
+        publishedCount: published && countPairTokens(published.lifi),
+      });
+    }
     files.set(file, {
       version: REGISTRY_VERSION,
       generatedAt,
@@ -208,11 +227,22 @@ export async function generateTokenRegistry({
     pairs,
   });
 
+  const v2Files = toV2Files({
+    files,
+    lifiAddressesByChainId: lifiConnectedAddressesByChainId,
+    lifiPairKeys,
+  });
+
   // Nothing is written until every file passed its checks.
-  for (const [file, content] of files) {
-    const filePath = path.join(outputDir, file);
-    mkdirSync(path.dirname(filePath), { recursive: true });
-    writeFileSync(filePath, JSON.stringify(content));
+  for (const [version, versionFiles] of [
+    ['v1', files],
+    ['v2', v2Files],
+  ] as const) {
+    for (const [file, content] of versionFiles) {
+      const filePath = path.join(outputDir, version, file);
+      mkdirSync(path.dirname(filePath), { recursive: true });
+      writeFileSync(filePath, JSON.stringify(content));
+    }
   }
   console.log(`Token registry generated at ${outputDir}`);
 }

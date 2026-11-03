@@ -9,6 +9,42 @@ const ARBITRUM_TOKEN_TOKEN_LIST = `${TOKEN_LISTS_URL}/arbitrum_token_token_list.
 export const ETHEREUM_CHAIN_ID = 1;
 const ARBITRUM_ONE_CHAIN_ID = 42161;
 const ARBITRUM_NOVA_CHAIN_ID = 42170;
+const ROBINHOOD_CHAIN_ID = 4663;
+const APE_CHAIN_CHAIN_ID = 33139;
+const BASE_CHAIN_ID = 8453;
+
+// The chains the bridge UI lets LiFi bridge to, by source chain. A copy of
+// lifiDestinationChainIds in arbitrum-portal's
+// packages/arb-token-bridge-ui/src/app/api/crosschain-transfers/constants.ts.
+const lifiDestinationChainIds: Record<number, number[]> = {
+  [ETHEREUM_CHAIN_ID]: [
+    ARBITRUM_ONE_CHAIN_ID,
+    ARBITRUM_NOVA_CHAIN_ID,
+    APE_CHAIN_CHAIN_ID,
+    ROBINHOOD_CHAIN_ID,
+  ],
+  [ARBITRUM_ONE_CHAIN_ID]: [
+    ETHEREUM_CHAIN_ID,
+    APE_CHAIN_CHAIN_ID,
+    ROBINHOOD_CHAIN_ID,
+  ],
+  [ARBITRUM_NOVA_CHAIN_ID]: [ETHEREUM_CHAIN_ID, ARBITRUM_ONE_CHAIN_ID],
+  [APE_CHAIN_CHAIN_ID]: [
+    ETHEREUM_CHAIN_ID,
+    ARBITRUM_ONE_CHAIN_ID,
+    ROBINHOOD_CHAIN_ID,
+  ],
+  [BASE_CHAIN_ID]: [
+    ARBITRUM_ONE_CHAIN_ID,
+    APE_CHAIN_CHAIN_ID,
+    ROBINHOOD_CHAIN_ID,
+  ],
+  [ROBINHOOD_CHAIN_ID]: [
+    ETHEREUM_CHAIN_ID,
+    ARBITRUM_ONE_CHAIN_ID,
+    APE_CHAIN_CHAIN_ID,
+  ],
+};
 
 // The same lists as the bridge UI's BRIDGE_TOKEN_LISTS.
 const coreChains: RegistryChain[] = [
@@ -89,7 +125,20 @@ export function pairKey({ sourceChainId, destinationChainId }: ChainPair) {
   return `${sourceChainId}-${destinationChainId}`;
 }
 
-// Every parent and child chain, both ways, and every two chains that LiFi supports.
+// Whether the bridge UI offers LiFi on this pair, and LiFi still supports both chains.
+export function isLifiPair(
+  { sourceChainId, destinationChainId }: ChainPair,
+  lifiChainIds: Set<number>,
+): boolean {
+  return (
+    (lifiDestinationChainIds[sourceChainId]?.includes(destinationChainId) ??
+      false) &&
+    lifiChainIds.has(sourceChainId) &&
+    lifiChainIds.has(destinationChainId)
+  );
+}
+
+// Every parent and child chain, both ways, and every LiFi pair.
 export function getRegistryPairs(
   chains: RegistryChain[],
   lifiChainIds: Set<number>,
@@ -107,10 +156,13 @@ export function getRegistryPairs(
     }
   }
 
-  const lifiChains = chains.filter((chain) => lifiChainIds.has(chain.chainId));
-  for (const source of lifiChains) {
-    for (const destination of lifiChains) {
-      if (source.chainId !== destination.chainId) {
+  for (const source of chains) {
+    for (const destination of chains) {
+      const pair = {
+        sourceChainId: source.chainId,
+        destinationChainId: destination.chainId,
+      };
+      if (isLifiPair(pair, lifiChainIds)) {
         add(source.chainId, destination.chainId);
       }
     }

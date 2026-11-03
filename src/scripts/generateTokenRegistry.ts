@@ -9,7 +9,7 @@ if (!process.env.MAINNET_RPC) {
 generateTokenRegistry({
   orbitNetworks: customNetworks,
   rpcUrls: { ...rpcs, 1: process.env.MAINNET_RPC },
-  outputDir: './src/TokenRegistry/v1',
+  outputDir: './src/TokenRegistry',
 }).catch((error) => {
   console.error(error);
   process.exit(1);
