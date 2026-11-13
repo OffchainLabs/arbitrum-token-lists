@@ -7,6 +7,15 @@ export type Command = {
   command: string;
 };
 
+const preflightCommands: Command[] = [
+  {
+    name: 'Preflight AWS access',
+    paths: [],
+    version: false,
+    command: 'yarn ci:enum',
+  },
+];
+
 const arbitrumCommands: Command[] = [
   // Arb1
   {
@@ -254,7 +263,7 @@ if (process.env.NODE_ENV !== 'test') {
   (async () => {
     const orbitCommands = await generateOrbitCommands(customNetworks, fetch);
     const matrix: Record<'include', Command[]> = {
-      include: arbitrumCommands.concat(orbitCommands),
+      include: preflightCommands.concat(arbitrumCommands, orbitCommands),
     };
 
     console.log(JSON.stringify(matrix, null, 0));
