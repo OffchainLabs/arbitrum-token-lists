@@ -9,8 +9,10 @@ import {
 
 export const TOP_TOKENS_PER_CHAIN = 1_000;
 
-// Like Jumper, each chain gets its own top tokens: the native token and the curated tokens first,
-// then the tokens LiFi has a 24-hour volume for, by volume, then the others by symbol.
+// Each chain keeps its native token, its curated tokens and its most traded tokens, up to the limit.
+// The file then orders every chain's tokens together, like Jumper: the curated tokens group by group,
+// the native tokens, the tokens LiFi has a 24-hour volume for, most traded first, and the others by
+// symbol. A token's rank is its position in the file. The volume is not written to the file.
 export function buildTopTokens({
   chains,
   tokensByChainId,
@@ -25,13 +27,16 @@ export function buildTopTokens({
   limit?: number;
 }): TopToken[] {
   const curatedTokens = curatedTokenGroups.flat();
+  const volumes = new Map<string, number>();
+  const topByChainId = new Map<number, Map<string, TopToken>>();
 
-  return chains.flatMap(({ chainId }) => {
-    const volumes = new Map<string, number>();
+  for (const { chainId } of chains) {
+    const chainVolumes = new Map<string, number>();
     for (const { address, volumeUSD24H } of lifiTokensByChainId.get(chainId) ??
       []) {
       if (volumeUSD24H && volumeUSD24H > 0) {
-        volumes.set(address.toLowerCase(), volumeUSD24H);
+        chainVolumes.set(address.toLowerCase(), volumeUSD24H);
+        volumes.set(toKey(chainId, address), volumeUSD24H);
       }
     }
 
@@ -45,7 +50,6 @@ export function buildTopTokens({
           name: token.name,
           decimals: token.decimals,
           logoURI: token.logoURI,
-          volumeUSD24H: volumes.get(token.address),
         }),
       ]),
     );
@@ -67,7 +71,8 @@ export function buildTopTokens({
 
     const ranked = [...tokens.values()].sort(
       (a, b) =>
-        (b.volumeUSD24H ?? 0) - (a.volumeUSD24H ?? 0) ||
+        (chainVolumes.get(b.address) ?? 0) -
+          (chainVolumes.get(a.address) ?? 0) ||
         a.symbol.localeCompare(b.symbol),
     );
     for (const token of ranked) {
@@ -77,6 +82,39 @@ export function buildTopTokens({
       add(token.address);
     }
 
-    return [...top.values()];
-  });
+    topByChainId.set(chainId, top);
+  }
+
+  const ordered = new Map<string, TopToken>();
+  const push = (token: TopToken | undefined) => {
+    if (token) {
+      ordered.set(toKey(token.chainId, token.address), token);
+    }
+  };
+  for (const token of curatedTokens) {
+    push(topByChainId.get(token.chainId)?.get(token.address.toLowerCase()));
+  }
+  for (const { chainId } of chains) {
+    push(topByChainId.get(chainId)?.get(NATIVE_TOKEN_ADDRESS));
+  }
+
+  const rest = [...topByChainId.values()]
+    .flatMap((top) => [...top.values()])
+    .filter((token) => !ordered.has(toKey(token.chainId, token.address)));
+  const volume = (token: TopToken) =>
+    volumes.get(toKey(token.chainId, token.address)) ?? 0;
+  rest
+    .sort(
+      (a, b) =>
+        volume(b) - volume(a) ||
+        a.symbol.localeCompare(b.symbol) ||
+        a.chainId - b.chainId,
+    )
+    .forEach(push);
+
+  return [...ordered.values()];
+}
+
+function toKey(chainId: number, address: string): string {
+  return `${chainId}:${address.toLowerCase()}`;
 }

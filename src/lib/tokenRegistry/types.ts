@@ -93,11 +93,11 @@ export type TopToken = {
   name: string;
   decimals: number;
   logoURI?: string;
-  // LiFi's 24-hour volume. Absent when LiFi has none, for example on a chain LiFi does not support.
-  volumeUSD24H?: number;
 };
 
-// The tokens the all-chains picker shows before any search, up to 1,000 per chain.
+// The tokens the all-chains picker shows before any search, up to 1,000 per chain. The order is the
+// ranking across every chain: the curated tokens, the native tokens, then LiFi's 24-hour volume, then
+// symbol. Readers rank a token by its position in the file.
 export type TopFile = {
   version: typeof REGISTRY_VERSION;
   generatedAt: string;

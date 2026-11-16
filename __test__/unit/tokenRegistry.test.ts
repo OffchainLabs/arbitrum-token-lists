@@ -645,7 +645,9 @@ describe('Token registry', () => {
       expect(
         findToken(tokensByChainId, ARBITRUM_ONE, NATIVE_TOKEN_ADDRESS)
           ?.counterparts,
-      ).toEqual({ [ETHEREUM]: NATIVE_TOKEN_ADDRESS });
+      ).toEqual({
+        [ETHEREUM]: NATIVE_TOKEN_ADDRESS,
+      });
     });
   });
 
@@ -724,52 +726,51 @@ describe('Token registry', () => {
       });
     const keys = (tokens: TopToken[]) =>
       tokens.map((token) => `${token.chainId}:${token.address}`);
-    it('ranks each chain on its own: native and curated first, then volume, then symbol', () => {
+    it('orders every chain together: curated groups, natives, then volume, then symbol', () => {
       const top = buildTop(100);
       expect(keys(top)).toEqual([
-        `${ETHEREUM}:${NATIVE_TOKEN_ADDRESS}`,
         `${ETHEREUM}:${USDC_ETHEREUM}`,
+        `${ARBITRUM_ONE}:${USDC_ARBITRUM}`,
+        `${ROBINHOOD}:${USDC_ROBINHOOD}`,
+        `${ETHEREUM}:${NATIVE_TOKEN_ADDRESS}`,
+        `${ARBITRUM_ONE}:${NATIVE_TOKEN_ADDRESS}`,
+        `${ROBINHOOD}:${NATIVE_TOKEN_ADDRESS}`,
+        `${L3}:${NATIVE_TOKEN_ADDRESS}`,
+        `${NATIVE_USDC_L3}:${NATIVE_TOKEN_ADDRESS}`,
+        // Arbitrum One WBTC has more volume than Ethereum WBTC.
+        `${ARBITRUM_ONE}:${WBTC_ARBITRUM}`,
         `${ETHEREUM}:${WBTC_ETHEREUM}`,
         `${ETHEREUM}:${DAI_ETHEREUM}`,
-        `${ARBITRUM_ONE}:${NATIVE_TOKEN_ADDRESS}`,
-        `${ARBITRUM_ONE}:${USDC_ARBITRUM}`,
-        `${ARBITRUM_ONE}:${WBTC_ARBITRUM}`,
         `${ARBITRUM_ONE}:${DAI_ARBITRUM}`,
-        `${ARBITRUM_ONE}:${USDC_E_ARBITRUM}`,
-        `${ROBINHOOD}:${NATIVE_TOKEN_ADDRESS}`,
-        `${ROBINHOOD}:${USDC_ROBINHOOD}`,
-        `${L3}:${NATIVE_TOKEN_ADDRESS}`,
-        `${L3}:${USDC_E_L3}`,
-        `${NATIVE_USDC_L3}:${NATIVE_TOKEN_ADDRESS}`,
         `${NATIVE_USDC_L3}:${USDC_NATIVE_USDC_L3}`,
+        `${L3}:${USDC_E_L3}`,
+        `${ARBITRUM_ONE}:${USDC_E_ARBITRUM}`,
       ]);
-      expect(
-        top.find((token) => token.address === USDC_ETHEREUM)?.volumeUSD24H,
-      ).toBe(100);
+      expect(top.filter((token) => 'volumeUSD24H' in token)).toEqual([]);
     });
 
     it('stops at the limit of each chain, but keeps every native and curated token', () => {
       expect(keys(buildTop(3))).toEqual([
-        `${ETHEREUM}:${NATIVE_TOKEN_ADDRESS}`,
         `${ETHEREUM}:${USDC_ETHEREUM}`,
-        `${ETHEREUM}:${WBTC_ETHEREUM}`,
-        `${ARBITRUM_ONE}:${NATIVE_TOKEN_ADDRESS}`,
         `${ARBITRUM_ONE}:${USDC_ARBITRUM}`,
-        `${ARBITRUM_ONE}:${WBTC_ARBITRUM}`,
-        `${ROBINHOOD}:${NATIVE_TOKEN_ADDRESS}`,
         `${ROBINHOOD}:${USDC_ROBINHOOD}`,
+        `${ETHEREUM}:${NATIVE_TOKEN_ADDRESS}`,
+        `${ARBITRUM_ONE}:${NATIVE_TOKEN_ADDRESS}`,
+        `${ROBINHOOD}:${NATIVE_TOKEN_ADDRESS}`,
         `${L3}:${NATIVE_TOKEN_ADDRESS}`,
-        `${L3}:${USDC_E_L3}`,
         `${NATIVE_USDC_L3}:${NATIVE_TOKEN_ADDRESS}`,
+        `${ARBITRUM_ONE}:${WBTC_ARBITRUM}`,
+        `${ETHEREUM}:${WBTC_ETHEREUM}`,
         `${NATIVE_USDC_L3}:${USDC_NATIVE_USDC_L3}`,
+        `${L3}:${USDC_E_L3}`,
       ]);
       expect(keys(buildTop(1))).toEqual([
-        `${ETHEREUM}:${NATIVE_TOKEN_ADDRESS}`,
         `${ETHEREUM}:${USDC_ETHEREUM}`,
-        `${ARBITRUM_ONE}:${NATIVE_TOKEN_ADDRESS}`,
         `${ARBITRUM_ONE}:${USDC_ARBITRUM}`,
-        `${ROBINHOOD}:${NATIVE_TOKEN_ADDRESS}`,
         `${ROBINHOOD}:${USDC_ROBINHOOD}`,
+        `${ETHEREUM}:${NATIVE_TOKEN_ADDRESS}`,
+        `${ARBITRUM_ONE}:${NATIVE_TOKEN_ADDRESS}`,
+        `${ROBINHOOD}:${NATIVE_TOKEN_ADDRESS}`,
         `${L3}:${NATIVE_TOKEN_ADDRESS}`,
         `${NATIVE_USDC_L3}:${NATIVE_TOKEN_ADDRESS}`,
       ]);
