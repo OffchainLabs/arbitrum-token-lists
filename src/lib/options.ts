@@ -34,6 +34,10 @@ const options = {
     type: 'string',
     demandOption: true,
   },
+  inputTokenList: {
+    type: 'string',
+    array: true,
+  },
   newArbifiedList: {
     type: 'string',
     demandOption: true,

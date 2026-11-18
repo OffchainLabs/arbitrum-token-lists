@@ -6,6 +6,11 @@ on:
 
 jobs:
   generate-token-lists:
+    # Required so the OIDC id-token can be minted on the reusable-workflow path:
+    # for workflow_call the token permissions are capped by the caller.
+    permissions:
+      id-token: write
+      contents: read
     uses: ./.github/workflows/generate-token-lists.yml
     with:
       environment: 'CI'
