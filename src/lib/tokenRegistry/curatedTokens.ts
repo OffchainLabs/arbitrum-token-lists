@@ -4,6 +4,7 @@ const ETHEREUM = 1;
 const ARBITRUM_ONE = 42161;
 const ROBINHOOD = 4663;
 const APE_CHAIN = 33139;
+const BASE = 8453;
 
 // Tokens that are the same asset on each chain of their group, even though bridgeInfo does not
 // link them: natively issued tokens, or a token whose canonical bridged version is not the one
@@ -21,6 +22,14 @@ export const curatedTokenGroups: CuratedToken[][] = [
     {
       chainId: ARBITRUM_ONE,
       address: '0xaf88d065e77c8cc2239327c5edb3a432268e5831',
+      symbol: 'USDC',
+      name: 'USD Coin',
+      decimals: 6,
+    },
+    // Native USDC. Base is not an Arbitrum chain, so no bridgeInfo links it.
+    {
+      chainId: BASE,
+      address: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
       symbol: 'USDC',
       name: 'USD Coin',
       decimals: 6,

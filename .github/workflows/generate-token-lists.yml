@@ -153,6 +153,7 @@ jobs:
       ARB_ONE_RPC: 'https://arbitrum-mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
       ARB_SEPOLIA_RPC: 'https://arbitrum-sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
       ARB_NOVA_RPC: 'https://nova.arbitrum.io/rpc'
+      BASE_RPC: 'https://base-mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
       LIFI_API_KEY: '${{ secrets.LIFI_API_KEY }}'
     steps:
       - name: Checkout

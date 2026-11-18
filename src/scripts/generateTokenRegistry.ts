@@ -5,10 +5,18 @@ import { generateTokenRegistry } from '../lib/tokenRegistry/generate';
 if (!process.env.MAINNET_RPC) {
   throw new Error('process.env.MAINNET_RPC was not set');
 }
+// Orbit chains that settle on Base read their gas token there.
+if (!process.env.BASE_RPC) {
+  throw new Error('process.env.BASE_RPC was not set');
+}
 
 generateTokenRegistry({
   orbitNetworks: customNetworks,
-  rpcUrls: { ...rpcs, 1: process.env.MAINNET_RPC },
+  rpcUrls: {
+    ...rpcs,
+    1: process.env.MAINNET_RPC,
+    8453: process.env.BASE_RPC,
+  },
   outputDir: './src/TokenRegistry',
 }).catch((error) => {
   console.error(error);

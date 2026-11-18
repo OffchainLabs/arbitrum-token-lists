@@ -3,7 +3,7 @@
 export type RegistryChain = {
   chainId: number;
   name: string;
-  // Absent on Ethereum.
+  // Absent on Ethereum and Base.
   parentChainId?: number;
   // The gas token's address on the parent chain. Absent when the gas token is Ether.
   nativeToken?: string;

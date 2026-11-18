@@ -71,6 +71,9 @@ const coreChains: RegistryChain[] = [
       `${TOKEN_LISTS_URL}/42170_arbed_coingecko.json`,
     ],
   },
+  // Not an Arbitrum chain, so it has no parent in the registry. LiFi bridges from it, and Orbit
+  // chains settle on it.
+  { chainId: BASE_CHAIN_ID, name: 'Base', tokenListUrls: [] },
 ];
 
 function usesEther(network: ArbitrumNetwork): boolean {

@@ -254,7 +254,7 @@ function findToken(
 
 describe('Token registry', () => {
   describe('getRegistryChains', () => {
-    it('adds the chains whose parent is in the registry, L3s included', () => {
+    it('adds the chains whose parent is in the registry, L3s and Base chains included', () => {
       const registryChains = getRegistryChains([
         // The L3 comes before its parent on purpose.
         network(5000, 4000),
@@ -271,19 +271,22 @@ describe('Token registry', () => {
         ETHEREUM,
         ARBITRUM_ONE,
         42170,
+        8453,
         4000,
         ROBINHOOD,
         6000,
+        8000,
         5000,
       ]);
-      expect(registryChains[5].nativeToken).toBe(
+      expect(registryChains[3].parentChainId).toBeUndefined();
+      expect(registryChains[6].nativeToken).toBe(
         '0x00000000000000000000000000000000000000ff',
       );
-      expect(registryChains[3].nativeToken).toBeUndefined();
+      expect(registryChains[4].nativeToken).toBeUndefined();
     });
 
     it('reads the native list of chains that settle on Arbitrum One', () => {
-      const [, , , l3] = getRegistryChains([network(L3, ARBITRUM_ONE)]);
+      const [, , , , l3] = getRegistryChains([network(L3, ARBITRUM_ONE)]);
       expect(l3.tokenListUrls).toContain(
         `https://tokenlist.arbitrum.io/ArbTokenLists/${L3}_arbed_native_list.json`,
       );
