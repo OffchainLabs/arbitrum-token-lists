@@ -5,11 +5,13 @@ import {
   IndexFile,
   IndexFileV2,
   REGISTRY_V2_VERSION,
+  TopFile,
+  TopFileV2,
 } from './types';
 
-// The version 1 files in the version 2 format: the chain files flag the tokens
-// LiFi routes, the index flags the LiFi pairs, and the pair files are dropped.
-// The other files are copied.
+// The version 1 files in the version 2 format: the chain files and top.json flag
+// the tokens LiFi routes, the index flags the LiFi pairs, and the pair files are
+// dropped. The other files are copied.
 export function toV2Files({
   files,
   lifiAddressesByChainId,
@@ -38,6 +40,20 @@ export function toV2Files({
         ),
       };
       v2Files.set(file, v2ChainFile);
+      continue;
+    }
+    if (file === 'top.json') {
+      const top = content as TopFile;
+      const v2Top: TopFileV2 = {
+        ...top,
+        version: REGISTRY_V2_VERSION,
+        tokens: top.tokens.map((token) =>
+          lifiAddressesByChainId.get(token.chainId)?.has(token.address)
+            ? { ...token, isLifi: true }
+            : token,
+        ),
+      };
+      v2Files.set(file, v2Top);
       continue;
     }
     if (file === 'index.json') {

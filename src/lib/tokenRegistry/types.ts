@@ -121,6 +121,13 @@ export type ChainFileV2 = Omit<ChainFile, 'version' | 'tokens'> & {
   tokens: (RegistryToken & { isLifi?: true })[];
 };
 
+// isLifi: the same flag as in the chain files, so the bridge UI knows which listed
+// tokens LiFi reaches without the chain files.
+export type TopFileV2 = Omit<TopFile, 'version' | 'tokens'> & {
+  version: typeof REGISTRY_V2_VERSION;
+  tokens: (TopToken & { isLifi?: true })[];
+};
+
 export type IndexFileV2 = Omit<IndexFile, 'version' | 'pairs'> & {
   version: typeof REGISTRY_V2_VERSION;
   // hasLifi: the bridge UI offers LiFi on the pair, and LiFi connects it.

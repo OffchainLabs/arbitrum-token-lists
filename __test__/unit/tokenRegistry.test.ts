@@ -363,7 +363,17 @@ describe('Token registry', () => {
               ],
             },
           ],
-          ['top.json', { version: 1, generatedAt, tokens: [] }],
+          [
+            'top.json',
+            {
+              version: 1,
+              generatedAt,
+              tokens: [
+                { chainId: ETHEREUM, ...token(USDC_ETHEREUM, 'USDC') },
+                { chainId: ETHEREUM, ...token(DAI_ETHEREUM, 'DAI') },
+              ],
+            },
+          ],
         ]),
         lifiAddressesByChainId: new Map([[ETHEREUM, new Set([USDC_ETHEREUM])]]),
         lifiPairKeys: new Set([`${ETHEREUM}-${ARBITRUM_ONE}`]),
@@ -399,7 +409,10 @@ describe('Token registry', () => {
       expect(v2Files.get('top.json')).toEqual({
         version: 2,
         generatedAt,
-        tokens: [],
+        tokens: [
+          { chainId: ETHEREUM, ...token(USDC_ETHEREUM, 'USDC'), isLifi: true },
+          { chainId: ETHEREUM, ...token(DAI_ETHEREUM, 'DAI') },
+        ],
       });
     });
   });
