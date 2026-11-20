@@ -2,6 +2,7 @@ node_modules
 .env
 src/ArbTokenLists/*
 src/FullList/*
+src/TokenRegistry
 dist
 !src/ArbTokenLists/arbed_arb_whitelist_era.json
 
