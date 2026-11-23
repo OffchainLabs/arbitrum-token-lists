@@ -577,6 +577,54 @@ describe('Token registry', () => {
     });
   });
 
+  describe('flagged tokens', () => {
+    const lifiTokens = new Map(lifiTokensByChainId);
+    lifiTokens.set(ARBITRUM_ONE, [
+      ...(lifiTokensByChainId.get(ARBITRUM_ONE) ?? []).map((token) =>
+        token.address === USDC_E_ARBITRUM
+          ? { ...token, verificationStatus: 'flagged' }
+          : token,
+      ),
+      // A copy of WBTC that LiFi flags, with the same coinKey.
+      {
+        address: WBTC_ARBITRUM_2,
+        symbol: 'WBTC',
+        name: 'WBTC',
+        decimals: 8,
+        coinKey: 'WBTC',
+        verificationStatus: 'flagged',
+      },
+    ]);
+    const tokensByChainId = buildAll(curatedTokenGroups, lifiTokens);
+
+    it('flags a token only when no other source lists it', () => {
+      expect(
+        findToken(tokensByChainId, ARBITRUM_ONE, WBTC_ARBITRUM_2)?.isFlagged,
+      ).toBe(true);
+      expect(
+        findToken(tokensByChainId, ARBITRUM_ONE, USDC_E_ARBITRUM)?.isFlagged,
+      ).toBeUndefined();
+    });
+
+    it('leaves flagged tokens out of the coinKey match and top.json', () => {
+      expect(
+        findToken(tokensByChainId, ETHEREUM, WBTC_ETHEREUM)?.counterparts,
+      ).toEqual({ [ARBITRUM_ONE]: WBTC_ARBITRUM });
+      const top = buildTopTokens({
+        chains,
+        tokensByChainId,
+        lifiTokensByChainId: lifiTokens,
+        curatedTokenGroups,
+      });
+      expect(
+        top.some(
+          (token) =>
+            token.chainId === ARBITRUM_ONE && token.address === WBTC_ARBITRUM_2,
+        ),
+      ).toBe(false);
+    });
+  });
+
   describe('custom gas tokens', () => {
     const APE_CHAIN = 33139;
     const APE_ETHEREUM = '0x00000000000000000000000000000000000000e4';

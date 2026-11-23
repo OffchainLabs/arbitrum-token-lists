@@ -106,14 +106,19 @@ export function buildChainTokens({
   curatedTokens: CuratedToken[];
 }): RegistryToken[] {
   const byAddress = new Map<string, RegistryToken>();
+  // The tokens that a source other than LiFi lists. LiFi's flag does not apply to them.
+  const listedAddresses = new Set<string>();
   // The first source of a token wins its metadata. Later sources only add the fields it lacks.
-  const add = (token: RegistryToken) => {
+  const add = (token: RegistryToken, { fromLifi = false } = {}) => {
     const address = token.address.toLowerCase();
     const existing = byAddress.get(address);
     byAddress.set(
       address,
       withoutUndefined({ ...token, ...existing, address }),
     );
+    if (!fromLifi) {
+      listedAddresses.add(address);
+    }
   };
 
   // A custom gas token takes its symbol and name from its link. On its own chain, every gas token
@@ -158,15 +163,24 @@ export function buildChainTokens({
   }
 
   for (const token of lifiTokens ?? []) {
-    add({
-      address: token.address,
-      symbol: token.symbol,
-      name: token.name,
-      decimals: token.decimals,
-      logoURI: token.logoURI,
-      coinKey: token.coinKey,
-    });
+    add(
+      {
+        address: token.address,
+        symbol: token.symbol,
+        name: token.name,
+        decimals: token.decimals,
+        logoURI: token.logoURI,
+        coinKey: token.coinKey,
+      },
+      { fromLifi: true },
+    );
   }
+  const flaggedAddresses = new Set(
+    (lifiTokens ?? [])
+      .filter((token) => token.verificationStatus === 'flagged')
+      .map((token) => token.address.toLowerCase())
+      .filter((address) => !listedAddresses.has(address)),
+  );
 
   for (const link of links) {
     if (link.parentChainId === chainId) {
@@ -182,9 +196,13 @@ export function buildChainTokens({
 
   return [...byAddress.values()]
     .map((token) =>
-      oftAddresses.has(token.address)
-        ? { ...token, isOft: true as const }
-        : token,
+      withoutUndefined({
+        ...token,
+        isOft: oftAddresses.has(token.address) ? (true as const) : undefined,
+        isFlagged: flaggedAddresses.has(token.address)
+          ? (true as const)
+          : undefined,
+      }),
     )
     .sort((a, b) => a.address.localeCompare(b.address));
 }
@@ -249,7 +267,7 @@ function getOnlyAddress(addresses: string[]): string | undefined {
 // 2. the native token maps to the native token, when both chains pay gas in Ether,
 // 3. its bridgeInfo family,
 // 4. the curated groups that its family belongs to, then those groups' families,
-// 5. its LiFi coinKey.
+// 5. its LiFi coinKey, among the tokens LiFi does not flag.
 export function addCounterparts({
   chains,
   tokensByChainId,
@@ -279,7 +297,7 @@ export function addCounterparts({
   for (const [chainId, tokens] of tokensByChainId) {
     const byCoinKey = new Map<string, TokenKey[]>();
     for (const token of tokens) {
-      if (token.coinKey) {
+      if (token.coinKey && !token.isFlagged) {
         byCoinKey.set(token.coinKey, [
           ...(byCoinKey.get(token.coinKey) ?? []),
           toTokenKey(chainId, token.address),

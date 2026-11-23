@@ -41,17 +41,19 @@ export function buildTopTokens({
     }
 
     const tokens = new Map(
-      (tokensByChainId.get(chainId) ?? []).map((token) => [
-        token.address,
-        withoutUndefined<TopToken>({
-          chainId,
-          address: token.address,
-          symbol: token.symbol,
-          name: token.name,
-          decimals: token.decimals,
-          logoURI: token.logoURI,
-        }),
-      ]),
+      (tokensByChainId.get(chainId) ?? [])
+        .filter((token) => !token.isFlagged)
+        .map((token) => [
+          token.address,
+          withoutUndefined<TopToken>({
+            chainId,
+            address: token.address,
+            symbol: token.symbol,
+            name: token.name,
+            decimals: token.decimals,
+            logoURI: token.logoURI,
+          }),
+        ]),
     );
 
     const top = new Map<string, TopToken>();
