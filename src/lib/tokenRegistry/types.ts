@@ -96,8 +96,8 @@ export type TopToken = {
 };
 
 // The tokens the all-chains picker shows before any search, up to 1,000 per chain. The order is the
-// ranking across every chain: the curated tokens, the native tokens, then LiFi's 24-hour volume, then
-// symbol. Readers rank a token by its position in the file.
+// ranking across every chain: LiFi's 24-hour volume, then symbol. Readers rank a token by its
+// position in the file.
 export type TopFile = {
   version: typeof REGISTRY_VERSION;
   generatedAt: string;

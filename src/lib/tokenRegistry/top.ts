@@ -10,9 +10,9 @@ import {
 export const TOP_TOKENS_PER_CHAIN = 1_000;
 
 // Each chain keeps its native token, its curated tokens and its most traded tokens, up to the limit.
-// The file then orders every chain's tokens together, like Jumper: the curated tokens group by group,
-// the native tokens, the tokens LiFi has a 24-hour volume for, most traded first, and the others by
-// symbol. A token's rank is its position in the file. The volume is not written to the file.
+// The file then orders every chain's tokens together by LiFi's 24-hour volume, most traded first.
+// The tokens without volume follow, by symbol. A token's rank is its position in the file. The
+// volume is not written to the file.
 export function buildTopTokens({
   chains,
   tokensByChainId,
@@ -85,34 +85,16 @@ export function buildTopTokens({
     topByChainId.set(chainId, top);
   }
 
-  const ordered = new Map<string, TopToken>();
-  const push = (token: TopToken | undefined) => {
-    if (token) {
-      ordered.set(toKey(token.chainId, token.address), token);
-    }
-  };
-  for (const token of curatedTokens) {
-    push(topByChainId.get(token.chainId)?.get(token.address.toLowerCase()));
-  }
-  for (const { chainId } of chains) {
-    push(topByChainId.get(chainId)?.get(NATIVE_TOKEN_ADDRESS));
-  }
-
-  const rest = [...topByChainId.values()]
-    .flatMap((top) => [...top.values()])
-    .filter((token) => !ordered.has(toKey(token.chainId, token.address)));
   const volume = (token: TopToken) =>
     volumes.get(toKey(token.chainId, token.address)) ?? 0;
-  rest
+  return [...topByChainId.values()]
+    .flatMap((top) => [...top.values()])
     .sort(
       (a, b) =>
         volume(b) - volume(a) ||
         a.symbol.localeCompare(b.symbol) ||
         a.chainId - b.chainId,
-    )
-    .forEach(push);
-
-  return [...ordered.values()];
+    );
 }
 
 function toKey(chainId: number, address: string): string {

@@ -739,23 +739,23 @@ describe('Token registry', () => {
       });
     const keys = (tokens: TopToken[]) =>
       tokens.map((token) => `${token.chainId}:${token.address}`);
-    it('orders every chain together: curated groups, natives, then volume, then symbol', () => {
+    it('orders every chain together by volume, then symbol', () => {
       const top = buildTop(100);
       expect(keys(top)).toEqual([
         `${ETHEREUM}:${USDC_ETHEREUM}`,
-        `${ARBITRUM_ONE}:${USDC_ARBITRUM}`,
-        `${ROBINHOOD}:${USDC_ROBINHOOD}`,
-        `${ETHEREUM}:${NATIVE_TOKEN_ADDRESS}`,
-        `${ARBITRUM_ONE}:${NATIVE_TOKEN_ADDRESS}`,
-        `${ROBINHOOD}:${NATIVE_TOKEN_ADDRESS}`,
-        `${L3}:${NATIVE_TOKEN_ADDRESS}`,
-        `${NATIVE_USDC_L3}:${NATIVE_TOKEN_ADDRESS}`,
         // Arbitrum One WBTC has more volume than Ethereum WBTC.
         `${ARBITRUM_ONE}:${WBTC_ARBITRUM}`,
         `${ETHEREUM}:${WBTC_ETHEREUM}`,
         `${ETHEREUM}:${DAI_ETHEREUM}`,
         `${ARBITRUM_ONE}:${DAI_ARBITRUM}`,
+        `${ETHEREUM}:${NATIVE_TOKEN_ADDRESS}`,
+        `${L3}:${NATIVE_TOKEN_ADDRESS}`,
+        `${NATIVE_USDC_L3}:${NATIVE_TOKEN_ADDRESS}`,
+        `${ROBINHOOD}:${NATIVE_TOKEN_ADDRESS}`,
+        `${ARBITRUM_ONE}:${NATIVE_TOKEN_ADDRESS}`,
         `${NATIVE_USDC_L3}:${USDC_NATIVE_USDC_L3}`,
+        `${ROBINHOOD}:${USDC_ROBINHOOD}`,
+        `${ARBITRUM_ONE}:${USDC_ARBITRUM}`,
         `${L3}:${USDC_E_L3}`,
         `${ARBITRUM_ONE}:${USDC_E_ARBITRUM}`,
       ]);
@@ -765,27 +765,27 @@ describe('Token registry', () => {
     it('stops at the limit of each chain, but keeps every native and curated token', () => {
       expect(keys(buildTop(3))).toEqual([
         `${ETHEREUM}:${USDC_ETHEREUM}`,
-        `${ARBITRUM_ONE}:${USDC_ARBITRUM}`,
-        `${ROBINHOOD}:${USDC_ROBINHOOD}`,
-        `${ETHEREUM}:${NATIVE_TOKEN_ADDRESS}`,
-        `${ARBITRUM_ONE}:${NATIVE_TOKEN_ADDRESS}`,
-        `${ROBINHOOD}:${NATIVE_TOKEN_ADDRESS}`,
-        `${L3}:${NATIVE_TOKEN_ADDRESS}`,
-        `${NATIVE_USDC_L3}:${NATIVE_TOKEN_ADDRESS}`,
         `${ARBITRUM_ONE}:${WBTC_ARBITRUM}`,
         `${ETHEREUM}:${WBTC_ETHEREUM}`,
+        `${ETHEREUM}:${NATIVE_TOKEN_ADDRESS}`,
+        `${L3}:${NATIVE_TOKEN_ADDRESS}`,
+        `${NATIVE_USDC_L3}:${NATIVE_TOKEN_ADDRESS}`,
+        `${ROBINHOOD}:${NATIVE_TOKEN_ADDRESS}`,
+        `${ARBITRUM_ONE}:${NATIVE_TOKEN_ADDRESS}`,
         `${NATIVE_USDC_L3}:${USDC_NATIVE_USDC_L3}`,
+        `${ROBINHOOD}:${USDC_ROBINHOOD}`,
+        `${ARBITRUM_ONE}:${USDC_ARBITRUM}`,
         `${L3}:${USDC_E_L3}`,
       ]);
       expect(keys(buildTop(1))).toEqual([
         `${ETHEREUM}:${USDC_ETHEREUM}`,
-        `${ARBITRUM_ONE}:${USDC_ARBITRUM}`,
-        `${ROBINHOOD}:${USDC_ROBINHOOD}`,
         `${ETHEREUM}:${NATIVE_TOKEN_ADDRESS}`,
-        `${ARBITRUM_ONE}:${NATIVE_TOKEN_ADDRESS}`,
-        `${ROBINHOOD}:${NATIVE_TOKEN_ADDRESS}`,
         `${L3}:${NATIVE_TOKEN_ADDRESS}`,
         `${NATIVE_USDC_L3}:${NATIVE_TOKEN_ADDRESS}`,
+        `${ROBINHOOD}:${NATIVE_TOKEN_ADDRESS}`,
+        `${ARBITRUM_ONE}:${NATIVE_TOKEN_ADDRESS}`,
+        `${ROBINHOOD}:${USDC_ROBINHOOD}`,
+        `${ARBITRUM_ONE}:${USDC_ARBITRUM}`,
       ]);
     });
   });
