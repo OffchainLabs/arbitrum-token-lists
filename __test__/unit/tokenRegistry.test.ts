@@ -677,16 +677,16 @@ describe('Token registry', () => {
     ]);
     const tokensByChainId = buildAll(curatedTokenGroups, lifiTokens);
 
-    it('flags a token only when no other source lists it', () => {
+    it('drops a flagged token only when no other source lists it', () => {
       expect(
-        findToken(tokensByChainId, ARBITRUM_ONE, WBTC_ARBITRUM_2)?.isFlagged,
-      ).toBe(true);
-      expect(
-        findToken(tokensByChainId, ARBITRUM_ONE, USDC_E_ARBITRUM)?.isFlagged,
+        findToken(tokensByChainId, ARBITRUM_ONE, WBTC_ARBITRUM_2),
       ).toBeUndefined();
+      expect(
+        findToken(tokensByChainId, ARBITRUM_ONE, USDC_E_ARBITRUM),
+      ).toBeDefined();
     });
 
-    it('leaves flagged tokens out of the coinKey match and top.json', () => {
+    it('leaves dropped tokens out of the coinKey match and top.json', () => {
       expect(
         findToken(tokensByChainId, ETHEREUM, WBTC_ETHEREUM)?.counterparts,
       ).toEqual({ [ARBITRUM_ONE]: WBTC_ARBITRUM });
