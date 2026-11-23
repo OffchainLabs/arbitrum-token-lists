@@ -182,12 +182,28 @@ jobs:
       # to an hour while they check S3 for a new version.
       # A failed mainnet or testnet generation writes no files, so the other one still deploys.
       - name: Deploy (Test folder)
+        id: deploy-test
         if: ${{ !cancelled() && inputs.environment == 'Test' }}
         run: aws s3 sync ./src/TokenRegistry/ s3://${{ secrets.AWS_BUCKET }}/TestFolder/TokenRegistry --acl "public-read" --cache-control "public, max-age=300, stale-while-revalidate=3600"
 
       - name: Deploy
+        id: deploy
         if: ${{ !cancelled() && inputs.environment == 'CI' }}
         run: aws s3 sync ./src/TokenRegistry/ s3://${{ secrets.AWS_BUCKET }}/TokenRegistry --acl "public-read" --cache-control "public, max-age=300, stale-while-revalidate=3600"
+
+      # The portal drops its cached registry files, so its API reads the new files on the next
+      # request. The environment sets the endpoint of the portal that reads its folder.
+      - name: Revalidate the portal
+        if: ${{ !cancelled() && (steps.deploy.outcome == 'success' || steps.deploy-test.outcome == 'success') }}
+        env:
+          REVALIDATE_URL: ${{ vars.TOKEN_REGISTRY_REVALIDATE_URL }}
+          REVALIDATE_SECRET: ${{ secrets.TOKEN_REGISTRY_REVALIDATE_SECRET }}
+        run: |
+          if [[ -z "$REVALIDATE_URL" ]]; then
+            echo "TOKEN_REGISTRY_REVALIDATE_URL is not set"
+            exit 0
+          fi
+          curl --fail --silent --show-error --retry 3 -X POST -H "Authorization: Bearer $REVALIDATE_SECRET" "$REVALIDATE_URL"
 
   error-alerts:
     runs-on: ubuntu-latest
