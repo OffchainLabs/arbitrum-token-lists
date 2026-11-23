@@ -289,6 +289,20 @@ describe('Token registry', () => {
       expect(registryChains[4].nativeToken).toBeUndefined();
     });
 
+    it('builds the testnet registry from the testnet chains only', () => {
+      const registryChains = getRegistryChains(
+        [
+          network(7000, 11155111, { isTestnet: true }),
+          network(7100, 7000, { isTestnet: true }),
+          network(ROBINHOOD, ETHEREUM),
+        ],
+        { testnet: true },
+      );
+      expect(registryChains.map((chain) => chain.chainId)).toEqual([
+        11155111, 421614, 84532, 7000, 7100,
+      ]);
+    });
+
     it('reads the native list of chains that settle on Arbitrum One', () => {
       const [, , , , l3] = getRegistryChains([network(L3, ARBITRUM_ONE)]);
       expect(l3.tokenListUrls).toContain(

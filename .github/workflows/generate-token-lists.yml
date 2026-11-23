@@ -154,6 +154,8 @@ jobs:
       ARB_SEPOLIA_RPC: 'https://arbitrum-sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
       ARB_NOVA_RPC: 'https://nova.arbitrum.io/rpc'
       BASE_RPC: 'https://base-mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      SEPOLIA_RPC: 'https://sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      BASE_SEPOLIA_RPC: 'https://base-sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
       LIFI_API_KEY: '${{ secrets.LIFI_API_KEY }}'
     steps:
       - name: Checkout
@@ -177,13 +179,14 @@ jobs:
       # Only the TokenRegistry folder is synced, so the token lists are left untouched. Unlike the
       # test token lists, the test registry is public, so a portal preview can read it.
       # The job runs every hour. Browsers reuse a file for 5 minutes, then serve it from cache for up
-      # to an hour while they check the CDN for a new version.
+      # to an hour while they check S3 for a new version.
+      # A failed mainnet or testnet generation writes no files, so the other one still deploys.
       - name: Deploy (Test folder)
-        if: ${{ inputs.environment == 'Test' }}
+        if: ${{ !cancelled() && inputs.environment == 'Test' }}
         run: aws s3 sync ./src/TokenRegistry/ s3://${{ secrets.AWS_BUCKET }}/TestFolder/TokenRegistry --acl "public-read" --cache-control "public, max-age=300, stale-while-revalidate=3600"
 
       - name: Deploy
-        if: ${{ inputs.environment == 'CI' }}
+        if: ${{ !cancelled() && inputs.environment == 'CI' }}
         run: aws s3 sync ./src/TokenRegistry/ s3://${{ secrets.AWS_BUCKET }}/TokenRegistry --acl "public-read" --cache-control "public, max-age=300, stale-while-revalidate=3600"
 
   error-alerts:

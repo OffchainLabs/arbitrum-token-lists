@@ -12,6 +12,9 @@ const ARBITRUM_NOVA_CHAIN_ID = 42170;
 const ROBINHOOD_CHAIN_ID = 4663;
 const APE_CHAIN_CHAIN_ID = 33139;
 const BASE_CHAIN_ID = 8453;
+const SEPOLIA_CHAIN_ID = 11155111;
+const ARBITRUM_SEPOLIA_CHAIN_ID = 421614;
+const BASE_SEPOLIA_CHAIN_ID = 84532;
 
 // The chains the bridge UI lets LiFi bridge to, by source chain. A copy of
 // lifiDestinationChainIds in arbitrum-portal's
@@ -76,6 +79,21 @@ const coreChains: RegistryChain[] = [
   { chainId: BASE_CHAIN_ID, name: 'Base', tokenListUrls: [] },
 ];
 
+// LiFi supports no testnet, so the testnet registry has no LiFi pairs.
+const testnetCoreChains: RegistryChain[] = [
+  { chainId: SEPOLIA_CHAIN_ID, name: 'Sepolia', tokenListUrls: [] },
+  {
+    chainId: ARBITRUM_SEPOLIA_CHAIN_ID,
+    name: 'Arbitrum Sepolia',
+    parentChainId: SEPOLIA_CHAIN_ID,
+    tokenListUrls: [
+      `${TOKEN_LISTS_URL}/421614_arbed_uniswap_labs.json`,
+      `${TOKEN_LISTS_URL}/421614_arbed_coingecko.json`,
+    ],
+  },
+  { chainId: BASE_SEPOLIA_CHAIN_ID, name: 'Base Sepolia', tokenListUrls: [] },
+];
+
 function usesEther(network: ArbitrumNetwork): boolean {
   return !network.nativeToken || network.nativeToken === constants.AddressZero;
 }
@@ -98,15 +116,17 @@ function toOrbitChain(network: ArbitrumNetwork): RegistryChain {
   };
 }
 
+// The mainnet and testnet registries are separate, with their own files.
 export function getRegistryChains(
   orbitNetworks: ArbitrumNetwork[],
+  { testnet = false }: { testnet?: boolean } = {},
 ): RegistryChain[] {
-  const chains = [...coreChains];
+  const chains = [...(testnet ? testnetCoreChains : coreChains)];
   const chainIds = new Set(chains.map((chain) => chain.chainId));
 
   // An L3 is added once its parent chain is in, so this repeats until nothing changes.
   let remaining = orbitNetworks.filter(
-    (network) => !network.isTestnet && network.tokenBridge,
+    (network) => Boolean(network.isTestnet) === testnet && network.tokenBridge,
   );
   let added = true;
   while (added) {

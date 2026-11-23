@@ -38,7 +38,7 @@ import {
 } from './types';
 import { splitChainFiles, toV2Files } from './v2';
 
-const PUBLISHED_URL = `https://tokenlist.arbitrum.io/TokenRegistry/v${REGISTRY_VERSION}`;
+const PUBLISHED_URL = 'https://tokenlist.arbitrum.io/TokenRegistry';
 
 // A file that lost more than this share of its tokens since the published version is not
 // written, so a failing source cannot replace a good registry with an empty one.
@@ -63,9 +63,13 @@ export function checkShrink({
   }
 }
 
-async function fetchPublished<T>(file: string): Promise<T | undefined> {
+async function fetchPublished<T>(
+  testnet: boolean,
+  file: string,
+): Promise<T | undefined> {
+  const folder = testnet ? `${PUBLISHED_URL}/testnet` : PUBLISHED_URL;
   try {
-    return await fetchJson<T>(`${PUBLISHED_URL}/${file}`);
+    return await fetchJson<T>(`${folder}/v${REGISTRY_VERSION}/${file}`);
   } catch (error) {
     if (
       error instanceof HttpError &&
@@ -93,13 +97,15 @@ export async function generateTokenRegistry({
   orbitNetworks,
   rpcUrls,
   outputDir,
+  testnet = false,
 }: {
   orbitNetworks: ArbitrumNetwork[];
   rpcUrls: Record<number, string>;
   outputDir: string;
+  testnet?: boolean;
 }) {
   const generatedAt = new Date().toISOString();
-  const chains = getRegistryChains(orbitNetworks);
+  const chains = getRegistryChains(orbitNetworks, { testnet });
   const lifiChainIds = await fetchLifiChainIds();
 
   const urls = [...new Set(chains.flatMap((chain) => chain.tokenListUrls))];
@@ -164,7 +170,7 @@ export async function generateTokenRegistry({
   for (const chain of chains) {
     const file = `chains/${chain.chainId}.json`;
     const tokens = tokensByChainId.get(chain.chainId) ?? [];
-    const published = await fetchPublished<ChainFile>(file);
+    const published = await fetchPublished<ChainFile>(testnet, file);
     checkShrink({
       file,
       count: tokens.length,
@@ -212,7 +218,7 @@ export async function generateTokenRegistry({
     // A pair can lose LiFi when the bridge UI stops offering it, and drop to 0
     // tokens.
     if (hasLifi) {
-      const published = await fetchPublished<PairFile>(file);
+      const published = await fetchPublished<PairFile>(testnet, file);
       checkShrink({
         file,
         count: countPairTokens(lifi),
@@ -233,7 +239,7 @@ export async function generateTokenRegistry({
     lifiTokensByChainId,
     curatedTokenGroups,
   });
-  const publishedTop = await fetchPublished<TopFile>('top.json');
+  const publishedTop = await fetchPublished<TopFile>(testnet, 'top.json');
   checkShrink({
     file: 'top.json',
     count: topTokens.length,
