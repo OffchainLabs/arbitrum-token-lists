@@ -133,8 +133,11 @@ export type TopFileV2 = Omit<TopFile, 'version' | 'tokens'> & {
   tokens: (TopToken & { isLifi?: true })[];
 };
 
-export type IndexFileV2 = Omit<IndexFile, 'version' | 'pairs'> & {
+export type IndexFileV2 = Omit<IndexFile, 'version' | 'chains' | 'pairs'> & {
   version: typeof REGISTRY_V2_VERSION;
+  // files: the parts of a chain file that splitChainFiles split, in order. Without it, the
+  // chain's tokens are in chains/<id>.json.
+  chains: (IndexFile['chains'][number] & { files?: string[] })[];
   // hasLifi: the bridge UI offers LiFi on the pair, and LiFi connects it.
   pairs: (ChainPair & { hasLifi?: true })[];
 };

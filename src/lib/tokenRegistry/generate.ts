@@ -36,7 +36,7 @@ import {
   RegistryToken,
   TopFile,
 } from './types';
-import { toV2Files } from './v2';
+import { splitChainFiles, toV2Files } from './v2';
 
 const PUBLISHED_URL = `https://tokenlist.arbitrum.io/TokenRegistry/v${REGISTRY_VERSION}`;
 
@@ -252,11 +252,13 @@ export async function generateTokenRegistry({
     pairs,
   });
 
-  const v2Files = toV2Files({
-    files,
-    lifiAddressesByChainId: lifiConnectedAddressesByChainId,
-    lifiPairKeys,
-  });
+  const v2Files = splitChainFiles(
+    toV2Files({
+      files,
+      lifiAddressesByChainId: lifiConnectedAddressesByChainId,
+      lifiPairKeys,
+    }),
+  );
 
   // Nothing is written until every file passed its checks.
   for (const [version, versionFiles] of [

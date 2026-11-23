@@ -14,13 +14,15 @@ import {
 import { checkShrink } from '../../src/lib/tokenRegistry/generate';
 import { buildTopTokens } from '../../src/lib/tokenRegistry/top';
 import {
+  ChainFileV2,
   CuratedToken,
+  IndexFileV2,
   RegistryChain,
   RegistryToken,
   TokenListEntry,
   TopToken,
 } from '../../src/lib/tokenRegistry/types';
-import { toV2Files } from '../../src/lib/tokenRegistry/v2';
+import { splitChainFiles, toV2Files } from '../../src/lib/tokenRegistry/v2';
 
 const ETHEREUM = 1;
 const ARBITRUM_ONE = 42161;
@@ -414,6 +416,70 @@ describe('Token registry', () => {
           { chainId: ETHEREUM, ...token(DAI_ETHEREUM, 'DAI') },
         ],
       });
+    });
+  });
+
+  describe('splitChainFiles', () => {
+    const chainFile = (chainId: number, count: number): ChainFileV2 => ({
+      version: 2,
+      generatedAt: 'now',
+      chainId,
+      tokens: Array.from({ length: count }, (_, index) => ({
+        address: `0x${index.toString(16).padStart(40, '0')}`,
+        symbol: `T${index}`,
+        name: `Token ${index}`,
+        decimals: 18,
+      })),
+    });
+    const index: IndexFileV2 = {
+      version: 2,
+      generatedAt: 'now',
+      chains: [
+        { chainId: ETHEREUM, name: 'Ethereum' },
+        { chainId: ARBITRUM_ONE, name: 'Arbitrum One' },
+      ],
+      pairs: [],
+    };
+    const big = chainFile(ETHEREUM, 30);
+    const small = chainFile(ARBITRUM_ONE, 2);
+    const maxBytes = Math.ceil(Buffer.byteLength(JSON.stringify(big)) / 2.5);
+    const split = splitChainFiles(
+      new Map<string, { version: number }>([
+        [`chains/${ETHEREUM}.json`, big],
+        [`chains/${ARBITRUM_ONE}.json`, small],
+        ['index.json', index],
+      ]),
+      maxBytes,
+    );
+
+    it('replaces a chain file over the limit with parts that fit, listed in the index', () => {
+      const files = (split.get('index.json') as IndexFileV2).chains.map(
+        (chain) => chain.files,
+      );
+      expect(files).toEqual([
+        [
+          `chains/${ETHEREUM}-1.json`,
+          `chains/${ETHEREUM}-2.json`,
+          `chains/${ETHEREUM}-3.json`,
+        ],
+        undefined,
+      ]);
+      expect(split.has(`chains/${ETHEREUM}.json`)).toBe(false);
+
+      const parts = (files[0] ?? []).map(
+        (file) => split.get(file) as ChainFileV2,
+      );
+      parts.forEach((part) => {
+        expect(Buffer.byteLength(JSON.stringify(part))).toBeLessThanOrEqual(
+          maxBytes,
+        );
+        expect(part.chainId).toBe(ETHEREUM);
+      });
+      expect(parts.flatMap((part) => part.tokens)).toEqual(big.tokens);
+    });
+
+    it('keeps a chain file under the limit', () => {
+      expect(split.get(`chains/${ARBITRUM_ONE}.json`)).toBe(small);
     });
   });
 
