@@ -10,6 +10,8 @@ jobs:
   check-age:
     runs-on: ubuntu-latest
     environment: CI
+    # Reads a public file and posts to Slack with its own token, so it needs no GITHUB_TOKEN permission.
+    permissions: {}
     steps:
       # The job publishes every hour, so an index.json over 3 hours old means three runs in a row
       # published nothing. A missing file fails the step, which alerts too.
