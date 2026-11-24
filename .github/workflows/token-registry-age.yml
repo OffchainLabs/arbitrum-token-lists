@@ -1,0 +1,58 @@
+name: Token registry age
+
+on:
+  schedule:
+    # Between two hourly generations, which start at minute 2.
+    - cron: '40 * * * *'
+  workflow_dispatch:
+
+jobs:
+  check-age:
+    runs-on: ubuntu-latest
+    environment: CI
+    # Reads a public file and posts to Slack with its own token, so it needs no GITHUB_TOKEN permission.
+    permissions: {}
+    steps:
+      # The job publishes every hour, so an index.json over 3 hours old means three runs in a row
+      # published nothing. A missing file fails the step, which alerts too.
+      - name: Check the age of index.json
+        id: age
+        run: |
+          for folder in TokenRegistry TokenRegistry/testnet; do
+            generated_at=$(curl --fail --silent --show-error "https://tokenlist.arbitrum.io/$folder/v2/index.json" | jq -r .generatedAt)
+            age=$(( $(date +%s) - $(date -d "$generated_at" +%s) ))
+            echo "$folder/v2/index.json is $(( age / 60 )) minutes old"
+            if (( age > 3 * 3600 )); then
+              echo "stale=true" >> "$GITHUB_OUTPUT"
+            fi
+          done
+
+      - name: Post to Slack
+        if: ${{ failure() || steps.age.outputs.stale == 'true' }}
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "The token registry's index.json is more than 3 hours old, or missing"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

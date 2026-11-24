@@ -136,12 +136,83 @@ jobs:
         if: ${{ inputs.environment == 'CI' }}
         run: aws s3 sync ./src/ s3://${{ secrets.AWS_BUCKET }} --exclude "*" --include "FullList/*.json" --include "ArbTokenLists/*.json" --acl "public-read"
 
+  generate-token-registry:
+    name: 'Generate token registry'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    # Runs after the lists, so it reads the versions they just published. A failed list does not
+    # block it: it then reads that list's previous version.
+    needs: [generate-token-lists]
+    if: ${{ !cancelled() }}
+    permissions:
+      id-token: write # need this for OIDC
+      contents: read
+    env:
+      INFURA_KEY: '${{ secrets.INFURA_KEY }}'
+      MAINNET_RPC: 'https://mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      ARB_ONE_RPC: 'https://arbitrum-mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      ARB_SEPOLIA_RPC: 'https://arbitrum-sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      ARB_NOVA_RPC: 'https://nova.arbitrum.io/rpc'
+      BASE_RPC: 'https://base-mainnet.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      SEPOLIA_RPC: 'https://sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      BASE_SEPOLIA_RPC: 'https://base-sepolia.infura.io/v3/${{ secrets.INFURA_KEY }}'
+      LIFI_API_KEY: '${{ secrets.LIFI_API_KEY }}'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install node_modules
+        uses: OffchainLabs/actions/node-modules/install@main
+
+      - name: Generate orbit chains data
+        run: yarn generate:orbitChainsData
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::352956043285:role/gha-arbitrum-token-lists
+          aws-region: 'us-west-2'
+
+      - name: Generate token registry
+        run: yarn tokenRegistry
+
+      # Only the TokenRegistry folder is synced, so the token lists are left untouched. Unlike the
+      # test token lists, the test registry is public, so a portal preview can read it.
+      # The job runs every hour. Browsers reuse a file for 5 minutes, then serve it from cache for up
+      # to an hour while they check S3 for a new version.
+      # A failed mainnet or testnet generation writes no files, so the other one still deploys.
+      - name: Deploy (Test folder)
+        id: deploy-test
+        if: ${{ !cancelled() && inputs.environment == 'Test' }}
+        run: aws s3 sync ./src/TokenRegistry/ s3://${{ secrets.AWS_BUCKET }}/TestFolder/TokenRegistry --acl "public-read" --cache-control "public, max-age=300, stale-while-revalidate=3600"
+
+      - name: Deploy
+        id: deploy
+        if: ${{ !cancelled() && inputs.environment == 'CI' }}
+        run: aws s3 sync ./src/TokenRegistry/ s3://${{ secrets.AWS_BUCKET }}/TokenRegistry --acl "public-read" --cache-control "public, max-age=300, stale-while-revalidate=3600"
+
+      # The portal drops its cached registry files, so its API reads the new files on the next
+      # request. The environment sets the endpoint of the portal that reads its folder.
+      - name: Revalidate the portal
+        if: ${{ !cancelled() && (steps.deploy.outcome == 'success' || steps.deploy-test.outcome == 'success') }}
+        env:
+          REVALIDATE_URL: ${{ vars.TOKEN_REGISTRY_REVALIDATE_URL }}
+          REVALIDATE_SECRET: ${{ secrets.TOKEN_REGISTRY_REVALIDATE_SECRET }}
+        run: |
+          if [[ -z "$REVALIDATE_URL" ]]; then
+            echo "TOKEN_REGISTRY_REVALIDATE_URL is not set"
+            exit 0
+          fi
+          curl --fail --silent --show-error --retry 3 -X POST -H "Authorization: Bearer $REVALIDATE_SECRET" "$REVALIDATE_URL"
+
   error-alerts:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
-    needs: [generate-token-lists]
+    needs: [generate-token-lists, generate-token-registry]
     # Run this job if any of the job in needs array failed
     if: ${{ always() && contains(needs.*.result, 'failure') }}
+    # Posts to Slack with its own token, so it needs no GITHUB_TOKEN permission.
+    permissions: {}
     steps:
       - name: Post errors to Slack channel
         uses: slackapi/slack-github-action@v1.23.0
